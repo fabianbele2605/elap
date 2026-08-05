@@ -36,4 +36,5 @@ pub use tools::{
 };
 pub use models::{
     ModelMetadata, TipoModelo, OllamaClient, RegistroModelos, CacheEmbeddings,
+    ModelManager, MemoriaCorta,
 };

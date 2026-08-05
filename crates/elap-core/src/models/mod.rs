@@ -8,9 +8,11 @@ pub mod ollama_client;
 pub mod registry;
 pub mod cache;
 pub mod errors;
+pub mod manager;
 
 pub use model_metadata::{ModelMetadata, TipoModelo};
 pub use ollama_client::OllamaClient;
 pub use registry::RegistroModelos;
 pub use cache::CacheEmbeddings;
 pub use errors::ModelError;
+pub use manager::{ModelManager, MemoriaCorta};
