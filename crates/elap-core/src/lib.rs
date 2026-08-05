@@ -30,4 +30,5 @@ pub use plugin::{Plugin, PluginMetadata, PluginLoader, RegistroPlugins, PluginSa
 pub use tools::{
     Tool, RegistroHerramientas, ToolMetadata, TipoHerramienta,
     FileTool, HttpTool, SqlTool, SshTool, SystemTool,
+    SandboxHerramienta, PoliticaHerramienta, ContextoEjecucion, ValidadorSeguridad,
 };
