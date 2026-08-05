@@ -17,6 +17,7 @@ pub mod security;
 pub mod plugin;
 pub mod tools;
 pub mod models;
+pub mod agents;
 
 pub use core::MotorCentral;
 pub use error::ElapError;
@@ -37,4 +38,8 @@ pub use tools::{
 pub use models::{
     ModelMetadata, TipoModelo, OllamaClient, RegistroModelos, CacheEmbeddings,
     ModelManager, MemoriaCorta,
+};
+pub use agents::{
+    Agent, EstadoAgente, ContextoAgente, Plan, Paso,
+    EjecutorAgente, AgentError,
 };
