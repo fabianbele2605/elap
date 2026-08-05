@@ -1,20 +1,20 @@
-// Desktop application entry point (Tauri placeholder)
+// Punto de entrada de aplicación Desktop (placeholder Tauri)
 
 use elap_core::{MotorCentral, Configuracion};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Crear configuración
+    // Crear configuración por defecto
     let config = Configuracion::defecto();
     let motor = MotorCentral::nuevo(config);
 
-    // Iniciar motor central
+    // Iniciar motor central con logging y configuración
     motor.iniciar().await?;
 
-    println!("ELAP Desktop runtime iniciado");
-    println!("Nota: Interfaz Tauri será implementada en pasos posteriores");
+    println!("✅ ELAP Desktop runtime iniciado");
+    println!("📝 Nota: Interfaz Tauri será implementada en pasos posteriores");
 
-    // Detener
+    // Detener motor de forma limpia
     motor.detener().await?;
 
     Ok(())

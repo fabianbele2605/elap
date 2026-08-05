@@ -1,4 +1,4 @@
 fn main() {
-    // Placeholder for Tauri build script
-    // Will be implemented when UI layer is added
+    // Script de compilación para Tauri (placeholder)
+    // Será implementado cuando se agregue la capa de UI
 }

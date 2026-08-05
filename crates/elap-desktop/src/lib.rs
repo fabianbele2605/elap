@@ -2,33 +2,33 @@
 
 //! # ELAP Desktop Runtime
 //!
-//! Desktop application shell for ELAP using Tauri.
-//! Provides GUI and window management for the platform.
+//! Capa de interfaz gráfica para ELAP usando Tauri.
+//! Proporciona GUI y gestión de ventanas para la plataforma.
 
 use elap_core::{MotorCentral, Configuracion};
 
-/// Desktop application manager
+/// Gestor de aplicación desktop
 #[derive(Debug)]
 pub struct DesktopRuntime {
     core: MotorCentral,
 }
 
 impl DesktopRuntime {
-    /// Create a new DesktopRuntime
+    /// Crear una nueva instancia de DesktopRuntime
     pub fn new(core: MotorCentral) -> Self {
         Self { core }
     }
 
-    /// Initialize the desktop environment
+    /// Inicializar el entorno desktop
     pub async fn initialize(&self) -> Result<(), Box<dyn std::error::Error>> {
-        tracing::info!("Initializing Desktop Runtime");
+        tracing::info!("Inicializando Desktop Runtime");
         self.core.iniciar().await?;
         Ok(())
     }
 
-    /// Shutdown the desktop environment
+    /// Detener el entorno desktop
     pub async fn shutdown(&self) -> Result<(), Box<dyn std::error::Error>> {
-        tracing::info!("Shutting down Desktop Runtime");
+        tracing::info!("Deteniendo Desktop Runtime");
         self.core.detener().await?;
         Ok(())
     }
