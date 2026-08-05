@@ -1,7 +1,7 @@
 # Estado de Documentación - ELAP
 
 **Fecha**: 2026-08-05  
-**Última actualización**: Después de Libros 01-06 completados (100%)
+**Última actualización**: Después de Fase 6 (Tool Engine) completada
 
 ---
 
@@ -193,9 +193,28 @@ Libro 06: ████████████ 100% (2/2) ✅
 
 ---
 
+## 🚀 Fase 6: Tool Engine (COMPLETADA ✅)
+
+**Estado**: Fase 6 Pasos 1-6 completados
+
+| Paso | Descripción | Estado |
+|------|-------------|--------|
+| 1 | Estructura (Tool trait, registry, metadata) | ✅ |
+| 2 | Herramientas estándar (5 tools) | ✅ |
+| 3 | Sandboxing (RBAC, límites, validación) | ✅ |
+| 4 | Ejecución segura (auditoría, timing) | ✅ |
+| 5 | Tests completos (246 tests totales) | ✅ |
+| 6 | Documentación lista | ✅ |
+
+**Código**: 1,100+ líneas
+**Tests**: 246 (0 fallos)
+**Herramientas**: 5 (File, HTTP, SQL, SSH, System)
+
 ## ⚠️ Lo que falta
 
-1. **Libro 07 en adelante** — Para Fases 6+ (Tool Engine, Model Manager, etc.)
+1. **Documentación Técnica Fase 6** — TOOL_ENGINE.md
+2. **Libro 07** — Introducción a Tool Engine (capítulo 1)
+3. **Fases 7+** — Model Manager, etc.
 
 ---
 
