@@ -8,6 +8,7 @@
 pub mod error;
 pub mod logging;
 pub mod config;
+pub mod configuration;
 pub mod core;
 pub mod scheduler;
 pub mod procesos;
@@ -17,6 +18,7 @@ pub mod plugin;
 pub use core::MotorCentral;
 pub use error::ElapError;
 pub use config::Configuracion;
+pub use configuration::{ConfiguracionAvanzada, CargadorConfiguracion, ValidadorConfiguracion};
 pub use scheduler::PlanificadorTareas;
 pub use procesos::GestorProcesos;
 pub use logging::inicializar_logging;
