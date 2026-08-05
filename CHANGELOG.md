@@ -1,5 +1,88 @@
 # CHANGELOG — Historial de Cambios ELAP
 
+## [Fase 12] - 2026-08-05
+
+### ✨ Nuevas Funcionalidades
+
+#### Dashboard CLI en Terminal
+
+**Comandos Implementados**:
+- `elap agents list` - Listar todos los agentes (tabla formateada)
+- `elap agents create` - Crear nuevo agente interactivamente
+- `elap agent <id> info` - Info detallada del agente
+- `elap agent <id> watch` - Monitoreo en tiempo real (WebSocket)
+- `elap agent <id> status` - Estado actual con progreso
+- `elap agent <id> execute` - Ejecutar plan (con progress bar)
+- `elap agent <id> delete` - Eliminar agente
+
+**Features**:
+- Tabla formateada con prettytable
+- Colores y emojis (colored)
+- Barras de progreso (indicatif)
+- WebSocket streaming (tokio-tungstenite)
+- HTTP client (reqwest)
+- JWT token support via env/args
+- Server configurable (--server flag)
+
+**Clientes**:
+- `HttpClient`: REST API calls
+- `WsClient`: WebSocket monitoreo en vivo
+
+### 📚 Documentación
+
+- `docs/06-CLI/DASHBOARD_CLI.md`: Guía completa
+  - Todos los comandos
+  - Ejemplos de flujo
+  - Configuración (env vars, args)
+  - Paleta de colores y emojis
+
+### 🏗️ Cambios Arquitectónicos
+
+**Estructura**:
+```
+crates/elap-cli/src/
+├── main.rs                    # Punto de entrada
+├── commands/
+│   ├── mod.rs
+│   ├── agents.rs             # Listar, crear
+│   └── agent.rs              # Info, watch, execute, status, delete
+└── client/
+    ├── mod.rs
+    ├── http_client.rs        # REST calls
+    └── ws_client.rs          # WebSocket
+```
+
+**Dependencias nuevas**:
+- reqwest 0.11 (HTTP)
+- tokio-tungstenite 0.21 (WebSocket)
+- colored 2.1 (terminal colors)
+- indicatif 0.17 (progress bars)
+- prettytable-rs 0.10 (tables)
+- futures (stream handling)
+
+### 📊 Métricas Fase 12
+
+| Métrica | Valor |
+|---------|-------|
+| Comandos | 7 |
+| Clientes | 2 (HTTP + WebSocket) |
+| Líneas de código | ~400 |
+| Dependencias nuevas | 6 |
+| Compilación | OK ✅ |
+
+### 🎯 UX Features
+
+- 🔵 Cyan: IDs y datos técnicos
+- 🟢 Green: Éxito y confirmaciones
+- 🔴 Red: Errores
+- 🟡 Yellow: Estados y alertas
+- Emojis descriptivos (📋, 🚀, 👁️, ⚡, etc)
+- Tablas formateadas
+- Barras de progreso
+- WebSocket en vivo con eventos tipados
+
+---
+
 ## [Fase 11] - 2026-08-05
 
 ### ✨ Nuevas Funcionalidades
