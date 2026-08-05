@@ -4,6 +4,63 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [0.5.0-alpha] - 2026-08-05
+
+### Fase 3 - Plugin Runtime (Pasos 1-6 Completados)
+
+#### Agregado
+
+**Paso 1: Estructura Plugin**
+- Módulo `plugin` en elap-core
+- `plugin/plugin_trait.rs`: Trait Plugin con 6 métodos obligatorios
+- `plugin/metadata.rs`: PluginMetadata con serialización
+- `plugin/loader.rs`: PluginLoader básico con validación
+- 3 tests iniciales
+
+**Paso 2: Plugin Loader (Carga Dinámica)**
+- Agregado `libloading = 0.8` al workspace
+- Métodos adicionales en loader:
+  - `descubrir()` — Buscar plugins en directorio
+  - `cargar_por_nombre()` — Cargar por nombre
+  - `calcular_hash()` — SHA256 para verificación
+- 6 tests totales (3 nuevos)
+
+**Paso 3: Plugin Registry**
+- Creado `plugin/registry.rs`
+- RegistroPlugins thread-safe con Arc<Mutex<HashMap>>
+- Métodos: registrar, desregistrar, obtener, listar, contar, existe
+- Búsqueda por autor y permiso
+- 13 tests totales (10 nuevos)
+
+**Paso 4: Plugin Sandboxing**
+- Creado `plugin/sandbox.rs`
+- ConfiguracionSandbox (restrictiva, defecto, permisiva)
+- PoliticaEjecucion (firma, permisos, auditoría)
+- Métodos de validación de acceso (red, archivos, procesos)
+- 12 tests nuevos
+
+**Paso 5: Tests Completos**
+- 7 tests nuevos para casos edge
+- Registry: búsqueda por autor, permiso, sin resultados
+- Loader: validaciones de metadata, cálculo de hash
+- Agregado tempfile como dev-dependency
+
+**Paso 6: Documentación**
+- `docs/03-Modules/PLUGIN.md`: Documentación técnica completa
+- Capítulo 1 del Libro 04: Introducción a Plugin Runtime
+- Estructura, componentes, flujo de uso, seguridad
+
+#### Resumen
+
+- **Módulos**: 1 nuevo (plugin) con 5 subcomponentes
+- **Tests**: 35 tests en módulo plugin (110 totales en elap-core)
+- **Compilación**: Exitosa en todos los puntos
+- **Documentación**: Técnica + didáctica completa
+- **Líneas de código**: 800+ nuevas líneas en plugin system
+- **Funcionalidad**: Estructura completa para sistema de plugins seguro
+
+---
+
 ## [0.4.0-alpha] - 2026-08-05
 
 ### Fase 2 - Desktop Runtime (Pasos 1-5 Completados)

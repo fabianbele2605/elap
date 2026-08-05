@@ -12,6 +12,7 @@ pub mod core;
 pub mod scheduler;
 pub mod procesos;
 pub mod security;
+pub mod plugin;
 
 pub use core::MotorCentral;
 pub use error::ElapError;
@@ -20,3 +21,4 @@ pub use scheduler::PlanificadorTareas;
 pub use procesos::GestorProcesos;
 pub use logging::inicializar_logging;
 pub use security::{Rol, Permiso, GestorRbac, RegistroAuditoria, AuditorRbac};
+pub use plugin::{Plugin, PluginMetadata, PluginLoader, RegistroPlugins, PluginSandbox, ConfiguracionSandbox, PoliticaEjecucion};

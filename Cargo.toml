@@ -49,10 +49,12 @@ hex = { version = "0.4" }
 
 # Testing
 criterion = { version = "0.5" }
+tempfile = { version = "3.8" }
 
 # Utilities
 uuid = { version = "1.6", features = ["v4", "serde"] }
 chrono = { version = "0.4", features = ["serde"] }
+libloading = { version = "0.8" }
 
 
 [profile.release]
