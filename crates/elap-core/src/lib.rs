@@ -9,8 +9,10 @@ pub mod error;
 pub mod config;
 pub mod core;
 pub mod scheduler;
+pub mod procesos;
 
 pub use core::MotorCentral;
 pub use error::ElapError;
 pub use config::Config;
 pub use scheduler::PlanificadorTareas;
+pub use procesos::GestorProcesos;
