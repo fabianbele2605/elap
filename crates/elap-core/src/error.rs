@@ -33,6 +33,12 @@ impl From<std::io::Error> for ElapError {
     }
 }
 
+impl From<sqlx::Error> for ElapError {
+    fn from(err: sqlx::Error) -> Self {
+        ElapError::Otro(format!("Error de BD: {}", err))
+    }
+}
+
 pub type ResultadoElap<T> = Result<T, ElapError>;
 
 #[cfg(test)]

@@ -30,6 +30,10 @@ futures = { version = "0.3" }
 jsonwebtoken = { version = "9.2" }
 base64 = { version = "0.21" }
 
+# Database
+sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "sqlite", "postgres", "migrate"] }
+directories = { version = "5.0" }
+
 # gRPC
 tonic = { version = "0.10" }
 tonic-build = { version = "0.10" }

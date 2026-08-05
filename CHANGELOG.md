@@ -1,5 +1,102 @@
 # CHANGELOG — Historial de Cambios ELAP
 
+## [Fase 11] - 2026-08-05
+
+### ✨ Nuevas Funcionalidades
+
+#### Persistencia en BD — SQLite + PostgreSQL
+
+**SQLite Embebido (Default)**:
+- Auto-detecta ubicación (`~/.elap/elap.db`)
+- Auto-crea tablas en startup
+- Sin dependencias externas
+- Connection pooling (5 conexiones)
+- Ideal para desktop/single-user
+
+**PostgreSQL (Opcional)**:
+- Via env var `DATABASE_URL`
+- Soporte multi-usuario
+- Escalable para producción
+- Replicación posible
+
+**Tablas**:
+- `agentes`: Metadatos del agente
+- `execuciones`: Historial de ejecuciones
+- `acciones`: Acciones registradas por agente
+
+**API Repository Pattern**:
+- `RepositorioAgente::guardar()` - Crear/actualizar
+- `RepositorioAgente::obtener()` - Leer por ID
+- `RepositorioAgente::listar()` - Listar todos
+- `RepositorioAgente::eliminar()` - Borrar
+- `RepositorioAgente::registrar_ejecucion()` - Historial
+- `RepositorioAgente::obtener_ejecuciones()` - Recuperar historial
+- `RepositorioAgente::registrar_accion()` - Log de acciones
+- `RepositorioAgente::obtener_acciones()` - Recuperar acciones
+- `RepositorioAgente::contar()` - Total de agentes
+
+### 📚 Documentación
+
+- `docs/05-Persistence/PERSISTENCE.md`: Guía completa
+  - SQLite default vs PostgreSQL
+  - API Repository
+  - Ejemplos prácticos
+  - Mejores prácticas
+  - Migración SQLite↔PostgreSQL
+
+### 🧪 Tests
+
+- 4 tests nuevos (directorio, conexión, repositorio, schema)
+- 336 tests totales en elap-core (0 fallos)
+- Tests con SQLite en-memory (reproducibles, sin contaminar sistema)
+
+### 🏗️ Cambios Arquitectónicos
+
+**Nuevos módulos**:
+- `db/mod.rs`: Orquestación
+- `db/connection.rs`: Pool SQLite, auto-init
+- `db/schema.rs`: AgenteBD, EjecucionBD, AccionBD
+- `db/agent_repo.rs`: CRUD operations
+
+**Dependencias**:
+- sqlx 0.7 (sqlite, postgres, migrate)
+- directories 5.0 (paths multiplataforma)
+
+**Error handling**:
+- Agregar From<sqlx::Error> → ElapError
+
+### 📊 Métricas Fase 11
+
+| Métrica | Valor |
+|---------|-------|
+| Tests nuevos | 4 |
+| Tests totales | 336 |
+| Tablas BD | 3 |
+| Métodos Repository | 8 |
+| Plataformas soportadas | 3 (Linux, macOS, Windows) |
+| Ubicación DB | ~/.elap/elap.db |
+
+### 🔗 Arquitectura Persistencia
+
+```
+[App]
+  ↓
+obtener_db() [auto-init]
+  ├─ Detecta SQLite default
+  ├─ O lee DATABASE_URL para PostgreSQL
+  ├─ Crea tablas si no existen
+  └─ Retorna pool (5 conexiones)
+  ↓
+RepositorioAgente [Repository Pattern]
+  ├─ guardar()
+  ├─ obtener()
+  ├─ listar()
+  ├─ registrar_ejecucion()
+  └─ obtener_acciones()
+```
+
+---
+
 ## [Fase 10] - 2026-08-05
 
 ### ✨ Nuevas Funcionalidades

@@ -19,6 +19,7 @@ pub mod tools;
 pub mod models;
 pub mod agents;
 pub mod api;
+pub mod db;
 
 pub use core::MotorCentral;
 pub use error::ElapError;
@@ -48,4 +49,7 @@ pub use agents::{
 pub use api::{
     AppState, crear_router, AgentEvent,
     Claims, ManagerJWT, RolAPI, Accion, ValidadorRBAC,
+};
+pub use db::{
+    Database, obtener_db, RepositorioAgente,
 };
