@@ -4,6 +4,76 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [0.3.0-alpha] - 2026-08-05
+
+### Fase 1 - Pasos 3-6: Core Runtime (Completo)
+
+#### Agregado
+
+**Paso 3: Gestor de Configuración**
+- Módulo `config` completo con `configuracion.rs`
+  - Struct Configuracion con modo, versión, puerto, logging
+  - Serialización YAML con serde_yaml
+  - Validación de parámetros críticos
+  - 8 tests de configuración
+- Documentación técnica: `docs/03-Modules/CONFIGURACION.md`
+- Capítulo 4 del Libro 02
+
+**Paso 4: Manejo de Errores**
+- Módulo `error` con tipos personalizados
+  - Enum ElapError (Config, Io, Validacion, Proceso, Otro)
+  - Alias ResultadoElap<T> para Result<T, ElapError>
+  - Implementación Display y Error traits
+  - 2 tests de error handling
+- Documentación técnica: `docs/03-Modules/ERROR_HANDLING.md`
+- Capítulo 5 del Libro 02
+
+**Paso 5: Gestor de Seguridad (RBAC)**
+- Módulo `security` completo con:
+  - `rol.rs`: Enum Rol (Admin, Usuario, Invitado, Agente)
+  - `permisos.rs`: Enum Permiso (5 permisos del sistema)
+  - `rbac.rs`: GestorRbac con validación de permisos
+  - `auditor.rs`: RegistroAuditoria + AuditorRbac (26 tests)
+- Integración en MotorCentral con getters .rbac() y .auditor()
+- Documentación técnica: `docs/03-Modules/SEGURIDAD.md`
+- Capítulo 6 del Libro 02
+
+**Paso 6: Integración Final**
+- Test E2E de flujo completo (RBAC + Auditoría)
+- MotorCentral actualizado con 4 tests de integración
+- Total: 75 tests pasando en elap-core
+
+#### Modificado
+
+- `crates/elap-core/src/lib.rs`: Agregados módulos config, error, security
+- `crates/elap-core/src/core.rs`: Integración de RBAC y Auditoría
+- `notebook/Libro-02-Core-Runtime/README.md`: 6/9 capítulos completados
+
+#### Seguridad
+
+- RBAC con tablas de permisos por rol (administrador, usuario, invitado, agente)
+- Auditoría con timestamp de cada acción (exitosa o denegada)
+- Validación explícita de permisos antes de operaciones sensibles
+- Sin panics: todo devuelve Result con error handling
+- Thread-safe con Mutex para AuditorRbac
+
+#### Documentación
+
+- 3 módulos documentados técnicamente (CONFIG, ERROR, SECURITY)
+- 3 capítulos didácticos para NotebookLM (Caps 4, 5, 6)
+- Analogías pedagógicas explicadas paso a paso
+- Casos de uso realistas en todos los capítulos
+
+#### Tests
+
+- **Configuración**: 8 tests (tipos, validación, default)
+- **Errores**: 2 tests (Display, From<std::io::Error>)
+- **RBAC**: 26 tests (roles, permisos, auditoría)
+- **Integración**: 4 tests (creación, ciclo vida, getters, E2E)
+- **Total Core**: 75 tests pasando ✅
+
+---
+
 ## [0.2.0-alpha] - 2026-08-04
 
 ### Fase 1 - Paso 2: Gestor de Procesos

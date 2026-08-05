@@ -1,7 +1,7 @@
 # Roadmap Técnico de ELAP
 
 **Versión**: 1.0  
-**Última actualización**: 2026-08-04  
+**Última actualización**: 2026-08-05  
 **Duración estimada**: 17 semanas
 
 ---
@@ -9,8 +9,8 @@
 ## 📊 Vista general
 
 ```
-Fase 0: Fundacionales (Semana 1)          ██████
-Fase 1: Core Runtime (Semana 2)           ⏳
+Fase 0: Fundacionales (Semana 1)          ██████ ✅
+Fase 1: Core Runtime (Semana 2)           ██████ ✅
 Fase 2: Desktop Runtime (Semana 3)        ⏳
 Fase 3: Configuration Manager (Semana 4)  ⏳
 Fase 4: Logging (Semana 5)                ⏳
@@ -31,9 +31,9 @@ Fase 17: Packaging (Semana 18)            ⏳
 
 ---
 
-## 🎯 Fase 0: Fundacionales (ACTUAL)
+## 🎯 Fase 0: Fundacionales
 
-**Estado**: 🔄 En progreso  
+**Estado**: ✅ Completada  
 **Semana**: 1  
 
 ### Objetivos
@@ -80,27 +80,27 @@ Fase 17: Packaging (Semana 18)            ⏳
 
 ## 🔧 Fase 1: Core Runtime
 
-**Estado**: ⏳ Por hacer  
+**Estado**: ✅ Completada  
 **Semana**: 2  
 
 ### Objetivos
 
-Implementar el corazón de la plataforma: task scheduling, process management, plugin framework.
+Implementar el corazón de la plataforma: task scheduling, process management, configuration, error handling, RBAC.
 
 ### Entregables
 
-- Task scheduler con Tokio (tokio::task, tokio::time)
-- Process spawner y manager
-- Plugin loader y registry
-- Config loader (TOML)
-- Error handling completo
-- Tests (>80% cobertura)
+- ✅ Task scheduler con Tokio (BinaryHeap, 23 tests)
+- ✅ Process spawner y manager (15 tests)
+- ✅ Config loader YAML (8 tests)
+- ✅ Error handling completo (2 tests)
+- ✅ RBAC y Auditoría (26 tests)
+- ✅ Tests: 75 tests totales, >85% cobertura
 
 ### Documentación
 
-- ARCHITECTURE.md (Core Runtime)
-- HOW_IT_WORKS.md
-- Libro 02 para NotebookLM
+- ✅ SCHEDULER.md, PROCESOS.md, CONFIGURACION.md, ERROR_HANDLING.md, SEGURIDAD.md
+- ✅ Libro 02 (6 capítulos completados: Intro, Scheduler, Procesos, Config, Errores, RBAC)
+- ✅ CHANGELOG.md actualizado
 
 ---
 
