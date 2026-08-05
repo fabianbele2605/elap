@@ -41,5 +41,6 @@ pub use models::{
 };
 pub use agents::{
     Agent, EstadoAgente, ContextoAgente, Plan, Paso,
-    EjecutorAgente, AgentError,
+    EjecutorAgente, AgentError, AgentIntegrado,
+    SistemaMemoria, MemoriaCortoTermino, MemoriaLargoTermino,
 };
