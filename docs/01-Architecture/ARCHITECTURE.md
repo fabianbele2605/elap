@@ -1,52 +1,52 @@
-# ELAP System Architecture
+# Arquitectura del Sistema ELAP
 
 **Fase**: 0 (Fundacional)  
-**Estado**: 🔄 In Progress  
-**Version**: 1.0-alpha
+**Estado**: 🔄 En progreso  
+**Versión**: 1.0-alpha
 
 ---
 
-## 1. Architecture Overview
+## 1. Descripción general de la arquitectura
 
-ELAP (Enterprise Local AI Platform) is organized around **independent runtimes**, not agents. Each runtime is a specialized component managing a specific concern.
+ELAP está organizada alrededor de **runtimes independientes**, no de agentes. Cada runtime es un componente especializado que gestiona una responsabilidad específica.
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│   Enterprise Local AI Platform (ELAP)               │
+│   Plataforma Enterprise Local de IA (ELAP)          │
 ├─────────────────────────────────────────────────────┤
 │                                                     │
 │  ┌─────────────────────────────────────────────┐   │
-│  │   Desktop Runtime (Tauri + TypeScript)      │   │
-│  │   - Window management                       │   │
-│  │   - User interface                          │   │
-│  │   - Communication with Core                 │   │
+│  │   Motor de Escritorio (Tauri + TypeScript)  │   │
+│  │   - Gestión de ventanas                     │   │
+│  │   - Interfaz de usuario                     │   │
+│  │   - Comunicación con Motor Central          │   │
 │  └─────────────────────────────────────────────┘   │
 │                      ↓↑                             │
 │  ┌─────────────────────────────────────────────┐   │
-│  │   Rust Core Runtime (Tokio)                 │   │
-│  │   - Task scheduling                         │   │
-│  │   - Process management                      │   │
-│  │   - Security (RBAC)                         │   │
-│  │   - Plugin engine                           │   │
-│  │   - gRPC gateway                            │   │
-│  │   - Configuration management                │   │
-│  │   - Logging/Audit                           │   │
+│  │   Motor Central Rust (Tokio)                │   │
+│  │   - Planificación de tareas                 │   │
+│  │   - Gestión de procesos                     │   │
+│  │   - Seguridad (RBAC)                        │   │
+│  │   - Motor de plugins                        │   │
+│  │   - Puerta de enlace gRPC                   │   │
+│  │   - Gestión de configuración                │   │
+│  │   - Logging/Auditoría                       │   │
 │  └─────────────────────────────────────────────┘   │
 │                      ↕ gRPC                        │
 │  ┌─────────────────────────────────────────────┐   │
-│  │   Python AI Runtime (LangGraph)             │   │
-│  │   - Agent execution                         │   │
-│  │   - LLM inference (Ollama)                  │   │
-│  │   - Memory management (RAG)                 │   │
-│  │   - Tool execution                          │   │
+│  │   Motor de IA Python (LangGraph)            │   │
+│  │   - Ejecución de agentes                    │   │
+│  │   - Inferencia de LLM (Ollama)              │   │
+│  │   - Gestión de memoria (RAG)                │   │
+│  │   - Ejecución de herramientas               │   │
 │  └─────────────────────────────────────────────┘   │
 │                      ↓                              │
 │  ┌─────────────────────────────────────────────┐   │
-│  │   External Systems                          │   │
-│  │   - Ollama/llama.cpp (models)               │   │
-│  │   - Qdrant/ChromaDB (vector store)          │   │
-│  │   - PostgreSQL/SQLite (database)            │   │
-│  │   - File system                             │   │
+│  │   Sistemas externos                         │   │
+│  │   - Ollama/llama.cpp (modelos)              │   │
+│  │   - Qdrant/ChromaDB (almacén vectorial)     │   │
+│  │   - PostgreSQL/SQLite (base de datos)       │   │
+│  │   - Sistema de archivos                     │   │
 │  └─────────────────────────────────────────────┘   │
 │                                                     │
 └─────────────────────────────────────────────────────┘
@@ -54,300 +54,300 @@ ELAP (Enterprise Local AI Platform) is organized around **independent runtimes**
 
 ---
 
-## 2. Core Principles
+## 2. Principios fundamentales
 
-### 2.1 Rust = Platform. Python = AI.
+### 2.1 Rust = Plataforma. Python = IA.
 
-| Responsibility | Language | Why |
+| Responsabilidad | Lenguaje | Por qué |
 |---|---|---|
-| Application lifecycle | Rust | Performance, memory safety, system access |
-| Concurrency/scheduling | Rust | Tokio > asyncio for throughput |
-| Security/RBAC | Rust | Memory-safe, lower attack surface |
-| Process management | Rust | Direct OS access |
-| Plugin engine | Rust | Safe sandboxing |
-| **LLM inference** | **Python** | Transformers, llama.cpp ecosystem |
-| **RAG/embeddings** | **Python** | LangChain, vector DB clients |
-| **Agent orchestration** | **Python** | LangGraph, async agents |
-| **Tool execution** | **Both** | Rust validates, Python executes |
+| Ciclo de vida de la aplicación | Rust | Rendimiento, seguridad de memoria, acceso al SO |
+| Concurrencia/planificación | Rust | Tokio > asyncio en rendimiento |
+| Seguridad/RBAC | Rust | Memoria segura, menor superficie de ataque |
+| Gestión de procesos | Rust | Acceso directo al SO |
+| Motor de plugins | Rust | Aislamiento y sandboxing seguro |
+| **Inferencia de LLM** | **Python** | Ecosistema de Transformers, llama.cpp |
+| **RAG/embeddings** | **Python** | LangChain, clientes de base de datos vectorial |
+| **Orquestación de agentes** | **Python** | LangGraph, agentes async |
+| **Ejecución de herramientas** | **Ambos** | Rust valida, Python ejecuta |
 
-### 2.2 Processes, not monolith
+### 2.2 Procesos, no monolito
 
-- **Core Runtime** (Rust) runs as main process
-- **AI Runtime** (Python) runs as separate process
-- Communication via **gRPC over Unix domain socket** (TLS-secured)
-- Benefits:
-  - If Python crashes, Core keeps running
-  - Independent versioning and updates
-  - Can restart Python without restarting Core
-  - Typed API contracts (Protocol Buffers)
+- **Motor Central** (Rust) se ejecuta como proceso principal
+- **Motor de IA** (Python) se ejecuta como proceso separado
+- Comunicación vía **gRPC sobre socket de dominio Unix** (TLS-asegurado)
+- Beneficios:
+  - Si Python falla, el Motor Central sigue funcionando
+  - Versionado independiente
+  - Puede reiniciar Python sin reiniciar el Motor Central
+  - API tipada con contratos (Protocol Buffers)
 
-### 2.3 Local-first, offline-capable
+### 2.3 Local-first, capaz de funcionar offline
 
-- No data leaves the enterprise perimeter
-- All telemetry stays local
-- Models run on local infrastructure
-- Optional: online features (updates check, cloud integrations) disabled by default
+- Sin datos que salgan del perímetro empresarial
+- Toda la telemetría permanece local
+- Los modelos se ejecutan en infraestructura local
+- Opcional: características en línea (chequeo de actualizaciones, integraciones en la nube) deshabilitadas por defecto
 
 ---
 
-## 3. Component Architecture
+## 3. Arquitectura de componentes
 
-### 3.1 Rust Core (Main Process)
+### 3.1 Motor Central Rust (Proceso principal)
 
-**Purpose**: Orchestration, security, lifecycle management.
+**Propósito**: Orquestación, seguridad, gestión del ciclo de vida.
 
 ```
 elap-core/
-├── Engine (lifecycle)
-├── TaskScheduler (Tokio-based)
-├── ProcessManager (spawn/manage subprocesses)
-├── PluginEngine (load, sandbox, manage plugins)
-├── RbacManager (permissions validation)
-├── ConfigManager (load, hot-reload TOML)
-├── Logger (structured, local-only)
-├── UpdateManager (signed binary updates)
-├── BackupManager (config + memory recovery)
-├── IpcGateway (gRPC server)
-└── SecurityManager (encryption, secrets)
+├── Motor (ciclo de vida)
+├── Planificador de Tareas (basado en Tokio)
+├── Gestor de Procesos (spawn/gestionar subprocesos)
+├── Motor de Plugins (cargar, aislar, gestionar plugins)
+├── Gestor RBAC (validación de permisos)
+├── Gestor de Configuración (cargar, recargar en caliente TOML)
+├── Logger (estructurado, solo local)
+├── Gestor de Actualizaciones (binarios firmados)
+├── Gestor de Respaldos (recuperación de configuración + memoria)
+├── Puerta de Enlace IPC (servidor gRPC)
+└── Gestor de Seguridad (cifrado, secretos)
 ```
 
-**Key responsibilities**:
-1. Start/stop lifecycle
-2. Validate all permissions before delegating to Python
-3. Route requests to correct AI agent
-4. Manage plugins securely
-5. Audit all mutations (writes, API calls)
-6. Handle update/recovery
-7. Manage hardware resources (detect GPU, CPU allocation)
+**Responsabilidades clave**:
+1. Iniciar/detener ciclo de vida
+2. Validar todos los permisos antes de delegar a Python
+3. Enrutar solicitudes al agente correcto de IA
+4. Gestionar plugins de forma segura
+5. Auditar todas las mutaciones (escrituras, llamadas a API)
+6. Manejar actualización/recuperación
+7. Gestionar recursos de hardware (detectar GPU, asignación de CPU)
 
-### 3.2 Desktop Shell (Tauri)
+### 3.2 Shell de Escritorio (Tauri)
 
-**Purpose**: User interface, window management, native OS integration.
+**Propósito**: Interfaz de usuario, gestión de ventanas, integración con el SO.
 
 ```
 elap-desktop/
-├── WindowManager (Tauri)
-├── IpcClient (communicates with Core)
-├── StateManagement (React/Vue state)
-├── ChatInterface (agent conversation)
-├── Dashboard (status, monitoring)
-├── ConfigUI (settings management)
-└── ResourceMonitor (CPU/GPU/RAM)
+├── Gestor de Ventanas (Tauri)
+├── Cliente IPC (se comunica con Motor Central)
+├── Gestión de Estado (estado de React/Vue)
+├── Interfaz de Chat (conversación con agentes)
+├── Dashboard (estado, monitoreo)
+├── IU de Configuración (gestión de configuración)
+└── Monitoreo de Recursos (CPU/GPU/RAM)
 ```
 
-**Key responsibilities**:
-1. Display agent responses in real-time (streaming)
-2. Collect user input
-3. Show system health
-4. Manage configuration UI
-5. Handle authentication UI
-6. Show audit logs
+**Responsabilidades clave**:
+1. Mostrar respuestas del agente en tiempo real (streaming)
+2. Recopilar entrada del usuario
+3. Mostrar salud del sistema
+4. Gestionar interfaz de configuración
+5. Manejar interfaz de autenticación
+6. Mostrar logs de auditoría
 
 ### 3.3 CLI (elap-cli)
 
-**Purpose**: Command-line tools for administration and development.
+**Propósito**: Herramientas de línea de comandos para administración y desarrollo.
 
 ```
 elap-cli/
-├── start (launch core + python runtimes)
-├── stop (graceful shutdown)
-├── status (health check)
-├── config (view/edit configuration)
-├── agent (manage agents)
-├── model (manage models)
-├── backup (manage backups)
-├── restore (restore from backup)
-└── logs (view audit logs)
+├── start (lanzar runtimes de core + python)
+├── stop (detención elegante)
+├── status (chequeo de salud)
+├── config (ver/editar configuración)
+├── agent (gestionar agentes)
+├── model (gestionar modelos)
+├── backup (gestionar respaldos)
+├── restore (restaurar desde respaldo)
+└── logs (ver logs de auditoría)
 ```
 
-### 3.4 Python AI Runtime (Separate Process)
+### 3.4 Motor de IA Python (Proceso separado)
 
-**Purpose**: AI inference, agents, memory management.
+**Propósito**: Inferencia de IA, agentes, gestión de memoria.
 
 ```
 elap_ai/
-├── AgentRuntime (LangGraph-based)
-│   ├── AgentManager (create/manage agents)
-│   ├── AgentExecutor (run agent logic)
-│   └── Handoff (delegation between agents)
-├── ModelRuntime (Ollama/llama.cpp interface)
-│   ├── ModelLoader (download/load)
-│   ├── ModelSelector (choose by task/agent)
-│   └── Inference (generate tokens)
-├── MemoryManager (short + long-term)
-│   ├── ShortTermMemory (conversation history)
-│   ├── LongTermMemory (vector DB)
-│   └── RAG (retrieval-augmented generation)
-├── ToolExecutor (secure tool invocation)
-│   ├── ToolRegistry (available tools)
-│   ├── ToolValidator (check permissions)
-│   └── ToolRunner (execute safely)
-└── GrpcServer (communicate with Core)
+├── Motor de Agentes (basado en LangGraph)
+│   ├── Gestor de Agentes (crear/gestionar agentes)
+│   ├── Ejecutor de Agentes (ejecutar lógica del agente)
+│   └── Delegación (delegación entre agentes)
+├── Motor de Modelos (interfaz Ollama/llama.cpp)
+│   ├── Cargador de Modelos (descargar/cargar)
+│   ├── Selector de Modelos (elegir por tarea/agente)
+│   └── Inferencia (generar tokens)
+├── Gestor de Memoria (corta + larga plazo)
+│   ├── Memoria Corta Plazo (historial de conversación)
+│   ├── Memoria Larga Plazo (base de datos vectorial)
+│   └── RAG (generación aumentada por recuperación)
+├── Ejecutor de Herramientas (invocación segura de herramientas)
+│   ├── Registro de Herramientas (herramientas disponibles)
+│   ├── Validador de Herramientas (chequeo de permisos)
+│   └── Ejecutor de Herramientas (ejecutar de forma segura)
+└── Servidor gRPC (comunicar con Motor Central)
 ```
 
-**Key responsibilities**:
-1. Execute agents (LangGraph)
-2. Manage conversation memory
-3. Retrieve relevant context (RAG)
-4. Generate responses (LLM inference)
-5. Execute allowed tools
-6. Stream responses back to Core
+**Responsabilidades clave**:
+1. Ejecutar agentes (LangGraph)
+2. Gestionar memoria de conversación
+3. Recuperar contexto relevante (RAG)
+4. Generar respuestas (inferencia de LLM)
+5. Ejecutar herramientas permitidas
+6. Transmitir respuestas de vuelta al Motor Central
 
 ---
 
-## 4. Communication Patterns
+## 4. Patrones de comunicación
 
-### 4.1 Desktop ↔ Core (gRPC or REST)
+### 4.1 Escritorio ↔ Motor Central (gRPC o REST)
 
-**Desktop** sends user requests → **Core** validates → routes to **Python**
+**Escritorio** envía solicitudes del usuario → **Motor Central** valida → enruta a **Python**
 
 ```
 ┌─────────┐
-│ Desktop │
-│ (UI)    │
+│ Escritorio│
+│ (IU)    │
 └────┬────┘
-     │ gRPC or HTTP
+     │ gRPC o HTTP
      ↓
 ┌─────────────────┐
-│ Rust Core       │
-│ (Orchestrator)  │
+│ Motor Central   │
+│ (Orquestador)   │
 └────┬────────────┘
-     │ Validates RBAC
-     │ Audit log
+     │ Valida RBAC
+     │ Log de auditoría
      ↓
 ```
 
-### 4.2 Core ↔ Python AI Runtime (gRPC)
+### 4.2 Motor Central ↔ Motor de IA Python (gRPC)
 
-**Core** asks Python runtime to process query → **Python** streams response
+**Motor Central** pide a Motor de IA Python procesar consulta → **Python** transmite respuesta
 
 ```
 ┌──────────────┐
-│ Rust Core    │
+│ Motor Central│
 └──────┬───────┘
-       │ gRPC request
+       │ solicitud gRPC
        │ (user_id, agent_id, query)
        ↓
 ┌──────────────┐
-│ Python AI    │
-│ Runtime      │ → Search memory (Qdrant)
-└──────┬───────┘   → Call LLM (Ollama)
-       │            → Execute tools
-       │ gRPC response
-       │ (streaming tokens)
+│ Motor de IA  │
+│ Python       │ → Buscar memoria (Qdrant)
+└──────┬───────┘   → Llamar LLM (Ollama)
+       │            → Ejecutar herramientas
+       │ respuesta gRPC
+       │ (transmisión de tokens)
        ↓
 ┌──────────────┐
-│ Rust Core    │
-│ (logs audit) │
+│ Motor Central│
+│ (log auditoría)│
 └──────────────┘
 ```
 
-### 4.3 IPC Details (Future detail in Phase 1)
+### 4.3 Detalles de IPC (Detalle futuro en Fase 1)
 
-- **Protocol**: gRPC with Protocol Buffers
-- **Transport**: Unix domain socket (Linux) / named pipe (Windows)
-- **Security**: TLS 1.3 + mutual authentication
-- **Buffer**: Async streaming with backpressure
-- **Latency target**: <5ms per request
-
----
-
-## 5. Data Persistence
-
-### 5.1 SQLite (Development/Small instances)
-
-- Single file: `elap.db`
-- Schema: users, agents, permissions, audit logs, conversations
-- Limitations: <10 concurrent users
-
-### 5.2 PostgreSQL (Enterprise)
-
-- Schema: same as SQLite (portable)
-- Supports: 50+ concurrent users, replication
-- Requirements: managed by customer or BBLABS
-
-### 5.3 Vector Database (AI Memory)
-
-**Development**: ChromaDB (embedded)  
-**Production**: Qdrant (standalone)
-
-- Stores: document embeddings, conversation snippets
-- Purpose: RAG (retrieve context for prompts)
-- Volume: ~GB to ~TB depending on documents
+- **Protocolo**: gRPC con Protocol Buffers
+- **Transporte**: socket de dominio Unix (Linux) / named pipe (Windows)
+- **Seguridad**: TLS 1.3 + autenticación mutua
+- **Buffer**: streaming async con contraPresión
+- **Objetivo de latencia**: <5ms por solicitud
 
 ---
 
-## 6. Security Model (Phase 0 overview)
+## 5. Persistencia de datos
 
-### 6.1 RBAC (Role-Based Access Control)
+### 5.1 SQLite (Desarrollo/Instancias pequeñas)
+
+- Archivo único: `elap.db`
+- Esquema: usuarios, agentes, permisos, logs de auditoría, conversaciones
+- Limitaciones: <10 usuarios concurrentes
+
+### 5.2 PostgreSQL (Empresarial)
+
+- Esquema: idéntico al de SQLite (portátil)
+- Soporta: 50+ usuarios concurrentes, replicación
+- Requisitos: gestionado por cliente o BBLABS
+
+### 5.3 Base de datos vectorial (Memoria de IA)
+
+**Desarrollo**: ChromaDB (embebido)  
+**Producción**: Qdrant (independiente)
+
+- Almacena: incrustaciones de documentos, fragmentos de conversación
+- Propósito: RAG (recuperar contexto para prompts)
+- Volumen: ~GB a ~TB dependiendo de documentos
+
+---
+
+## 6. Modelo de seguridad (descripción general Fase 0)
+
+### 6.1 RBAC (Control de Acceso Basado en Roles)
 
 ```
-User → Role → Permissions
-              ├── Agent access (which agents can use)
-              ├── Tool access (which tools can call)
-              └── Data access (which files/databases)
+Usuario → Rol → Permisos
+              ├── Acceso al agente (qué agentes pueden usar)
+              ├── Acceso a herramientas (qué herramientas pueden llamar)
+              └── Acceso a datos (qué archivos/bases de datos)
 ```
 
-Every operation validated against user's role before execution.
+Cada operación se valida contra el rol del usuario antes de la ejecución.
 
-### 6.2 Encryption
+### 6.2 Cifrado
 
-- **At rest**: AES-256 for sensitive configs/secrets
-- **In transit**: TLS 1.3 for IPC
-- **No default cloud encryption** (local-first means local key)
+- **En reposo**: AES-256 para configuraciones/secretos sensibles
+- **En tránsito**: TLS 1.3 para IPC
+- **Sin cifrado de nube por defecto** (local-first significa clave local)
 
-### 6.3 Audit Logging
+### 6.3 Logging de auditoría
 
-Every operation recorded:
-- User ID
-- Timestamp
-- Action (read/write/execute)
-- Resource
-- Result (success/failure)
+Cada operación registrada:
+- ID de usuario
+- Marca de tiempo
+- Acción (lectura/escritura/ejecución)
+- Recurso
+- Resultado (éxito/fallo)
 
-Stored in SQLite/PostgreSQL, immutable.
-
----
-
-## 7. Extensibility Points
-
-### 7.1 Plugins (Phase 6)
-
-Custom Rust code compiled to .so/.dll, loaded at runtime.  
-Sandboxed using capability model.
-
-Example: Custom PDF processor, enterprise CRM connector.
-
-### 7.2 Tools (Phase 7)
-
-Python functions registered in ToolRegistry.  
-Invoked by agents after RBAC validation.
-
-Example: Send email, query SQL, read/write files.
-
-### 7.3 Agents (Phase 12)
-
-LangGraph-based agents running in Python AI Runtime.  
-Composition: model + tools + memory + prompt.
-
-Example: Sales agent, HR agent, Finance agent.
-
-### 7.4 Models (Phase 8)
-
-Swap LLM without changing architecture.  
-Support: Ollama, llama.cpp, Transformers, HuggingFace.
-
-Example: Switch from Llama-7B to Mistral-8x7B.
+Almacenado en SQLite/PostgreSQL, inmutable.
 
 ---
 
-## 8. Deployment Model
+## 7. Puntos de extensibilidad
 
-### 8.1 Single-machine (PYME)
+### 7.1 Plugins (Fase 6)
+
+Código Rust personalizado compilado a .so/.dll, cargado en tiempo de ejecución.  
+Aislado usando modelo de capacidad.
+
+Ejemplo: procesador PDF personalizado, conector de CRM empresarial.
+
+### 7.2 Herramientas (Fase 7)
+
+Funciones Python registradas en ToolRegistry.  
+Invocadas por agentes después de validación RBAC.
+
+Ejemplo: Enviar correo, consultar SQL, leer/escribir archivos.
+
+### 7.3 Agentes (Fase 12)
+
+Agentes basados en LangGraph ejecutándose en Motor de IA Python.  
+Composición: modelo + herramientas + memoria + prompt.
+
+Ejemplo: Agente de Ventas, agente de RRHH, agente de Finanzas.
+
+### 7.4 Modelos (Fase 8)
+
+Intercambiar LLM sin cambiar arquitectura.  
+Soporte: Ollama, llama.cpp, Transformers, HuggingFace.
+
+Ejemplo: Cambiar de Llama-7B a Mistral-8x7B.
+
+---
+
+## 8. Modelo de despliegue
+
+### 8.1 Máquina única (PYME)
 
 ```
 ┌─────────────────────────────────────┐
-│ Customer Laptop/Server              │
+│ Laptop/Servidor del cliente         │
 ├─────────────────────────────────────┤
 │                                     │
 │ ┌──────────────────────────────┐   │
@@ -360,102 +360,102 @@ Example: Switch from Llama-7B to Mistral-8x7B.
 └─────────────────────────────────────┘
 ```
 
-File-based data, <30GB disk required, 16GB RAM minimum.
+Datos basados en archivo, <30GB disco requerido, 16GB RAM mínimo.
 
-### 8.2 Multi-machine (Enterprise)
+### 8.2 Multi-máquina (Empresarial)
 
 ```
 ┌─────────────────────────────────────┐
-│ Server 1: ELAP Core + Desktop       │
+│ Servidor 1: Motor Central ELAP + Escritorio│
 ├─────────────────────────────────────┤
-│ Server 2: Python AI Runtime         │
+│ Servidor 2: Motor de IA Python      │
 ├─────────────────────────────────────┤
-│ Server 3: PostgreSQL database       │
+│ Servidor 3: Base de datos PostgreSQL│
 ├─────────────────────────────────────┤
-│ Server 4: Qdrant vector DB          │
+│ Servidor 4: Base de datos vectorial Qdrant│
 ├─────────────────────────────────────┤
-│ Server 5: Ollama model cache        │
+│ Servidor 5: Caché de modelo Ollama  │
 └─────────────────────────────────────┘
-  (all behind private network, no internet)
+  (todos detrás de red privada, sin internet)
 ```
 
-Scalable, resilient, multi-node management.
+Escalable, resiliente, gestión de múltiples nodos.
 
 ---
 
-## 9. Comparison with alternatives
+## 9. Comparación con alternativas
 
-### Single-language (Python only)
+### Solo Python
 
-❌ Problems:
-- Poor performance on core operations
-- Memory overhead (GC, runtime)
-- Hard to manage processes safely
-- Difficult to sandbox plugins
+❌ Problemas:
+- Rendimiento pobre en operaciones principales
+- Sobrecarga de memoria (GC, runtime)
+- Difícil gestionar procesos de forma segura
+- Difícil aislar plugins
 
 ### Go + Python
 
-❌ Problems:
-- Three ecosystems (cargo + go mod + pip)
-- Go adds complexity without solving Rust's already-good problems
-- Higher maintenance burden
+❌ Problemas:
+- Tres ecosistemas (cargo + go mod + pip)
+- Go agrega complejidad sin resolver problemas ya buenos en Rust
+- Mayor carga de mantenimiento
 
 ### Node.js (Electron)
 
-❌ Problems:
-- 150MB+ binary vs Tauri ~10MB
-- High RAM consumption
-- Less control over native OS
+❌ Problemas:
+- Binario 150MB+ vs Tauri ~10MB
+- Alto consumo de RAM
+- Menos control sobre el SO nativo
 
 ### C++ + Python
 
-❌ Problems:
-- Memory safety issues in C++
-- Complex build process
-- Slow to develop compared to Rust
+❌ Problemas:
+- Problemas de seguridad de memoria en C++
+- Proceso de compilación complejo
+- Más lento de desarrollar comparado con Rust
 
-**Chosen: Rust + Python** ✅
-- Performance + safety + ecosystem fit
-- Clear language boundary (platform vs AI)
-- Best of both worlds
-
----
-
-## 10. Phase-wise evolution
-
-| Phase | Adds | Changes |
-|-------|------|---------|
-| 0 | Foundations | Structure, base modules |
-| 1 | Core Engine | Task scheduling, processes, plugins |
-| 2 | Desktop | Tauri window, communication |
-| 3-5 | Plumbing | Config, logging, errors |
-| 6-7 | Extensibility | Plugins, tools |
-| 8-10 | AI Core | Models, agents, memory |
-| 11-12 | Orchestration | Workflows, delegation |
-| 13-14 | UX/Deployment | GUI, installer |
-| 15-17 | Polish | Updates, testing, packaging |
+**Elegido: Rust + Python** ✅
+- Rendimiento + seguridad + ajuste del ecosistema
+- Límite claro del lenguaje (plataforma vs IA)
+- Lo mejor de ambos mundos
 
 ---
 
-## 11. Performance targets
+## 10. Evolución por fases
 
-| Operation | Target | Hardware reference |
-|-----------|--------|-------------------|
-| First token latency | <3s | CPU 8-core, 16GB RAM, 7B Q4 model |
-| Concurrent users | 50 | 16-core, 64GB RAM, 1 GPU |
-| Inference throughput | 20 tokens/sec | Same as above |
-| Core startup | <2s | SSD, no GPU wait |
-
----
-
-## 12. Next steps
-
-See:
-- [DECISIONS.md](DECISIONS.md) — Why these choices
-- [/docs/02-Development/SETUP.md](../02-Development/SETUP.md) — How to build locally
-- [/docs/02-Development/CONVENTIONS.md](../02-Development/CONVENTIONS.md) — Code standards
+| Fase | Agrega | Cambios |
+|------|--------|---------|
+| 0 | Fundacionales | Estructura, módulos base |
+| 1 | Motor Central | Planificación de tareas, procesos, plugins |
+| 2 | Escritorio | Ventana Tauri, comunicación |
+| 3-5 | Plomería | Config, logging, errores |
+| 6-7 | Extensibilidad | Plugins, herramientas |
+| 8-10 | Motor de IA | Modelos, agentes, memoria |
+| 11-12 | Orquestación | Flujos, delegación |
+| 13-14 | UX/Despliegue | GUI, instalador |
+| 15-17 | Pulido | Actualizaciones, testing, empaquetado |
 
 ---
 
-**Last updated**: 2026-08-04  
-**Next review**: After Phase 1 completion
+## 11. Objetivos de rendimiento
+
+| Operación | Objetivo | Hardware de referencia |
+|-----------|----------|-------------------|
+| Latencia de primer token | <3s | CPU 8-núcleos, 16GB RAM, modelo 7B Q4 |
+| Usuarios concurrentes | 50 | 16-núcleos, 64GB RAM, 1 GPU |
+| Rendimiento de inferencia | 20 tokens/seg | Igual al anterior |
+| Inicio del Motor | <2s | SSD, sin espera GPU |
+
+---
+
+## 12. Siguientes pasos
+
+Ver:
+- [DECISIONS.md](DECISIONS.md) — Por qué estas opciones
+- [/docs/02-Development/SETUP.md](../02-Development/SETUP.md) — Cómo construir localmente
+- [/docs/02-Development/CONVENTIONS.md](../02-Development/CONVENTIONS.md) — Estándares de código
+
+---
+
+**Última actualización**: 2026-08-04  
+**Próxima revisión**: Después de completar Fase 1

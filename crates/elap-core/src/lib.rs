@@ -7,6 +7,8 @@
 
 pub mod error;
 pub mod config;
+pub mod core;
+pub mod scheduler;
 
 /// Core engine and state management
 pub mod core {
@@ -74,3 +76,6 @@ pub mod core {
 }
 
 pub use core::CoreEngine;
+pub use error::ElapError;
+pub config::Config;
+pub use scheduler::TaskScheduler;

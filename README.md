@@ -1,4 +1,4 @@
-# Enterprise Local AI Platform (ELAP)
+# Plataforma Enterprise Local de IA (ELAP)
 
 **Versión:** 0.1.0  
 **Estado:** Fase 0 — Inicialización  
@@ -22,12 +22,12 @@ ELAP es una plataforma de IA local, 100% offline-first, para empresas que necesi
 
 ```
 elap/
-├── crates/              # Núcleo Rust (Core, Desktop, CLI)
-├── python/              # Runtime de IA (Python)
+├── crates/              # Núcleo Rust (Motor, Escritorio, CLI)
+├── python/              # Motor de IA (Python)
 ├── docs/                # Documentación técnica
 ├── notebook/            # Libros para NotebookLM (material de estudio)
 ├── tooling/             # Scripts, CI/CD, Docker
-└── .github/             # Workflows de GitHub Actions
+└── .github/             # Flujos de trabajo de GitHub Actions
 ```
 
 ---
@@ -91,23 +91,23 @@ cargo run --bin elap-cli help
 | Fase | Nombre | Estado | Inicio estimado |
 |------|--------|--------|-----------------|
 | 0 | Fundacionales | 🔄 En progreso | Semana 1 |
-| 1 | Core Runtime | ⏳ Por hacer | Semana 2 |
-| 2 | Desktop Runtime | ⏳ Por hacer | Semana 3 |
-| 3 | Configuration Manager | ⏳ Por hacer | Semana 4 |
+| 1 | Motor Central | ⏳ Por hacer | Semana 2 |
+| 2 | Motor de Escritorio | ⏳ Por hacer | Semana 3 |
+| 3 | Gestor de Configuración | ⏳ Por hacer | Semana 4 |
 | 4 | Logging | ⏳ Por hacer | Semana 5 |
-| 5 | Error Handling | ⏳ Por hacer | Semana 6 |
-| 6 | Plugin Runtime | ⏳ Por hacer | Semana 7 |
-| 7 | Tool Engine | ⏳ Por hacer | Semana 8 |
-| 8 | Model Manager | ⏳ Por hacer | Semana 9 |
-| 9 | Python AI Runtime | ⏳ Por hacer | Semana 10 |
-| 10 | Memory Manager | ⏳ Por hacer | Semana 11 |
-| 11 | Workflow Engine | ⏳ Por hacer | Semana 12 |
-| 12 | Agent Runtime | ⏳ Por hacer | Semana 13 |
-| 13 | Desktop GUI | ⏳ Por hacer | Semana 14 |
-| 14 | Installer | ⏳ Por hacer | Semana 15 |
-| 15 | Updater | ⏳ Por hacer | Semana 16 |
+| 5 | Manejo de Errores | ⏳ Por hacer | Semana 6 |
+| 6 | Motor de Plugins | ⏳ Por hacer | Semana 7 |
+| 7 | Motor de Herramientas | ⏳ Por hacer | Semana 8 |
+| 8 | Gestor de Modelos | ⏳ Por hacer | Semana 9 |
+| 9 | Motor de IA Python | ⏳ Por hacer | Semana 10 |
+| 10 | Gestor de Memoria | ⏳ Por hacer | Semana 11 |
+| 11 | Motor de Flujos | ⏳ Por hacer | Semana 12 |
+| 12 | Motor de Agentes | ⏳ Por hacer | Semana 13 |
+| 13 | Interfaz Gráfica | ⏳ Por hacer | Semana 14 |
+| 14 | Instalador | ⏳ Por hacer | Semana 15 |
+| 15 | Actualizador | ⏳ Por hacer | Semana 16 |
 | 16 | Testing | ⏳ Por hacer | Semana 17 |
-| 17 | Packaging | ⏳ Por hacer | Semana 18 |
+| 17 | Empaquetado | ⏳ Por hacer | Semana 18 |
 
 Ver [ROADMAP.md](docs/00-Project/ROADMAP.md) para detalles.
 
@@ -117,19 +117,19 @@ Ver [ROADMAP.md](docs/00-Project/ROADMAP.md) para detalles.
 
 | Componente | Lenguaje | Tecnologías |
 |-----------|----------|-------------|
-| **Core Runtime** | Rust | Tokio, Tonic (gRPC), Tauri |
+| **Motor Central** | Rust | Tokio, Tonic (gRPC), Tauri |
 | **CLI** | Rust | Clap, Tracing |
-| **Desktop GUI** | Rust/TypeScript | Tauri, React/Vue |
-| **AI Runtime** | Python | LangGraph, Transformers, Ollama |
+| **Interfaz Gráfica** | Rust/TypeScript | Tauri, React/Vue |
+| **Motor de IA** | Python | LangGraph, Transformers, Ollama |
 | **Base de datos** | SQL | PostgreSQL, SQLite |
-| **Vector DB** | Vector | Qdrant, ChromaDB |
+| **Base de datos vectorial** | Vector | Qdrant, ChromaDB |
 | **Seguridad** | Rust | Ring, AES-256, RBAC |
 
 ---
 
 ## 🤝 Cómo contribuir
 
-Este proyecto está en construcción bajo un enfoque **Living Documentation**:
+Este proyecto está en construcción bajo un enfoque **Documentación Viva**:
 
 1. **Código** siempre viene acompañado de documentación técnica
 2. **Cada fase** genera documentos para desarrolladores y material de estudio
@@ -148,23 +148,23 @@ Si contribuyes, asegúrate de:
 Cuando el proyecto esté completo, tendrás 18 libros completos:
 
 1. Introducción a ELAP
-2. Core Runtime
-3. Desktop Runtime
-4. Configuration Manager
+2. Motor Central
+3. Motor de Escritorio
+4. Gestor de Configuración
 5. Logging
-6. Error Handling
-7. Plugin Engine
-8. Tool Engine
-9. Model Manager
-10. AI Runtime
-11. Memory Manager
-12. Workflow Engine
-13. Agent Runtime
-14. Installer
-15. Deployment
+6. Manejo de Errores
+7. Motor de Plugins
+8. Motor de Herramientas
+9. Gestor de Modelos
+10. Motor de IA
+11. Gestor de Memoria
+12. Motor de Flujos
+13. Motor de Agentes
+14. Instalador
+15. Despliegue
 16. Testing
 17. CI/CD
-18. Enterprise Administration Guide
+18. Guía de Administración Empresarial
 
 Todos didácticos, con ejemplos, analogías, preguntas frecuentes y glosario.
 
