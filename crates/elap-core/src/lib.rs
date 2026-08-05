@@ -16,6 +16,7 @@ pub mod procesos;
 pub mod security;
 pub mod plugin;
 pub mod tools;
+pub mod models;
 
 pub use core::MotorCentral;
 pub use error::ElapError;
@@ -32,4 +33,7 @@ pub use tools::{
     FileTool, HttpTool, SqlTool, SshTool, SystemTool,
     SandboxHerramienta, PoliticaHerramienta, ContextoEjecucion, ValidadorSeguridad,
     EjecutorHerramientas, ResultadoEjecucion,
+};
+pub use models::{
+    ModelMetadata, TipoModelo, OllamaClient, RegistroModelos, CacheEmbeddings,
 };
