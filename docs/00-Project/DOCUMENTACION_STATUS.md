@@ -1,7 +1,7 @@
 # Estado de Documentación - ELAP
 
 **Fecha**: 2026-08-05  
-**Última actualización**: Después de Fase 5
+**Última actualización**: Después de Libros 01-06 completados (100%)
 
 ---
 
@@ -74,47 +74,47 @@
 
 ---
 
-### Libro 03: Desktop Runtime (INCOMPLETO)
+### Libro 03: Desktop Runtime (COMPLETO ✅)
 
-**Status**: ⚠️ 1/2 capítulos
+**Status**: ✅ 2/2 capítulos
 
 - ✅ [01-introduccion.md](../../notebook/Libro-03-Desktop/01-introduccion.md) — Analogía: Teléfono entre oficinas (IPC)
-- ❌ [02-primer-comando.md](../../notebook/Libro-03-Desktop/02-primer-comando.md) — (Coming soon)
+- ✅ [02-primer-comando.md](../../notebook/Libro-03-Desktop/02-primer-comando.md) — Implementar EstadoSistemaResponse + cmd_obtener_estado_sistema
 
-**Completitud**: 1/2 capítulos
+**Completitud**: 2/2 capítulos
 
 ---
 
-### Libro 04: Plugin Runtime (INCOMPLETO)
+### Libro 04: Plugin Runtime (COMPLETO ✅)
 
-**Status**: ⚠️ 1/2 capítulos
+**Status**: ✅ 2/2 capítulos
 
 - ✅ [01-introduccion.md](../../notebook/Libro-04-Plugin-Runtime/01-introduccion.md) — Analogía: Empleados contratistas en sandbox
-- ❌ [02-crear-plugin.md](../../notebook/Libro-04-Plugin-Runtime/02-crear-plugin.md) — (Coming soon)
+- ✅ [02-crear-plugin.md](../../notebook/Libro-04-Plugin-Runtime/02-crear-plugin.md) — Plugin Saludador multiidioma
 
-**Completitud**: 1/2 capítulos
+**Completitud**: 2/2 capítulos
 
 ---
 
-### Libro 05: Configuration (INCOMPLETO)
+### Libro 05: Configuration (COMPLETO ✅)
 
-**Status**: ⚠️ 1/2 capítulos
+**Status**: ✅ 2/2 capítulos
 
 - ✅ [01-introduccion.md](../../notebook/Libro-05-Configuration/01-introduccion.md) — Analogía: Receta vs Configuración
-- ❌ [02-tu-primer-config.md](../../notebook/Libro-05-Configuration/02-tu-primer-config.md) — (Coming soon)
+- ✅ [02-tu-primer-config.md](../../notebook/Libro-05-Configuration/02-tu-primer-config.md) — Default + desarrollo + producción con overrides
 
-**Completitud**: 1/2 capítulos
+**Completitud**: 2/2 capítulos
 
 ---
 
-### Libro 06: Logging (INCOMPLETO)
+### Libro 06: Logging (COMPLETO ✅)
 
-**Status**: ⚠️ 1/2 capítulos
+**Status**: ✅ 2/2 capítulos
 
 - ✅ [01-introduccion.md](../../notebook/Libro-06-Logging/01-introduccion.md) — Analogía: Diario vs Detective
-- ❌ [02-configurar-logger.md](../../notebook/Libro-06-Logging/02-configurar-logger.md) — (Coming soon)
+- ✅ [02-configurar-logger.md](../../notebook/Libro-06-Logging/02-configurar-logger.md) — LoggerAvanzado + outputs + filtros + rate-limiting
 
-**Completitud**: 1/2 capítulos
+**Completitud**: 2/2 capítulos
 
 ---
 
@@ -170,33 +170,32 @@ Documentación Técnica:
 ████████████████████ 100% (9/9) ✅
 
 Documentación Didáctica Total:
-████████████████████ 100% (14/14) ✅
+████████████████████ 100% (18/18) ✅
 
 Por Libro:
 Libro 01: ████████████ 100% (6/6) ✅
 Libro 02: ████████████ 100% (6/6) ✅
-Libro 03: ███░░░░░░░░░ 50% (1/2)
-Libro 04: ███░░░░░░░░░ 50% (1/2)
-Libro 05: ███░░░░░░░░░ 50% (1/2)
-Libro 06: ███░░░░░░░░░ 50% (1/2)
+Libro 03: ████████████ 100% (2/2) ✅
+Libro 04: ████████████ 100% (2/2) ✅
+Libro 05: ████████████ 100% (2/2) ✅
+Libro 06: ████████████ 100% (2/2) ✅
 ```
 
 ---
 
 ## ✅ Lo que está bien
 
-1. **Documentación Técnica 100% completa** — Cada módulo implementado tiene su doc técnica detallada
-2. **Libro 01 completamente documentado** — Introducción integral para nuevos usuarios
-3. **Libro 02 completamente documentado** — Core Runtime es un ejemplo a seguir
-4. **Capítulos introductorios en Libros 03-06** — Ya hay base didáctica para expandir
-5. **Estructura consistente** — Analogías pedagógicas, flujos, código de ejemplo
+1. **Documentación Técnica 100% completa** (9/9) — Cada módulo implementado tiene su doc técnica detallada
+2. **Documentación Didáctica 100% completa** (18/18) — 6 libros, 3 capítulos cada uno
+3. **Libro 01** — Introducción integral para nuevos usuarios (qué es, cómo instalar, primeros pasos)
+4. **Libros 02-06** — Cada uno tiene intro didáctica + capítulo práctico con código
+5. **Estructura consistente** — Analogías, flujos, código ejecutable, verificación
 
 ---
 
 ## ⚠️ Lo que falta
 
-1. **Capítulos prácticos (Cap 2) en Libros 03-06** — Ejercicios paso a paso (prioridad media)
-2. **Libro 07 en adelante** — Para Fases 6+ (Tool Engine, Model Manager, etc.)
+1. **Libro 07 en adelante** — Para Fases 6+ (Tool Engine, Model Manager, etc.)
 
 ---
 
