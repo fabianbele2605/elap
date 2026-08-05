@@ -11,7 +11,7 @@
 ```
 Fase 0: Fundacionales (Semana 1)          ██████ ✅
 Fase 1: Core Runtime (Semana 2)           ██████ ✅
-Fase 2: Desktop Runtime (Semana 3)        ⏳
+Fase 2: Desktop Runtime (Semana 3)        ██████ ✅ (+ Paso 6 pendiente)
 Fase 3: Configuration Manager (Semana 4)  ⏳
 Fase 4: Logging (Semana 5)                ⏳
 Fase 5: Error Handling (Semana 6)         ⏳
@@ -106,25 +106,26 @@ Implementar el corazón de la plataforma: task scheduling, process management, c
 
 ## 🖥️ Fase 2: Desktop Runtime
 
-**Estado**: ⏳ Por hacer  
+**Estado**: ✅ Completada (Pasos 1-5)  
 **Semana**: 3  
 
 ### Objetivos
 
-Implementar la capa de UI desktop usando Tauri.
+Implementar capa de interfaz desktop con IPC bridge y UI components.
 
 ### Entregables
 
-- Tauri setup y configuración
-- Window manager
-- Communication bridge (Rust ↔ TypeScript/React)
-- Basic UI components
-- Tests
+- ✅ Estructura Desktop Runtime (Paso 1)
+- ✅ IPC Bridge con 3 comandos (Paso 2)
+- ✅ UI Components serializables (Paso 3)
+- ✅ Integración con MotorCentral real (Paso 4)
+- ✅ 4 tests de integración pasando (Paso 5)
+- ✅ Documentación técnica (DESKTOP.md)
+- ✅ Capítulo 1 del Libro 03
 
-### Documentación
-
-- Desktop Architecture
-- Libro 03 para NotebookLM
+### Próximo: Paso 6
+- Implementación de frontend React/TypeScript
+- Conexión real de Tauri bridge
 
 ---
 

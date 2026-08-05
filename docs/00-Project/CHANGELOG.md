@@ -4,6 +4,59 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [0.4.0-alpha] - 2026-08-05
+
+### Fase 2 - Desktop Runtime (Pasos 1-5 Completados)
+
+#### Agregado
+
+**Paso 1: Estructura Desktop**
+- Crear proyecto Desktop Runtime con Cargo.toml
+- setup build.rs y tauri.conf.json (placeholders)
+- src/main.rs que inicializa MotorCentral
+- Compilación exitosa
+
+**Paso 2: IPC Bridge**
+- Módulo `ipc` con estructura de comunicación
+- `ipc/errors.rs`: 4 tipos de error IPC
+- `ipc/commands.rs`: 3 comandos IPC
+  - cmd_init_motor (inicialización real)
+  - cmd_get_status (estado del motor)
+  - cmd_get_rbac_status (permisos RBAC)
+- Compilación exitosa
+
+**Paso 3: Componentes UI**
+- Módulo `ui` con estructura de componentes
+- `ui/state.rs`: 3 estados serializables (AppState, ToolbarState, StatusBarState)
+- `ui/components.rs`: 3 componentes visuales (WindowComponent, ButtonComponent, LogPanelComponent)
+- Todos con Serialize/Deserialize para JSON
+
+**Paso 4: Integración IPC ↔ MotorCentral**
+- Refactorizar comandos para recibir Arc<MotorCentral>
+- Integración real con motor.iniciar()
+- Tests con integración real
+- Compilación exitosa
+
+**Paso 5: Tests de Integración**
+- 3 tests IPC con integración real
+- test_cmd_init_motor, test_cmd_get_status, test_cmd_get_rbac_status
+- 4 tests totales en elap-desktop (todos pasando)
+
+**Paso 6: Documentación**
+- `docs/03-Modules/DESKTOP.md`: Documentación técnica completa
+- Capítulo 1 del Libro 03: Introducción a Desktop Runtime
+- 11 commits en Fase 2
+
+#### Resumen
+
+- **Módulos**: 2 nuevos (ipc, ui) con 8 subcomponentes
+- **Tests**: 4 tests pasando en elap-desktop
+- **Compilación**: Exitosa en todos los puntos
+- **Documentación**: Técnica + didáctica completa
+- **Integración**: IPC bridge conectado con MotorCentral real
+
+---
+
 ## [0.3.0-alpha] - 2026-08-05
 
 ### Fase 1 - Pasos 3-6: Core Runtime (Completo)
