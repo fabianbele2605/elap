@@ -29,7 +29,14 @@ Este libro tiene varios capítulos que aprenderás progresivamente:
 - Códigos de salida y timestamps
 - **Estado**: ✅ Completado
 
-### Capítulo 4: Flujo Completo
+### [Capítulo 4: Gestor de Configuración](04-gestor-configuracion.md)
+- Separación entre código y configuración
+- Entornos (desarrollo vs producción)
+- Validación de configuración
+- Archivos YAML legibles
+- **Estado**: ✅ Completado
+
+### Capítulo 5: Flujo Completo
 - Tokens, locks y mutexes (sin tecnicismos)
 - Async/await explicado simple
 - Por qué Rust es perfecto para esto
