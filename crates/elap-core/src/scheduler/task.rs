@@ -1,121 +1,121 @@
-//! Task definition and status tracking
+//! Definición de tareas y seguimiento de estado
 
 use std::fmt;
 use uuid::Uuid;
 
-/// Unique task identifier
+/// Identificador único de tarea
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TaskId(Uuid);
+pub struct IdTarea(Uuid);
 
-impl TaskId {
-    /// Create a new random task ID
-    pub fn new() -> Self {
+impl IdTarea {
+    /// Crear un nuevo ID de tarea aleatorio
+    pub fn nuevo() -> Self {
         Self(Uuid::new_v4())
     }
 }
 
-impl Default for TaskId {
+impl Default for IdTarea {
     fn default() -> Self {
-        Self::new()
+        Self::nuevo()
     }
 }
 
-impl fmt::Display for TaskId {
+impl fmt::Display for IdTarea {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.0)
     }
 }
 
-/// Task priority level
+/// Nivel de prioridad de la tarea
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub enum TaskPriority {
-    /// Low priority (background tasks)
-    Low = 0,
-    /// Normal priority (default)
+pub enum PrioridadTarea {
+    /// Prioridad baja (tareas de fondo)
+    Baja = 0,
+    /// Prioridad normal (por defecto)
     Normal = 1,
-    /// High priority (user-facing)
-    High = 2,
+    /// Prioridad alta (tareas que requieren respuesta rápida)
+    Alta = 2,
 }
 
-impl Default for TaskPriority {
+impl Default for PrioridadTarea {
     fn default() -> Self {
-        TaskPriority::Normal
+        PrioridadTarea::Normal
     }
 }
 
-/// Task execution status
+/// Estado de ejecución de la tarea
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum TaskStatus {
-    /// Waiting in queue
-    Pending,
-    /// Currently executing
-    Running,
-    /// Completed successfully
-    Completed,
-    /// Failed with error
-    Failed,
-    /// Cancelled by user
-    Cancelled,
+pub enum EstadoTarea {
+    /// Esperando en la cola
+    Pendiente,
+    /// Se está ejecutando actualmente
+    Ejecutando,
+    /// Completada exitosamente
+    Completada,
+    /// Falló con error
+    Falló,
+    /// Cancelada por el usuario
+    Cancelada,
 }
 
-impl fmt::Display for TaskStatus {
+impl fmt::Display for EstadoTarea {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            TaskStatus::Pending => write!(f, "pending"),
-            TaskStatus::Running => write!(f, "running"),
-            TaskStatus::Completed => write!(f, "completed"),
-            TaskStatus::Failed => write!(f, "failed"),
-            TaskStatus::Cancelled => write!(f, "cancelled"),
+            EstadoTarea::Pendiente => write!(f, "pendiente"),
+            EstadoTarea::Ejecutando => write!(f, "ejecutando"),
+            EstadoTarea::Completada => write!(f, "completada"),
+            EstadoTarea::Falló => write!(f, "falló"),
+            EstadoTarea::Cancelada => write!(f, "cancelada"),
         }
     }
 }
 
-/// A task to be executed
+/// Una tarea a ser ejecutada
 #[derive(Debug, Clone)]
-pub struct Task {
-    /// Unique identifier
-    pub id: TaskId,
-    /// Task name for logging
-    pub name: String,
-    /// Priority level
-    pub priority: TaskPriority,
-    /// Current status
-    pub status: TaskStatus,
-    /// Creation timestamp
-    pub created_at: chrono::DateTime<chrono::Utc>,
-    /// Last status update
-    pub updated_at: chrono::DateTime<chrono::Utc>,
+pub struct Tarea {
+    /// Identificador único
+    pub id: IdTarea,
+    /// Nombre de la tarea para logging
+    pub nombre: String,
+    /// Nivel de prioridad
+    pub prioridad: PrioridadTarea,
+    /// Estado actual
+    pub estado: EstadoTarea,
+    /// Marca de tiempo de creación
+    pub creada_en: chrono::DateTime<chrono::Utc>,
+    /// Última actualización de estado
+    pub actualizada_en: chrono::DateTime<chrono::Utc>,
 }
 
-impl Task {
-    /// Create a new task
-    pub fn new(name: impl Into<String>) -> Self {
-        let now = chrono::Utc::now();
+impl Tarea {
+    /// Crear una nueva tarea
+    pub fn nueva(nombre: impl Into<String>) -> Self {
+        let ahora = chrono::Utc::now();
         Self {
-            id: TaskId::new(),
-            name: name.into(),
-            priority: TaskPriority::default(),
-            status: TaskStatus::Pending,
-            created_at: now,
-            updated_at: now,
+            id: IdTarea::nuevo(),
+            nombre: nombre.into(),
+            prioridad: PrioridadTarea::default(),
+            estado: EstadoTarea::Pendiente,
+            creada_en: ahora,
+            actualizada_en: ahora,
         }
     }
 
-    /// Set task priority
-    pub fn with_priority(mut self, priority: TaskPriority) -> Self {
-        self.priority = priority;
+    /// Establecer prioridad de la tarea
+    pub fn con_prioridad(mut self, prioridad: PrioridadTarea) -> Self {
+        self.prioridad = prioridad;
         self
     }
 
-    /// Update status
-    pub fn set_status(&mut self, status: TaskStatus) {
-        self.status = status;
-        self.updated_at = chrono::Utc::now();
+    /// Actualizar estado de la tarea
+    pub fn establecer_estado(&mut self, estado: EstadoTarea) {
+        self.estado = estado;
+        self.actualizada_en = chrono::Utc::now();
     }
 
-    /// Get time elapsed since creation
-    pub fn elapsed(&self) -> chrono::Duration {
-        chrono::Utc::now() - self.created_at
+    /// Obtener tiempo transcurrido desde la creación
+    pub fn tiempo_transcurrido(&self) -> chrono::Duration {
+        chrono::Utc::now() - self.creada_en
     }
 }
 
@@ -124,37 +124,37 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_task_creation() {
-        let task = Task::new("test_task");
-        assert_eq!(task.name, "test_task");
-        assert_eq!(task.status, TaskStatus::Pending);
-        assert_eq!(task.priority, TaskPriority::Normal);
+    fn test_creacion_tarea() {
+        let tarea = Tarea::nueva("tarea_test");
+        assert_eq!(tarea.nombre, "tarea_test");
+        assert_eq!(tarea.estado, EstadoTarea::Pendiente);
+        assert_eq!(tarea.prioridad, PrioridadTarea::Normal);
     }
 
     #[test]
-    fn test_task_with_priority() {
-        let task = Task::new("high_priority").with_priority(TaskPriority::High);
-        assert_eq!(task.priority, TaskPriority::High);
+    fn test_tarea_con_prioridad() {
+        let tarea = Tarea::nueva("prioridad_alta").con_prioridad(PrioridadTarea::Alta);
+        assert_eq!(tarea.prioridad, PrioridadTarea::Alta);
     }
 
     #[test]
-    fn test_task_status_update() {
-        let mut task = Task::new("test");
-        task.set_status(TaskStatus::Running);
-        assert_eq!(task.status, TaskStatus::Running);
+    fn test_actualizar_estado_tarea() {
+        let mut tarea = Tarea::nueva("test");
+        tarea.establecer_estado(EstadoTarea::Ejecutando);
+        assert_eq!(tarea.estado, EstadoTarea::Ejecutando);
     }
 
     #[test]
-    fn test_task_id_unique() {
-        let task1 = Task::new("task1");
-        let task2 = Task::new("task2");
-        assert_ne!(task1.id, task2.id);
+    fn test_id_tarea_unico() {
+        let tarea1 = Tarea::nueva("tarea1");
+        let tarea2 = Tarea::nueva("tarea2");
+        assert_ne!(tarea1.id, tarea2.id);
     }
 
     #[test]
-    fn test_task_elapsed() {
-        let task = Task::new("test");
+    fn test_tiempo_transcurrido() {
+        let tarea = Tarea::nueva("test");
         std::thread::sleep(std::time::Duration::from_millis(10));
-        assert!(task.elapsed().num_milliseconds() >= 10);
+        assert!(tarea.tiempo_transcurrido().num_milliseconds() >= 10);
     }
 }

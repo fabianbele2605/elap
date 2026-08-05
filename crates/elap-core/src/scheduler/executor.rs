@@ -1,100 +1,100 @@
-//! Task scheduler and executor
+//! Planificador y ejecutor de tareas
 
-use super::queue::TaskQueue;
-use super::task::{Task, TaskId, TaskPriority};
+use super::queue::ColaTareas;
+use super::task::{Tarea, IdTarea, PrioridadTarea};
 use tokio::sync::Mutex;
 use std::sync::Arc;
 
-/// Main task scheduler
+/// Planificador principal de tareas
 ///
-/// Manages task execution with Tokio runtime.
-/// Handles enqueueing, dequeuing, and tracking task status.
-pub struct TaskScheduler {
-    queue: Arc<Mutex<TaskQueue>>,
-    max_concurrent: usize,
+/// Gestiona la ejecución de tareas con el runtime de Tokio.
+/// Maneja encolar, desencolar y rastrear el estado de las tareas.
+pub struct PlanificadorTareas {
+    cola: Arc<Mutex<ColaTareas>>,
+    maximo_concurrentes: usize,
 }
 
-impl TaskScheduler {
-    /// Create a new task scheduler
-    pub fn new(max_concurrent: usize) -> Self {
+impl PlanificadorTareas {
+    /// Crear un nuevo planificador de tareas
+    pub fn nuevo(maximo_concurrentes: usize) -> Self {
         Self {
-            queue: Arc::new(Mutex::new(TaskQueue::new(max_concurrent))),
-            max_concurrent,
+            cola: Arc::new(Mutex::new(ColaTareas::nueva(maximo_concurrentes))),
+            maximo_concurrentes,
         }
     }
 
-    /// Submit a task to the queue
-    pub async fn submit_task(&self, task: Task) -> TaskId {
-        let mut queue = self.queue.lock().await;
-        queue.enqueue(task)
+    /// Enviar una tarea a la cola
+    pub async fn enviar_tarea(&self, tarea: Tarea) -> IdTarea {
+        let mut cola = self.cola.lock().await;
+        cola.encolar(tarea)
     }
 
-    /// Submit a simple named task
-    pub async fn submit(&self, name: impl Into<String>) -> TaskId {
-        self.submit_task(Task::new(name)).await
+    /// Enviar una tarea simple por nombre
+    pub async fn enviar(&self, nombre: impl Into<String>) -> IdTarea {
+        self.enviar_tarea(Tarea::nueva(nombre)).await
     }
 
-    /// Submit a high-priority task
-    pub async fn submit_high_priority(&self, name: impl Into<String>) -> TaskId {
-        let task = Task::new(name).with_priority(TaskPriority::High);
-        self.submit_task(task).await
+    /// Enviar una tarea de alta prioridad
+    pub async fn enviar_alta_prioridad(&self, nombre: impl Into<String>) -> IdTarea {
+        let tarea = Tarea::nueva(nombre).con_prioridad(PrioridadTarea::Alta);
+        self.enviar_tarea(tarea).await
     }
 
-    /// Get task status
-    pub async fn get_task_status(&self, task_id: TaskId) -> Option<String> {
-        let queue = self.queue.lock().await;
-        queue.get_task(task_id).map(|t| t.status.to_string())
+    /// Obtener estado de una tarea
+    pub async fn obtener_estado_tarea(&self, id_tarea: IdTarea) -> Option<String> {
+        let cola = self.cola.lock().await;
+        cola.obtener_tarea(id_tarea).map(|t| t.estado.to_string())
     }
 
-    /// Mark task as completed
-    pub async fn complete_task(&self, task_id: TaskId) {
-        let mut queue = self.queue.lock().await;
-        queue.mark_completed(task_id);
+    /// Marcar tarea como completada
+    pub async fn completar_tarea(&self, id_tarea: IdTarea) {
+        let mut cola = self.cola.lock().await;
+        cola.marcar_completada(id_tarea);
     }
 
-    /// Mark task as failed
-    pub async fn fail_task(&self, task_id: TaskId) {
-        let mut queue = self.queue.lock().await;
-        queue.mark_failed(task_id);
+    /// Marcar tarea como fallida
+    pub async fn fallar_tarea(&self, id_tarea: IdTarea) {
+        let mut cola = self.cola.lock().await;
+        cola.marcar_fallida(id_tarea);
     }
 
-    /// Get queue statistics
-    pub async fn stats(&self) -> TaskSchedulerStats {
-        let queue = self.queue.lock().await;
-        TaskSchedulerStats {
-            pending: queue.pending_count(),
-            running: queue.running_count(),
-            total: queue.total_count(),
-            max_concurrent: self.max_concurrent,
+    /// Obtener estadísticas de la cola
+    pub async fn estadisticas(&self) -> EstadisticasPlanificador {
+        let cola = self.cola.lock().await;
+        EstadisticasPlanificador {
+            pendientes: cola.cantidad_pendientes(),
+            ejecutando: cola.cantidad_ejecutando(),
+            total: cola.cantidad_total(),
+            maximo_concurrentes: self.maximo_concurrentes,
         }
     }
 
-    /// Get next task to execute
-    pub async fn next_task(&self) -> Option<Task> {
-        let mut queue = self.queue.lock().await;
-        queue.dequeue()
+    /// Obtener la siguiente tarea a ejecutar
+    pub async fn proxima_tarea(&self) -> Option<Tarea> {
+        let mut cola = self.cola.lock().await;
+        cola.desencolar()
     }
 }
 
-/// Scheduler statistics
+/// Estadísticas del planificador
 #[derive(Debug, Clone)]
-pub struct TaskSchedulerStats {
-    /// Pending tasks in queue
-    pub pending: usize,
-    /// Currently running tasks
-    pub running: usize,
-    /// Total tasks managed
+pub struct EstadisticasPlanificador {
+    /// Tareas pendientes en la cola
+    pub pendientes: usize,
+    /// Tareas ejecutándose actualmente
+    pub ejecutando: usize,
+    /// Total de tareas gestionadas
     pub total: usize,
-    /// Maximum concurrent tasks allowed
-    pub max_concurrent: usize,
+    /// Máximo de tareas concurrentes permitidas
+    pub maximo_concurrentes: usize,
 }
 
-impl std::fmt::Display for TaskSchedulerStats {
+impl std::fmt::Display for EstadisticasPlanificador {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "Tasks - Pending: {}, Running: {}/{}, Total: {}",
-            self.pending, self.running, self.max_concurrent, self.total
+            "Tareas - Pendientes: {}, Ejecutando: {}/{}, Total: {}",
+            self.pendientes, self.ejecutando, self.maximo_concurrentes, self.total
         )
     }
 }
@@ -104,57 +104,57 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_scheduler_creation() {
-        let scheduler = TaskScheduler::new(4);
-        let stats = scheduler.stats().await;
-        assert_eq!(stats.pending, 0);
-        assert_eq!(stats.running, 0);
-        assert_eq!(stats.max_concurrent, 4);
+    async fn test_creacion_planificador() {
+        let planificador = PlanificadorTareas::nuevo(4);
+        let stats = planificador.estadisticas().await;
+        assert_eq!(stats.pendientes, 0);
+        assert_eq!(stats.ejecutando, 0);
+        assert_eq!(stats.maximo_concurrentes, 4);
     }
 
     #[tokio::test]
-    async fn test_submit_task() {
-        let scheduler = TaskScheduler::new(4);
-        let task_id = scheduler.submit("test_task").await;
-        
-        let stats = scheduler.stats().await;
+    async fn test_enviar_tarea() {
+        let planificador = PlanificadorTareas::nuevo(4);
+        let id_tarea = planificador.enviar("tarea_test").await;
+
+        let stats = planificador.estadisticas().await;
         assert_eq!(stats.total, 1);
     }
 
     #[tokio::test]
-    async fn test_next_task() {
-        let scheduler = TaskScheduler::new(4);
-        scheduler.submit("task1").await;
-        
-        let task = scheduler.next_task().await;
-        assert!(task.is_some());
-        
-        let stats = scheduler.stats().await;
-        assert_eq!(stats.pending, 0);
-        assert_eq!(stats.running, 1);
+    async fn test_proxima_tarea() {
+        let planificador = PlanificadorTareas::nuevo(4);
+        planificador.enviar("tarea1").await;
+
+        let tarea = planificador.proxima_tarea().await;
+        assert!(tarea.is_some());
+
+        let stats = planificador.estadisticas().await;
+        assert_eq!(stats.pendientes, 0);
+        assert_eq!(stats.ejecutando, 1);
     }
 
     #[tokio::test]
-    async fn test_complete_task() {
-        let scheduler = TaskScheduler::new(4);
-        let id = scheduler.submit("task").await;
-        
-        scheduler.next_task().await;
-        scheduler.complete_task(id).await;
-        
-        let stats = scheduler.stats().await;
-        assert_eq!(stats.running, 0);
+    async fn test_completar_tarea() {
+        let planificador = PlanificadorTareas::nuevo(4);
+        let id = planificador.enviar("tarea").await;
+
+        planificador.proxima_tarea().await;
+        planificador.completar_tarea(id).await;
+
+        let stats = planificador.estadisticas().await;
+        assert_eq!(stats.ejecutando, 0);
     }
 
     #[tokio::test]
-    async fn test_high_priority() {
-        let scheduler = TaskScheduler::new(100);
-        
-        scheduler.submit("low").await;
-        let high_id = scheduler.submit_high_priority("high").await;
-        scheduler.submit("normal").await;
-        
-        let first = scheduler.next_task().await.unwrap();
-        assert_eq!(first.id, high_id);
+    async fn test_alta_prioridad() {
+        let planificador = PlanificadorTareas::nuevo(100);
+
+        planificador.enviar("baja").await;
+        let id_alta = planificador.enviar_alta_prioridad("alta").await;
+        planificador.enviar("normal").await;
+
+        let primera = planificador.proxima_tarea().await.unwrap();
+        assert_eq!(primera.id, id_alta);
     }
 }

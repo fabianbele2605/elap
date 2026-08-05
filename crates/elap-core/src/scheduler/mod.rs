@@ -1,12 +1,12 @@
-//! Task scheduling and execution
+//! Planificación y ejecución de tareas
 //!
-//! Manages concurrent task execution using Tokio.
-//! Provides queue, scheduling, and executor capabilities.
+//! Gestiona la ejecución concurrente de tareas usando Tokio.
+//! Proporciona capacidades de cola, planificación y ejecución.
 
 pub mod task;
 pub mod queue;
 pub mod executor;
 
-pub use executor::TaskScheduler;
-pub use task::{Task, TaskId, TaskStatus, TaskPriority};
-pub use queue::TaskQueue;
+pub use executor::PlanificadorTareas;
+pub use task::{Tarea, IdTarea, EstadoTarea, PrioridadTarea};
+pub use queue::ColaTareas;

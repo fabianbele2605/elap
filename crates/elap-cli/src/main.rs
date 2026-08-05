@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand};
-use elap_core::CoreEngine;
+use elap_core::MotorCentral;
 use std::error::Error;
 use tracing_subscriber;
 
@@ -54,13 +54,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
     match cli.command {
         Commands::Start { port } => {
             tracing::info!("Starting ELAP Core Engine on port {}", port);
-            let engine = CoreEngine::new("ELAP-CLI", "0.1.0");
-            engine.start().await?;
+            let engine = MotorCentral::nuevo("ELAP-CLI", "0.1.0");
+            engine.iniciar().await?;
             tracing::info!("Engine running. Press Ctrl+C to stop.");
 
             // Keep running until interrupted
             tokio::signal::ctrl_c().await?;
-            engine.stop().await?;
+            engine.detener().await?;
             tracing::info!("Engine stopped gracefully");
         }
 
