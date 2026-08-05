@@ -7,6 +7,9 @@
 
 use elap_core::{MotorCentral, Configuracion};
 
+/// Módulo de comunicación IPC (Inter-Process Communication)
+pub mod ipc;
+
 /// Gestor de aplicación desktop
 #[derive(Debug)]
 pub struct DesktopRuntime {
