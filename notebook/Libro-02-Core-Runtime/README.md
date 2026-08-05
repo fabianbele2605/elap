@@ -22,7 +22,14 @@ Este libro tiene varios capítulos que aprenderás progresivamente:
 - Ejemplo paso a paso
 - **Estado**: ✅ Completado
 
-### Capítulo 3: Concurrencia segura
+### [Capítulo 3: Gestor de Procesos](03-gestor-procesos.md)
+- Diferencia entre tarea y proceso
+- Crear y ejecutar procesos del SO
+- Estados: Pendiente, Ejecutando, Completado, Fallo
+- Códigos de salida y timestamps
+- **Estado**: ✅ Completado
+
+### Capítulo 4: Flujo Completo
 - Tokens, locks y mutexes (sin tecnicismos)
 - Async/await explicado simple
 - Por qué Rust es perfecto para esto
