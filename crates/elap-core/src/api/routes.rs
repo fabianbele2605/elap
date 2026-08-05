@@ -9,7 +9,9 @@ use super::{handlers, websocket, state::AppState, middleware};
 /// Crear router con todas las rutas
 pub fn crear_router(state: AppState) -> Router {
     Router::new()
-        // Agentes
+        // Autenticación (sin requerir token)
+        .route("/login", post(handlers::login))
+        // Agentes (requieren token)
         .route("/agents", post(handlers::crear_agente))
         .route("/agents", get(handlers::listar_agentes))
         .route("/agents/:id", get(handlers::obtener_agente))

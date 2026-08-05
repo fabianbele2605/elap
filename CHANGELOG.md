@@ -1,5 +1,90 @@
 # CHANGELOG — Historial de Cambios ELAP
 
+## [Fase 10] - 2026-08-05
+
+### ✨ Nuevas Funcionalidades
+
+#### Autenticación JWT + RBAC
+
+**JWT (JSON Web Tokens)**:
+- ManagerJWT: Generación y validación de tokens
+- Claims: sub (usuario), rol, exp (24h), iat
+- Firma HMAC-SHA256 con secret key
+- Validación de expiración automática
+- Extractor de Bearer token
+
+**RBAC (Role-Based Access Control)**:
+- 3 roles: Admin, User, Guest
+- 5 acciones: Crear, Leer, Actualizar, Eliminar, Ejecutar
+- ValidadorRBAC con matriz de permisos
+- Checks en handlers de endpoints
+
+**Endpoints**:
+- POST /login - Obtener token (sin autenticación requerida)
+- Todos los otros endpoints requieren Bearer token
+
+**Permisos por Rol**:
+- Admin: todas las acciones (5/5)
+- User: CRUD básico (4/5) - no puede eliminar
+- Guest: solo lectura (1/5)
+
+### 📚 Documentación
+
+- `docs/04-API/AUTHENTICATION.md`: Guía completa
+  - Flujo de autenticación
+  - Roles y permisos
+  - Ejemplos cURL, JS, Rust
+  - Mejores prácticas de seguridad
+
+### 🧪 Tests
+
+- 5 tests JWT (Claims, generación, validación, expiración)
+- 6 tests RBAC (roles, permisos, acciones)
+- 11 tests nuevos (100% cobertura)
+- 332 tests totales en elap-core (0 fallos)
+
+### 🏗️ Cambios Arquitectónicos
+
+**Nuevos módulos**:
+- `api/auth.rs`: JWT ManagerJWT, Claims, validación
+- `api/rbac.rs`: RolAPI, Accion, ValidadorRBAC
+
+**Actualizaciones**:
+- `handlers.rs`: Agregar login, validar Claims en DELETE
+- `routes.rs`: POST /login sin requerir token
+- `lib.rs`: Exportar tipos de autenticación
+
+**Dependencias**:
+- jsonwebtoken 9.2
+- base64 0.21
+
+### 📊 Métricas Fase 10
+
+| Métrica | Valor |
+|---------|-------|
+| Tests nuevos | 11 |
+| Tests totales | 332 |
+| Roles | 3 |
+| Acciones | 5 |
+| Duración token | 24h |
+| Algoritmo | HMAC-SHA256 |
+
+### 🔗 Flujo Completo
+
+```
+[Cliente] 
+    ↓
+POST /login → [Generar JWT]
+    ↓
+Bearer token en headers
+    ↓
+Validar token + RBAC
+    ↓
+Ejecutar endpoint o 403
+```
+
+---
+
 ## [Fase 9] - 2026-08-05
 
 ### ✨ Nuevas Funcionalidades

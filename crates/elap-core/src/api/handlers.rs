@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use uuid::Uuid;
 use crate::{AgentIntegrado, EstadoAgente};
-use super::state::AppState;
+use super::{state::AppState, auth::{Claims, ManagerJWT}, rbac::{ValidadorRBAC, Accion, RolAPI}};
 
 /// Solicitud para crear agente
 #[derive(Deserialize, Serialize)]
@@ -200,11 +200,65 @@ pub async fn obtener_estado(
 
 /// DELETE /agents/{id} - Eliminar agente
 pub async fn eliminar_agente(
+    _claims: Claims,
     State(state): State<AppState>,
     Path(id): Path<String>,
 ) -> StatusCode {
+    let validador = ValidadorRBAC::nuevo();
+    let rol = RolAPI::from_str(&_claims.rol);
+
+    if !validador.puede_realizar(&rol, &Accion::Eliminar) {
+        return StatusCode::FORBIDDEN;
+    }
+
     state.eliminar_agente(&id).await;
     StatusCode::NO_CONTENT
+}
+
+/// Login request
+#[derive(Deserialize)]
+pub struct LoginRequest {
+    pub usuario: String,
+    pub contraseña: String,
+}
+
+/// Login response
+#[derive(Serialize)]
+pub struct LoginResponse {
+    pub token: String,
+    pub usuario: String,
+    pub rol: String,
+}
+
+/// POST /login - Autenticación
+pub async fn login(
+    Json(payload): Json<LoginRequest>,
+) -> Result<Json<LoginResponse>, StatusCode> {
+    // Validación simple (en producción, verificar contra BD)
+    if payload.usuario.is_empty() || payload.contraseña.is_empty() {
+        return Err(StatusCode::BAD_REQUEST);
+    }
+
+    // Asignar rol básico (en producción, desde BD)
+    let rol = if payload.usuario == "admin" {
+        "Admin".to_string()
+    } else {
+        "User".to_string()
+    };
+
+    // Generar token
+    let claims = Claims::nuevo(payload.usuario.clone(), rol.clone());
+    let manager = ManagerJWT::nuevo("elap-secret-key");
+
+    let token = manager
+        .generar_token(&claims)
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    Ok(Json(LoginResponse {
+        token,
+        usuario: payload.usuario,
+        rol,
+    }))
 }
 
 #[cfg(test)]

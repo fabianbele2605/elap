@@ -47,4 +47,5 @@ pub use agents::{
 };
 pub use api::{
     AppState, crear_router, AgentEvent,
+    Claims, ManagerJWT, RolAPI, Accion, ValidadorRBAC,
 };
