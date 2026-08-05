@@ -77,3 +77,21 @@ temp/
 models/
 *.gguf
 *.safetensors
+
+# Tauri
+src-tauri/target/
+src-tauri/dist/
+
+# Node (si usas npm en Tauri frontend)
+node_modules/
+package-lock.json
+yarn.lock
+
+# AI Runtime (Ollama/models locales)
+.ollama/
+ollama_cache/
+
+# Backup files
+*.bak
+*.backup
+*~.swp
