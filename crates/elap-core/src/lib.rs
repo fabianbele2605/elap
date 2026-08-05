@@ -27,4 +27,7 @@ pub use logging::inicializar_logging;
 pub use logging_v2::{LogLevel, LogEntry, LogEvent, LoggerAvanzado};
 pub use security::{Rol, Permiso, GestorRbac, RegistroAuditoria, AuditorRbac};
 pub use plugin::{Plugin, PluginMetadata, PluginLoader, RegistroPlugins, PluginSandbox, ConfiguracionSandbox, PoliticaEjecucion};
-pub use tools::{Tool, RegistroHerramientas, ToolMetadata, TipoHerramienta};
+pub use tools::{
+    Tool, RegistroHerramientas, ToolMetadata, TipoHerramienta,
+    FileTool, HttpTool, SqlTool, SshTool, SystemTool,
+};
