@@ -16,10 +16,11 @@ Este libro tiene varios capítulos que aprenderás progresivamente:
 - ¿Por qué es tan importante?
 - Analogía con el mundo real
 
-### Capítulo 2: El Planificador de Tareas
+### [Capítulo 2: El Planificador de Tareas](02-planificador-tareas.md)
 - Problema: ¿Cómo ejecutar 100 tareas simultáneamente?
 - Solución: Planificador con cola y prioridades
 - Ejemplo paso a paso
+- **Estado**: ✅ Completado
 
 ### Capítulo 3: Concurrencia segura
 - Tokens, locks y mutexes (sin tecnicismos)
