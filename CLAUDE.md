@@ -301,26 +301,29 @@ pytest -v                             # Verbose
 
 ## 5. Git y Commits
 
-### Conventional Commits
+### Conventional Commits en ESPAÑOL
+
+**IMPORTANTE**: Todos los commits deben estar en **ESPAÑOL**, aunque el código esté en inglés.
 
 ```
-<type>(<scope>): <subject>
+<tipo>(<scope>): <mensaje>
 
-<body>
+<cuerpo>
 
-<footer>
+<pie>
 ```
 
-**Types**:
+**Tipos**:
 - `feat`: Nueva funcionalidad
-- `fix`: Bug fix
-- `docs`: Documentación
+- `fix`: Corrección de bug
+- `docs`: Cambios en documentación
 - `refactor`: Cambio de código sin alterar funcionalidad
-- `test`: Tests
-- `ci`: CI/CD
+- `test`: Tests o cobertura de tests
+- `ci`: Cambios en CI/CD
 - `chore`: Cambios en build, deps, etc.
 
-**Ejemplos**:
+**Ejemplos correctos**:
+
 ```
 feat(core): Agregar task scheduler con Tokio
 
@@ -337,6 +340,19 @@ Agrega RBAC check obligatorio. Sin esto, usuarios podían usar
 herramientas no autorizadas.
 
 Breaking change: Requiere migración de permisos existentes.
+```
+
+```
+docs(readme): Actualizar instrucciones de instalación
+
+Agregan pasos de configuración para PostgreSQL y Qdrant.
+Aclara requisitos de hardware mínimo.
+```
+
+```
+test(core): Aumentar cobertura de error handling a 95%
+
+Agrega tests para casos edge en validación de permisos.
 ```
 
 ### Branch naming
