@@ -45,6 +45,7 @@ impl Paso {
 }
 
 /// Plan de ejecución
+#[derive(Clone)]
 pub struct Plan {
     /// Identificador
     pub id: String,

@@ -4,6 +4,7 @@ use serde_json::{json, Value as JsonValue};
 use std::collections::HashMap;
 
 /// Contexto disponible para el agente
+#[derive(Clone)]
 pub struct ContextoAgente {
     /// Variables disponibles
     pub variables: HashMap<String, JsonValue>,

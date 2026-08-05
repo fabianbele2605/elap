@@ -14,6 +14,7 @@ pub struct MemoriaCorta {
 }
 
 /// Model Manager: orquestador central
+#[derive(Clone)]
 pub struct ModelManager {
     cliente: OllamaClient,
     registro: RegistroModelos,

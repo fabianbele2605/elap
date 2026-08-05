@@ -34,6 +34,7 @@ impl std::fmt::Display for EstadoAgente {
 }
 
 /// Agente inteligente
+#[derive(Clone)]
 pub struct Agent {
     /// Identificador único
     pub id: String,

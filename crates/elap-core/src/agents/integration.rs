@@ -6,6 +6,7 @@ use serde_json::{json, Value as JsonValue};
 use crate::error::ResultadoElap;
 
 /// Integración completa: Agent + Tools + Models
+#[derive(Clone)]
 pub struct AgentIntegrado {
     pub agente: Agent,
     pub plan: Plan,

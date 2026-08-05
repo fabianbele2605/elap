@@ -1,5 +1,79 @@
 # CHANGELOG — Historial de Cambios ELAP
 
+## [Fase 9] - 2026-08-05
+
+### ✨ Nuevas Funcionalidades
+
+#### Web API REST (Paso 1 - Endpoints CRUD)
+
+- **Framework**: Axum 0.7 + Tower middleware
+- **Endpoints implementados**: 7
+  - POST /agents - Crear agente
+  - GET /agents - Listar agentes
+  - GET /agents/{id} - Obtener agente
+  - POST /agents/{id}/pasos - Agregar paso
+  - POST /agents/{id}/execute - Ejecutar agente
+  - GET /agents/{id}/status - Obtener estado
+  - DELETE /agents/{id} - Eliminar agente
+
+- **Estado compartido**: AppState con almacén de agentes thread-safe
+- **Handlers tipados**: CrearAgentRequest, AgentResponse, EjecucionResponse
+- **CORS**: Configurado para desarrollo
+- **Tests**: 7 nuevos tests (100% endpoints)
+
+### 📚 Documentación
+
+- `docs/04-API/REST_API.md`: Referencia completa de endpoints
+  - Ejemplos curl
+  - Request/Response schemas
+  - Códigos de estado
+  - Configuración del servidor
+
+### 🧪 Tests
+
+- 7 tests nuevos (state, handlers, routes, middleware)
+- 315 tests totales en elap-core (0 fallos)
+
+### 🏗️ Cambios Arquitectónicos
+
+- **Nuevo módulo**: `api/` en elap-core
+  - `mod.rs`: Exportaciones públicas
+  - `state.rs`: AppState (almacén thread-safe)
+  - `handlers.rs`: Handlers para los 7 endpoints
+  - `routes.rs`: Router Axum con todas las rutas
+  - `middleware.rs`: CORS, logging, config del servidor
+
+- **Trait Clone agregado**:
+  - Agent, Plan, ContextoAgente, AgentIntegrado
+  - OllamaClient, ModelManager
+  - Necesario para estado compartido thread-safe
+
+### 📊 Métricas Fase 9
+
+| Métrica | Valor |
+|---------|-------|
+| Endpoints | 7 |
+| Tests nuevos | 7 |
+| Tests totales | 315 |
+| Líneas de código API | ~400 |
+| Documentación | 1 (REST_API.md) |
+
+### 🔗 Integración
+
+```
+HTTP Client
+    ↓
+[Axum Router]
+    ↓
+[Handlers] → AppState (thread-safe)
+    ↓
+[AgentIntegrado] → ExecutorAgente
+    ↓
+[Tool Engine + Model Manager]
+```
+
+---
+
 ## [Fase 8] - 2026-08-05
 
 ### ✨ Nuevas Funcionalidades

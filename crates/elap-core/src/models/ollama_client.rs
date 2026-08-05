@@ -4,6 +4,7 @@ use serde_json::{json, Value as JsonValue};
 use crate::error::{ResultadoElap, ElapError};
 
 /// Cliente para comunicarse con Ollama
+#[derive(Clone)]
 pub struct OllamaClient {
     url_base: String,
     timeout_segundos: u64,

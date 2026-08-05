@@ -18,6 +18,7 @@ pub mod plugin;
 pub mod tools;
 pub mod models;
 pub mod agents;
+pub mod api;
 
 pub use core::MotorCentral;
 pub use error::ElapError;
@@ -43,4 +44,7 @@ pub use agents::{
     Agent, EstadoAgente, ContextoAgente, Plan, Paso,
     EjecutorAgente, AgentError, AgentIntegrado,
     SistemaMemoria, MemoriaCortoTermino, MemoriaLargoTermino,
+};
+pub use api::{
+    AppState, crear_router,
 };
