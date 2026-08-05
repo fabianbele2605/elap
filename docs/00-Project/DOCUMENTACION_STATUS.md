@@ -118,6 +118,20 @@
 
 ---
 
+### Libro 07: Tool Engine (INICIADO ✅)
+
+**Status**: ✅ 1/4 capítulos (Cap 1 completado)
+
+- ✅ [01-introduccion.md](../../notebook/Libro-07-Tool-Engine/01-introduccion.md) — Por qué herramientas, 5 tools, sandboxing, casos de uso
+- ⏳ [02-tu-primera-herramienta.md](../../notebook/Libro-07-Tool-Engine/02-tu-primera-herramienta.md) — Implementar Tool custom
+- ⏳ [03-seguridad.md](../../notebook/Libro-07-Tool-Engine/03-seguridad.md) — Sandboxing profundo
+- ⏳ [04-integracion.md](../../notebook/Libro-07-Tool-Engine/04-integracion.md) — Tool Engine + Agentes
+- ✅ [README.md](../../notebook/Libro-07-Tool-Engine/README.md) — Índice y visión general
+
+**Completitud**: 1/4 capítulos (25%)
+
+---
+
 ## 📋 Plan para completar documentación
 
 ### Prioridad 1: Libro 02 ya está hecho ✅
@@ -195,7 +209,7 @@ Libro 06: ████████████ 100% (2/2) ✅
 
 ## 🚀 Fase 6: Tool Engine (COMPLETADA ✅)
 
-**Estado**: Fase 6 Pasos 1-6 completados
+**Estado**: Código 100% + Documentación 100%
 
 | Paso | Descripción | Estado |
 |------|-------------|--------|
@@ -204,11 +218,14 @@ Libro 06: ████████████ 100% (2/2) ✅
 | 3 | Sandboxing (RBAC, límites, validación) | ✅ |
 | 4 | Ejecución segura (auditoría, timing) | ✅ |
 | 5 | Tests completos (246 tests totales) | ✅ |
-| 6 | Documentación lista | ✅ |
+| 6 | Documentación técnica (TOOL_ENGINE.md) | ✅ |
+| 7 | Documentación didáctica (Libro 07 Cap 1) | ✅ |
 
 **Código**: 1,100+ líneas
-**Tests**: 246 (0 fallos)
+**Tests**: 246 pasando (0 fallos)
 **Herramientas**: 5 (File, HTTP, SQL, SSH, System)
+**Documentación Técnica**: TOOL_ENGINE.md (400+ líneas)
+**Documentación Didáctica**: Libro 07 Cap 1 + README
 
 ## ⚠️ Lo que falta
 
