@@ -5,7 +5,7 @@
 //! Desktop application shell for ELAP using Tauri.
 //! Provides GUI and window management for the platform.
 
-use elap_core::MotorCentral;
+use elap_core::{MotorCentral, Configuracion};
 
 /// Desktop application manager
 #[derive(Debug)]
@@ -40,7 +40,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_desktop_runtime_creation() {
-        let core = MotorCentral::nuevo("MotorTest", "0.1.0");
+        let config = Configuracion::defecto();
+        let core = MotorCentral::nuevo(config);
         let desktop = DesktopRuntime::new(core);
         assert!(desktop.initialize().await.is_ok());
         assert!(desktop.shutdown().await.is_ok());

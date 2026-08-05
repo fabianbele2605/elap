@@ -12,7 +12,6 @@ path = "src/lib.rs"
 tokio = { workspace = true }
 tonic = { workspace = true }
 prost = { workspace = true }
-tracing = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 serde_yaml = { workspace = true }
@@ -24,5 +23,8 @@ aes-gcm = { workspace = true }
 hex = { workspace = true }
 uuid = { workspace = true }
 chrono = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+tracing-appender = { workspace = true }
 
 [dev-dependencies]

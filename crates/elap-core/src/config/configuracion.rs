@@ -54,6 +54,8 @@ pub struct Configuracion {
     pub puerto: u16,
     /// Nivel de logging (trace, debug, info, warn, error).
     pub nivel_logging: String,
+    /// Ruta del archivo de logs.
+    pub ruta_logs: String,
     /// Configuración de base de datos.
     pub base_datos: ConfigBaseDatos,
     /// Configuración de seguridad.
@@ -71,6 +73,7 @@ impl Configuracion {
             modo: "development".to_string(),
             puerto: 8000,
             nivel_logging: "info".to_string(),
+            ruta_logs: "logs/elap.log".to_string(),
             base_datos: ConfigBaseDatos {
                 tipo: "sqlite".to_string(),
                 url: "sqlite::memory:".to_string(),

@@ -1,53 +1,39 @@
-//! Error types for ELAP Core
-
-use std::fmt;
-
-/// Main error type for ELAP Core
+/// Errores de ELAP Core.
 #[derive(Debug)]
 pub enum ElapError {
-    /// Permission denied for operation
-    PermissionDenied(String),
-    /// Module or component not found
-    ModuleNotFound(String),
-    /// gRPC communication error
-    GrpcError(String),
-    /// Configuration error
-    ConfigError(String),
-    /// Authentication failure
-    AuthenticationError(String),
-    /// Plugin error
-    PluginError(String),
-    /// Generic internal error
-    Internal(String),
+    /// Error de configuración.
+    Config(String),
+    /// Error de I/O.
+    Io(std::io::Error),
+    /// Error de validación.
+    Validacion(String),
+    /// Error de proceso.
+    Proceso(String),
+    /// Error no categorizado.
+    Otro(String),
 }
 
-impl fmt::Display for ElapError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl std::fmt::Display for ElapError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ElapError::PermissionDenied(msg) => write!(f, "Permission denied: {}", msg),
-            ElapError::ModuleNotFound(msg) => write!(f, "Module not found: {}", msg),
-            ElapError::GrpcError(msg) => write!(f, "gRPC error: {}", msg),
-            ElapError::ConfigError(msg) => write!(f, "Configuration error: {}", msg),
-            ElapError::AuthenticationError(msg) => write!(f, "Authentication error: {}", msg),
-            ElapError::PluginError(msg) => write!(f, "Plugin error: {}", msg),
-            ElapError::Internal(msg) => write!(f, "Internal error: {}", msg),
+            ElapError::Config(msg) => write!(f, "Error de configuración: {}", msg),
+            ElapError::Io(err) => write!(f, "Error I/O: {}", err),
+            ElapError::Validacion(msg) => write!(f, "Error de validación: {}", msg),
+            ElapError::Proceso(msg) => write!(f, "Error de proceso: {}", msg),
+            ElapError::Otro(msg) => write!(f, "Error: {}", msg),
         }
     }
 }
 
 impl std::error::Error for ElapError {}
 
-impl From<String> for ElapError {
-    fn from(msg: String) -> Self {
-        ElapError::Internal(msg)
+impl From<std::io::Error> for ElapError {
+    fn from(err: std::io::Error) -> Self {
+        ElapError::Io(err)
     }
 }
 
-impl From<&str> for ElapError {
-    fn from(msg: &str) -> Self {
-        ElapError::Internal(msg.to_string())
-    }
-}
+pub type ResultadoElap<T> = Result<T, ElapError>;
 
 #[cfg(test)]
 mod tests {
@@ -55,16 +41,14 @@ mod tests {
 
     #[test]
     fn test_error_display() {
-        let err = ElapError::PermissionDenied("User lacks write access".to_string());
-        assert_eq!(
-            err.to_string(),
-            "Permission denied: User lacks write access"
-        );
+        let error = ElapError::Config("Test error".to_string());
+        assert_eq!(error.to_string(), "Error de configuración: Test error");
     }
 
     #[test]
-    fn test_error_from_string() {
-        let err: ElapError = "test error".into();
-        assert!(matches!(err, ElapError::Internal(_)));
+    fn test_error_from_io() {
+        let io_error = std::io::Error::new(std::io::ErrorKind::NotFound, "File not found");
+        let elap_error = ElapError::from(io_error);
+        assert!(matches!(elap_error, ElapError::Io(_)));
     }
 }

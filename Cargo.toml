@@ -27,6 +27,7 @@ prost = { version = "0.12" }
 # Logging
 tracing = { version = "0.1" }
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+tracing-appender = { version = "0.2" }
 
 # CLI
 clap = { version = "4.4", features = ["derive"] }
