@@ -66,3 +66,51 @@ pub async fn cmd_get_rbac_status(motor: Arc<MotorCentral>) -> IpcResult<RbacStat
         ],
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use elap_core::Configuracion;
+
+    #[tokio::test]
+    async fn test_cmd_init_motor() {
+        let config = Configuracion::defecto();
+        let motor_core = elap_core::MotorCentral::nuevo(config);
+        let motor = Arc::new(motor_core);
+        
+        let result = cmd_init_motor(motor).await;
+        assert!(result.is_ok());
+        
+        let response = result.unwrap();
+        assert!(response.success);
+        assert!(response.message.contains("inicializado"));
+    }
+
+    #[tokio::test]
+    async fn test_cmd_get_status() {
+        let config = Configuracion::defecto();
+        let motor_core = elap_core::MotorCentral::nuevo(config);
+        let motor = Arc::new(motor_core);
+        
+        let result = cmd_get_status(motor).await;
+        assert!(result.is_ok());
+        
+        let response = result.unwrap();
+        assert!(response.motor_running);
+        assert!(response.timestamp > 0);
+    }
+
+    #[tokio::test]
+    async fn test_cmd_get_rbac_status() {
+        let config = Configuracion::defecto();
+        let motor_core = elap_core::MotorCentral::nuevo(config);
+        let motor = Arc::new(motor_core);
+        
+        let result = cmd_get_rbac_status(motor).await;
+        assert!(result.is_ok());
+        
+        let response = result.unwrap();
+        assert_eq!(response.usuario_rol, "Admin");
+        assert_eq!(response.permisos_disponibles.len(), 5);
+    }
+}
