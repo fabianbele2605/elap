@@ -36,23 +36,25 @@ Este libro tiene varios capítulos que aprenderás progresivamente:
 - Archivos YAML legibles
 - **Estado**: ✅ Completado
 
-### Capítulo 5: Flujo Completo
+### [Capítulo 5: Manejo de Errores](05-manejo-errores.md)
+- Errores vs Panics
+- El operador ? para propagación
+- Tipos de error específicos (Config, Io, Validacion, Proceso)
+- Patrones de manejo seguro
+- **Estado**: ✅ Completado
+
+### Capítulo 6: Flujo Completo
 - Tokens, locks y mutexes (sin tecnicismos)
 - Async/await explicado simple
 - Por qué Rust es perfecto para esto
 
-### Capítulo 4: El flujo completo
-- Cómo fluye una solicitud de usuario
-- De principio a fin
-- Con diagrama animado
-
-### Capítulo 5: Preguntas frecuentes
+### Capítulo 7: Preguntas frecuentes
 - ¿Qué pasa si hay 1000 tareas?
 - ¿Qué pasa si una tarea falla?
 - ¿Cómo escalamos?
 
-### Capítulo 6: Buenas prácticas
-- Cómo usar el planificador correctamente
+### Capítulo 8: Buenas prácticas
+- Cómo usar el motor correctamente
 - Antipatrones a evitar
 - Consejos de rendimiento
 
@@ -63,47 +65,54 @@ Este libro tiene varios capítulos que aprenderás progresivamente:
 ### Si eres completamente nuevo:
 1. Lee el Capítulo 1 (introducción)
 2. Lee el Capítulo 2 (planificador)
-3. Luego regresa cuando tengas dudas específicas
+3. Lee el Capítulo 3 (procesos)
+4. Lee el Capítulo 4 (configuración)
+5. Lee el Capítulo 5 (errores)
+6. Luego regresa cuando tengas dudas específicas
 
 ### Si ya sabes Rust:
-1. Salta el Capítulo 3 (concurrencia)
-2. Ve directo al Capítulo 4 (flujo completo)
-3. Capítulo 6 para insights avanzados
+1. Salta Capítulo 1-2 si son obvios
+2. Lee Capítulo 3-5 para entender ELAP específicamente
+3. Capítulo 7 (FAQ) probablemente responde tus preguntas
+4. Capítulo 8 para insights avanzados
 
 ### Si estás debugueando un problema:
-- Capítulo 5 (FAQ) probablemente tiene la respuesta
-- Capítulo 6 (mejores prácticas) para optimización
+- Capítulo 5 (Manejo de Errores) para entender propagación
+- Capítulo 7 (FAQ) probablemente tiene la respuesta
+- Capítulo 8 (mejores prácticas) para optimización
 
 ---
 
 ## 🚀 Conceptos clave que aprenderás
 
 ```
-┌─────────────────────────────────────┐
-│     Motor Central (Core Runtime)    │
-├─────────────────────────────────────┤
-│                                     │
-│  ┌─────────────────────────────┐   │
-│  │   Planificador de Tareas    │   │
-│  │  (PlanificadorTareas)       │   │
-│  │                             │   │
-│  │  ┌─────────────────────┐   │   │
-│  │  │ Cola de Prioridad   │   │   │
-│  │  │ (BinaryHeap)        │   │   │
-│  │  │                     │   │   │
-│  │  │ [Alta]              │   │   │
-│  │  │ [Normal] [Normal]   │   │   │
-│  │  │ [Baja]              │   │   │
-│  │  └─────────────────────┘   │   │
-│  │                             │   │
-│  └─────────────────────────────┘   │
-│                                     │
-│  Ejecuta concurrentemente usando:  │
-│  - Tokio (async runtime)           │
-│  - Mutex (concurrencia segura)     │
-│  - BinaryHeap (ordenamiento)       │
-│                                     │
-└─────────────────────────────────────┘
+┌──────────────────────────────────────────────┐
+│      Motor Central (Core Runtime)            │
+├──────────────────────────────────────────────┤
+│                                              │
+│ ┌─────────────┐   ┌─────────────────┐       │
+│ │Planificador │   │ Gestor Procesos │       │
+│ │de Tareas    │   │                 │       │
+│ │             │   │  std::process   │       │
+│ │  BinaryHeap │   │  Command        │       │
+│ │  (Prioridad)│   │  Timestamps     │       │
+│ └─────────────┘   └─────────────────┘       │
+│         ↓                   ↓                │
+│ ┌────────────────────────────────────┐      │
+│ │   Configuración (YAML)             │      │
+│ │   - Puertos                        │      │
+│ │   - Niveles de logging             │      │
+│ │   - Modos (dev/prod)               │      │
+│ └────────────────────────────────────┘      │
+│         ↓                                   │
+│ ┌────────────────────────────────────┐      │
+│ │   Manejo de Errores (Result)       │      │
+│ │   - Config, Io, Validacion         │      │
+│ │   - Operador ?                     │      │
+│ │   - Propagación segura             │      │
+│ └────────────────────────────────────┘      │
+│                                              │
+└──────────────────────────────────────────────┘
 ```
 
 ---
@@ -142,7 +151,22 @@ Todo lo demás construye encima.
 
 ---
 
-**Siguiente**: Abre el [Capítulo 1: Introducción al Motor Central](01-introduccion.md)
+## 📊 Progreso del libro
 
-**Última actualización**: 2026-08-04  
-**Estado**: En construcción 🔨
+| Capítulo | Tema | Estado |
+|----------|------|--------|
+| 1 | Introducción al Motor | ✅ Completado |
+| 2 | Planificador de Tareas | ✅ Completado |
+| 3 | Gestor de Procesos | ✅ Completado |
+| 4 | Gestor de Configuración | ✅ Completado |
+| 5 | Manejo de Errores | ✅ Completado |
+| 6 | Flujo Completo | 🔜 En construcción |
+| 7 | FAQ | 🔜 Pendiente |
+| 8 | Buenas Prácticas | 🔜 Pendiente |
+
+---
+
+**Para comenzar**: Abre el [Capítulo 1: Introducción al Motor Central](01-introduccion.md)
+
+**Última actualización**: 2026-08-05  
+**Estado**: 5/8 capítulos completados ✅
