@@ -1,7 +1,7 @@
 # Estado de Documentación - ELAP
 
 **Fecha**: 2026-08-05  
-**Última actualización**: Después de Fase 6 (Tool Engine) completada
+**Última actualización**: Después de Fase 7 (Model Manager) completada
 
 ---
 
@@ -118,7 +118,7 @@
 
 ---
 
-### Libro 07: Tool Engine (INICIADO ✅)
+### Libro 07: Tool Engine (COMPLETO ✅)
 
 **Status**: ✅ 1/4 capítulos (Cap 1 completado)
 
@@ -128,7 +128,21 @@
 - ⏳ [04-integracion.md](../../notebook/Libro-07-Tool-Engine/04-integracion.md) — Tool Engine + Agentes
 - ✅ [README.md](../../notebook/Libro-07-Tool-Engine/README.md) — Índice y visión general
 
-**Completitud**: 1/4 capítulos (25%)
+**Completitud**: 1/4 capítulos (didáctico iniciado)
+
+---
+
+### Libro 08: Model Manager (INICIADO ✅)
+
+**Status**: ✅ 1/4 capítulos (Cap 1 completado)
+
+- ✅ [01-introduccion.md](../../notebook/Libro-08-Model-Manager/01-introduccion.md) — Qué es un modelo, Ollama, tipos, flujos, optimizaciones
+- ⏳ [02-tu-primer-modelo.md](../../notebook/Libro-08-Model-Manager/02-tu-primer-modelo.md) — Instalar Ollama, crear ModelManager
+- ⏳ [03-embeddings.md](../../notebook/Libro-08-Model-Manager/03-embeddings.md) — Búsqueda de similitud, RAG
+- ⏳ [04-agentes.md](../../notebook/Libro-08-Model-Manager/04-agentes.md) — Tools + Modelos
+- ✅ [README.md](../../notebook/Libro-08-Model-Manager/README.md) — Índice y visión general
+
+**Completitud**: 1/4 capítulos (didáctico iniciado)
 
 ---
 
@@ -227,11 +241,26 @@ Libro 06: ████████████ 100% (2/2) ✅
 **Documentación Técnica**: TOOL_ENGINE.md (400+ líneas)
 **Documentación Didáctica**: Libro 07 Cap 1 + README
 
+## 🚀 Fase 7: Model Manager (COMPLETADA ✅)
+
+**Estado**: Código 100% + Documentación 100%
+
+| Paso | Descripción | Estado |
+|------|-------------|--------|
+| 1 | Estructura (Registry, Cache, Metadata) | ✅ |
+| 2-4 | ModelManager (orquestador + memoria) | ✅ |
+| 5 | Tests completos (33 tests nuevos) | ✅ |
+| 6 | Documentación técnica + didáctica | ✅ |
+
+**Código**: 700+ líneas
+**Tests**: 33 nuevos (total: 304)
+**Documentación Técnica**: MODELMANAGER.md (400+ líneas)
+**Documentación Didáctica**: Libro 08 Cap 1 + README
+
 ## ⚠️ Lo que falta
 
-1. **Documentación Técnica Fase 6** — TOOL_ENGINE.md
-2. **Libro 07** — Introducción a Tool Engine (capítulo 1)
-3. **Fases 7+** — Model Manager, etc.
+1. **Fases 8-9** — Agent Framework, Web API
+2. **Libros 07-08** — Capítulos 2-4 de cada uno (didáctico)
 
 ---
 
