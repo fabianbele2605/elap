@@ -4,70 +4,96 @@
 
 ### ✨ Nuevas Funcionalidades
 
-#### Web API REST (Paso 1 - Endpoints CRUD)
+#### Web API REST + WebSocket (Pasos 1-2)
+
+**Paso 1: REST API - 7 Endpoints CRUD**
+- POST /agents - Crear agente
+- GET /agents - Listar agentes
+- GET /agents/{id} - Obtener agente
+- POST /agents/{id}/pasos - Agregar paso
+- POST /agents/{id}/execute - Ejecutar agente
+- GET /agents/{id}/status - Obtener estado
+- DELETE /agents/{id} - Eliminar agente
+
+**Paso 2: WebSocket Streaming - Monitoreo en Vivo**
+- GET ws://localhost:3000/agents/{id}/watch
+- 7 tipos de eventos: conectado, estado, progreso, acción, reflexión, latido, error
+- Heartbeat cada 1 segundo
+- Bidireccional (preparado para comandos futuros)
+- 6 tests unitarios (tipos de eventos)
+
+### 🛠️ Implementación
 
 - **Framework**: Axum 0.7 + Tower middleware
-- **Endpoints implementados**: 7
-  - POST /agents - Crear agente
-  - GET /agents - Listar agentes
-  - GET /agents/{id} - Obtener agente
-  - POST /agents/{id}/pasos - Agregar paso
-  - POST /agents/{id}/execute - Ejecutar agente
-  - GET /agents/{id}/status - Obtener estado
-  - DELETE /agents/{id} - Eliminar agente
-
-- **Estado compartido**: AppState con almacén de agentes thread-safe
+- **WebSocket**: axum::extract::ws + futures
+- **Estado compartido**: AppState con Arc<RwLock<HashMap>>
 - **Handlers tipados**: CrearAgentRequest, AgentResponse, EjecucionResponse
+- **Eventos tipados**: AgentEvent con 7 variantes
 - **CORS**: Configurado para desarrollo
-- **Tests**: 7 nuevos tests (100% endpoints)
 
 ### 📚 Documentación
 
-- `docs/04-API/REST_API.md`: Referencia completa de endpoints
+- `docs/04-API/REST_API.md`: 7 endpoints REST
   - Ejemplos curl
   - Request/Response schemas
-  - Códigos de estado
-  - Configuración del servidor
+  - Códigos HTTP
+  
+- `docs/04-API/WEBSOCKET.md`: Monitoreo en tiempo real
+  - 7 tipos de eventos
+  - Ejemplos JavaScript, Rust, Bash
+  - Flujo completo
+  - Performance metrics
 
 ### 🧪 Tests
 
-- 7 tests nuevos (state, handlers, routes, middleware)
-- 315 tests totales en elap-core (0 fallos)
+- 13 tests nuevos (7 REST + 6 WebSocket)
+- 321 tests totales en elap-core (0 fallos)
+- 100% cobertura endpoints
 
 ### 🏗️ Cambios Arquitectónicos
 
-- **Nuevo módulo**: `api/` en elap-core
-  - `mod.rs`: Exportaciones públicas
-  - `state.rs`: AppState (almacén thread-safe)
-  - `handlers.rs`: Handlers para los 7 endpoints
-  - `routes.rs`: Router Axum con todas las rutas
-  - `middleware.rs`: CORS, logging, config del servidor
+**Nuevo módulo `api/` en elap-core**:
+- `mod.rs` - Exportaciones
+- `state.rs` - AppState thread-safe
+- `handlers.rs` - 7 handlers REST
+- `routes.rs` - Router Axum
+- `middleware.rs` - CORS, config
+- `websocket.rs` - WebSocket + AgentEvent
 
-- **Trait Clone agregado**:
-  - Agent, Plan, ContextoAgente, AgentIntegrado
-  - OllamaClient, ModelManager
-  - Necesario para estado compartido thread-safe
+**Dependencias agregadas**:
+- axum 0.7 (con feature `ws`)
+- tower 0.4
+- tower-http 0.5
+- hyper 1.0
+- futures 0.3
+
+**Trait Clone agregado**:
+- Agent, Plan, ContextoAgente, AgentIntegrado
+- OllamaClient, ModelManager
+- Necesario para estado compartido
 
 ### 📊 Métricas Fase 9
 
 | Métrica | Valor |
 |---------|-------|
-| Endpoints | 7 |
-| Tests nuevos | 7 |
-| Tests totales | 315 |
-| Líneas de código API | ~400 |
-| Documentación | 1 (REST_API.md) |
+| Endpoints REST | 7 |
+| WebSocket endpoints | 1 |
+| Tipos de eventos | 7 |
+| Tests nuevos | 13 |
+| Tests totales | 321 |
+| Líneas de código | ~600 |
+| Documentación | 2 files |
 
 ### 🔗 Integración
 
 ```
-HTTP Client
+HTTP Client ← REST (CRUD)
     ↓
 [Axum Router]
     ↓
-[Handlers] → AppState (thread-safe)
+WebSocket ← Streaming (monitoreo)
     ↓
-[AgentIntegrado] → ExecutorAgente
+[AppState] → [AgentIntegrado]
     ↓
 [Tool Engine + Model Manager]
 ```

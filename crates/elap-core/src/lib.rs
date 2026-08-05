@@ -46,5 +46,5 @@ pub use agents::{
     SistemaMemoria, MemoriaCortoTermino, MemoriaLargoTermino,
 };
 pub use api::{
-    AppState, crear_router,
+    AppState, crear_router, AgentEvent,
 };
