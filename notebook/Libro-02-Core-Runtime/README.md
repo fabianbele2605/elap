@@ -43,17 +43,25 @@ Este libro tiene varios capítulos que aprenderás progresivamente:
 - Patrones de manejo seguro
 - **Estado**: ✅ Completado
 
-### Capítulo 6: Flujo Completo
+### [Capítulo 6: Gestor de Seguridad (RBAC)](06-gestor-seguridad.md)
+- Control de acceso basado en roles
+- Los 4 roles: Admin, Usuario, Invitado, Agente
+- Los 5 permisos del sistema
+- Sistema de auditoría
+- Integración con MotorCentral
+- **Estado**: ✅ Completado
+
+### Capítulo 7: Flujo Completo
 - Tokens, locks y mutexes (sin tecnicismos)
 - Async/await explicado simple
 - Por qué Rust es perfecto para esto
 
-### Capítulo 7: Preguntas frecuentes
+### Capítulo 8: Preguntas frecuentes
 - ¿Qué pasa si hay 1000 tareas?
 - ¿Qué pasa si una tarea falla?
 - ¿Cómo escalamos?
 
-### Capítulo 8: Buenas prácticas
+### Capítulo 9: Buenas prácticas
 - Cómo usar el motor correctamente
 - Antipatrones a evitar
 - Consejos de rendimiento
@@ -160,13 +168,14 @@ Todo lo demás construye encima.
 | 3 | Gestor de Procesos | ✅ Completado |
 | 4 | Gestor de Configuración | ✅ Completado |
 | 5 | Manejo de Errores | ✅ Completado |
-| 6 | Flujo Completo | 🔜 En construcción |
-| 7 | FAQ | 🔜 Pendiente |
-| 8 | Buenas Prácticas | 🔜 Pendiente |
+| 6 | Gestor de Seguridad (RBAC) | ✅ Completado |
+| 7 | Flujo Completo | 🔜 En construcción |
+| 8 | FAQ | 🔜 Pendiente |
+| 9 | Buenas Prácticas | 🔜 Pendiente |
 
 ---
 
 **Para comenzar**: Abre el [Capítulo 1: Introducción al Motor Central](01-introduccion.md)
 
 **Última actualización**: 2026-08-05  
-**Estado**: 5/8 capítulos completados ✅
+**Estado**: 6/9 capítulos completados ✅
