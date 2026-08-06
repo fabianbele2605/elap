@@ -4,118 +4,377 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [0.5.0-alpha] - 2026-08-05
+
+### Fase 3 - Plugin Runtime (Pasos 1-6 Completados)
+
+#### Agregado
+
+**Paso 1: Estructura Plugin**
+- Módulo `plugin` en elap-core
+- `plugin/plugin_trait.rs`: Trait Plugin con 6 métodos obligatorios
+- `plugin/metadata.rs`: PluginMetadata con serialización
+- `plugin/loader.rs`: PluginLoader básico con validación
+- 3 tests iniciales
+
+**Paso 2: Plugin Loader (Carga Dinámica)**
+- Agregado `libloading = 0.8` al workspace
+- Métodos adicionales en loader:
+  - `descubrir()` — Buscar plugins en directorio
+  - `cargar_por_nombre()` — Cargar por nombre
+  - `calcular_hash()` — SHA256 para verificación
+- 6 tests totales (3 nuevos)
+
+**Paso 3: Plugin Registry**
+- Creado `plugin/registry.rs`
+- RegistroPlugins thread-safe con Arc<Mutex<HashMap>>
+- Métodos: registrar, desregistrar, obtener, listar, contar, existe
+- Búsqueda por autor y permiso
+- 13 tests totales (10 nuevos)
+
+**Paso 4: Plugin Sandboxing**
+- Creado `plugin/sandbox.rs`
+- ConfiguracionSandbox (restrictiva, defecto, permisiva)
+- PoliticaEjecucion (firma, permisos, auditoría)
+- Métodos de validación de acceso (red, archivos, procesos)
+- 12 tests nuevos
+
+**Paso 5: Tests Completos**
+- 7 tests nuevos para casos edge
+- Registry: búsqueda por autor, permiso, sin resultados
+- Loader: validaciones de metadata, cálculo de hash
+- Agregado tempfile como dev-dependency
+
+**Paso 6: Documentación**
+- `docs/03-Modules/PLUGIN.md`: Documentación técnica completa
+- Capítulo 1 del Libro 04: Introducción a Plugin Runtime
+- Estructura, componentes, flujo de uso, seguridad
+
+#### Resumen
+
+- **Módulos**: 1 nuevo (plugin) con 5 subcomponentes
+- **Tests**: 35 tests en módulo plugin (110 totales en elap-core)
+- **Compilación**: Exitosa en todos los puntos
+- **Documentación**: Técnica + didáctica completa
+- **Líneas de código**: 800+ nuevas líneas en plugin system
+- **Funcionalidad**: Estructura completa para sistema de plugins seguro
+
+---
+
+## [0.4.0-alpha] - 2026-08-05
+
+### Fase 2 - Desktop Runtime (Pasos 1-5 Completados)
+
+#### Agregado
+
+**Paso 1: Estructura Desktop**
+- Crear proyecto Desktop Runtime con Cargo.toml
+- setup build.rs y tauri.conf.json (placeholders)
+- src/main.rs que inicializa MotorCentral
+- Compilación exitosa
+
+**Paso 2: IPC Bridge**
+- Módulo `ipc` con estructura de comunicación
+- `ipc/errors.rs`: 4 tipos de error IPC
+- `ipc/commands.rs`: 3 comandos IPC
+  - cmd_init_motor (inicialización real)
+  - cmd_get_status (estado del motor)
+  - cmd_get_rbac_status (permisos RBAC)
+- Compilación exitosa
+
+**Paso 3: Componentes UI**
+- Módulo `ui` con estructura de componentes
+- `ui/state.rs`: 3 estados serializables (AppState, ToolbarState, StatusBarState)
+- `ui/components.rs`: 3 componentes visuales (WindowComponent, ButtonComponent, LogPanelComponent)
+- Todos con Serialize/Deserialize para JSON
+
+**Paso 4: Integración IPC ↔ MotorCentral**
+- Refactorizar comandos para recibir Arc<MotorCentral>
+- Integración real con motor.iniciar()
+- Tests con integración real
+- Compilación exitosa
+
+**Paso 5: Tests de Integración**
+- 3 tests IPC con integración real
+- test_cmd_init_motor, test_cmd_get_status, test_cmd_get_rbac_status
+- 4 tests totales en elap-desktop (todos pasando)
+
+**Paso 6: Documentación**
+- `docs/03-Modules/DESKTOP.md`: Documentación técnica completa
+- Capítulo 1 del Libro 03: Introducción a Desktop Runtime
+- 11 commits en Fase 2
+
+#### Resumen
+
+- **Módulos**: 2 nuevos (ipc, ui) con 8 subcomponentes
+- **Tests**: 4 tests pasando en elap-desktop
+- **Compilación**: Exitosa en todos los puntos
+- **Documentación**: Técnica + didáctica completa
+- **Integración**: IPC bridge conectado con MotorCentral real
+
+---
+
+## [0.3.0-alpha] - 2026-08-05
+
+### Fase 1 - Pasos 3-6: Core Runtime (Completo)
+
+#### Agregado
+
+**Paso 3: Gestor de Configuración**
+- Módulo `config` completo con `configuracion.rs`
+  - Struct Configuracion con modo, versión, puerto, logging
+  - Serialización YAML con serde_yaml
+  - Validación de parámetros críticos
+  - 8 tests de configuración
+- Documentación técnica: `docs/03-Modules/CONFIGURACION.md`
+- Capítulo 4 del Libro 02
+
+**Paso 4: Manejo de Errores**
+- Módulo `error` con tipos personalizados
+  - Enum ElapError (Config, Io, Validacion, Proceso, Otro)
+  - Alias ResultadoElap<T> para Result<T, ElapError>
+  - Implementación Display y Error traits
+  - 2 tests de error handling
+- Documentación técnica: `docs/03-Modules/ERROR_HANDLING.md`
+- Capítulo 5 del Libro 02
+
+**Paso 5: Gestor de Seguridad (RBAC)**
+- Módulo `security` completo con:
+  - `rol.rs`: Enum Rol (Admin, Usuario, Invitado, Agente)
+  - `permisos.rs`: Enum Permiso (5 permisos del sistema)
+  - `rbac.rs`: GestorRbac con validación de permisos
+  - `auditor.rs`: RegistroAuditoria + AuditorRbac (26 tests)
+- Integración en MotorCentral con getters .rbac() y .auditor()
+- Documentación técnica: `docs/03-Modules/SEGURIDAD.md`
+- Capítulo 6 del Libro 02
+
+**Paso 6: Integración Final**
+- Test E2E de flujo completo (RBAC + Auditoría)
+- MotorCentral actualizado con 4 tests de integración
+- Total: 75 tests pasando en elap-core
+
+#### Modificado
+
+- `crates/elap-core/src/lib.rs`: Agregados módulos config, error, security
+- `crates/elap-core/src/core.rs`: Integración de RBAC y Auditoría
+- `notebook/Libro-02-Core-Runtime/README.md`: 6/9 capítulos completados
+
+#### Seguridad
+
+- RBAC con tablas de permisos por rol (administrador, usuario, invitado, agente)
+- Auditoría con timestamp de cada acción (exitosa o denegada)
+- Validación explícita de permisos antes de operaciones sensibles
+- Sin panics: todo devuelve Result con error handling
+- Thread-safe con Mutex para AuditorRbac
+
+#### Documentación
+
+- 3 módulos documentados técnicamente (CONFIG, ERROR, SECURITY)
+- 3 capítulos didácticos para NotebookLM (Caps 4, 5, 6)
+- Analogías pedagógicas explicadas paso a paso
+- Casos de uso realistas en todos los capítulos
+
+#### Tests
+
+- **Configuración**: 8 tests (tipos, validación, default)
+- **Errores**: 2 tests (Display, From<std::io::Error>)
+- **RBAC**: 26 tests (roles, permisos, auditoría)
+- **Integración**: 4 tests (creación, ciclo vida, getters, E2E)
+- **Total Core**: 75 tests pasando ✅
+
+---
+
+## [0.2.0-alpha] - 2026-08-04
+
+### Fase 1 - Paso 2: Gestor de Procesos
+
+#### Agregado
+
+- Módulo `procesos` completo en `crates/elap-core/src/procesos/`
+  - `error.rs`: Tipos de error específicos de procesos
+  - `proceso.rs`: Definición de Proceso, IdProceso, EstadoProceso
+  - `spawner.rs`: Creación y ejecución de procesos del SO
+  - `ejecutor.rs`: GestorProcesos API pública (thread-safe)
+  - `mod.rs`: Re-exports públicos
+- 15 tests nuevos en módulo procesos (todos pasando)
+  - 4 tests en proceso.rs
+  - 4 tests en spawner.rs
+  - 8 tests en ejecutor.rs
+- Documentación técnica: `docs/03-Modules/PROCESOS.md`
+- Capítulo 3 del Libro 02: `notebook/Libro-02-Core-Runtime/03-gestor-procesos.md`
+- Mejorado `.gitignore` con exclusiones para:
+  - Tauri (src-tauri/target/, src-tauri/dist/)
+  - Node (node_modules/, package-lock.json, yarn.lock)
+  - Ollama (.ollama/, ollama_cache/)
+  - Backups (*.bak, *.backup)
+
+#### Modificado
+
+- `crates/elap-core/src/lib.rs`: Agregado módulo procesos
+- `docs/00-Project/CHANGELOG.md`: Actualizado a español
+- `README.md`: Actualizado con email personal y GitHub correcto
+
+#### Seguridad
+
+- GestorProcesos usa Arc<Mutex<>> para thread-safety
+- Procesos ejecutados en aislamiento del SO
+- Sin panics: todos los métodos devuelven Result/Option
+- Validación de IDs antes de ejecutar
+
+#### Documentación
+
+- Documentación técnica profesional (PROCESOS.md)
+- Capítulo didáctico para NotebookLM (03-gestor-procesos.md)
+- Analogías pedagógicas sin tecnicismos
+- 15 tests implementados y documentados
+
+---
+
 ## [0.1.0-alpha] - 2026-08-04
 
 ### Fase 0: Fundacionales
 
-#### Added
+#### Agregado
 
-- Git repository initialized with user configuration
-- Complete directory structure created
-  - `crates/` for Rust workspace (elap-core, elap-desktop, elap-cli)
-  - `python/` for AI Runtime
-  - `docs/` with 10 subdirectories for documentation
-  - `notebook/` for NotebookLM study materials
-  - `tooling/` for CI/CD and scripts
-  - `.github/workflows/` for GitHub Actions
-- Cargo.toml workspace configuration with shared dependencies
-  - Tokio async runtime
-  - Tonic gRPC framework
-  - Tracing for logging
-  - Serde for serialization
-  - Ring for crypto
-- pyproject.toml for Python package
-  - LangChain/LangGraph dependencies
-  - Transformers and PyTorch
-  - Vector DBs (Qdrant, ChromaDB)
-  - Ollama for model inference
-- Main documentation files
-  - README.md (English, project overview)
-  - CLAUDE.md (Engineering standards)
-  - .gitignore (Rust + Python + IDE)
-- Rust code (elap-core)
-  - CoreEngine struct with lifecycle management
-  - ElapError type with variants
-  - Config struct with DatabaseConfig and SecurityConfig
-  - Initial tests (>80% coverage target)
-- Rust code (elap-desktop)
-  - DesktopRuntime wrapper
-  - Basic async lifecycle
-- Rust code (elap-cli)
-  - CLI with clap
-  - Commands: start, version, health, help
-  - Logging with tracing
-- Python code (elap-ai)
-  - AIRuntime base class
-  - Async lifecycle (start/stop)
-  - health_check method
-  - process_query placeholder
-- Documentation structure
+- Repositorio Git inicializado con configuración de usuario
+- Estructura de carpetas completa
+  - `crates/` para workspace Rust (elap-core, elap-desktop, elap-cli)
+  - `python/` para Motor de IA
+  - `docs/` con 10 subdirectorios para documentación
+  - `notebook/` para materiales de estudio NotebookLM
+  - `tooling/` para CI/CD y scripts
+  - `.github/workflows/` para GitHub Actions
+- Configuración Cargo.toml workspace con dependencias compartidas
+  - Runtime async Tokio
+  - Framework gRPC Tonic
+  - Logging con Tracing
+  - Serialización con Serde
+  - Criptografía con Ring
+- pyproject.toml para package Python
+  - Dependencias LangChain/LangGraph
+  - Transformers y PyTorch
+  - Bases de datos vectoriales (Qdrant, ChromaDB)
+  - Ollama para inferencia de modelos
+- Módulo Planificador de Tareas (Scheduler)
+  - IdTarea: identificador único (UUID)
+  - EstadoTarea: Pendiente, Ejecutando, Completada, Fallo
+  - PrioridadTarea: Alta, Normal, Baja
+  - Tarea: metadata completa
+  - ColaTareas: BinaryHeap con ordenamiento por prioridad
+  - PlanificadorTareas: API pública (thread-safe, Arc<Mutex<>>)
+- 23 tests del Planificador (todos pasando)
+  - 5 tests en tarea.rs
+  - 6 tests en cola.rs
+  - 5 tests en ejecutor.rs
+  - 2 tests en core.rs
+  - 3 tests en config.rs
+  - 2 tests en error.rs
+- Archivos de documentación principales
+  - README.md (en español, visión general del proyecto)
+  - CLAUDE.md (estándares de ingeniería)
+  - .gitignore (Rust + Python + IDE + secretos)
+- Código Rust (elap-core)
+  - Struct MotorCentral con gestión de ciclo de vida
+  - Type ElapError con variantes
+  - Struct Config con ConfigBaseDatos y ConfigSeguridad
+  - Tests iniciales (objetivo >80% cobertura)
+  - Módulo scheduler completamente implementado
+- Código Rust (elap-desktop)
+  - Wrapper DesktopRuntime
+  - Ciclo de vida async básico
+- Código Rust (elap-cli)
+  - CLI con clap
+  - Comandos: start, version, health, help
+  - Logging con tracing
+- Código Python (elap-ai)
+  - Clase AIRuntime base
+  - Ciclo de vida async (iniciar/detener)
+  - Método health_check
+  - Placeholder process_query
+- Estructura de documentación
   - /docs/00-Project/ (README, ROADMAP, CHANGELOG, TODO, TREE)
-  - /docs/01-Architecture/ (skeleton)
-  - /docs/02-Development/ (skeleton)
-  - /docs/03-Modules/ through /10-NotebookLM/ (empty, ready for content)
-  - /notebook/Libro-01-Introduccion/ (skeleton)
+  - /docs/01-Architecture/ (esqueleto)
+  - /docs/02-Development/ (esqueleto)
+  - /docs/03-Modules/ hasta /10-NotebookLM/ (listas para contenido)
+  - /notebook/Libro-01-Introduccion/ (esqueleto)
+- Documentación técnica del Planificador: `docs/03-Modules/SCHEDULER.md`
+- Capítulo 1 del Libro 02: `notebook/Libro-02-Core-Runtime/01-introduccion.md`
+- Capítulo 2 del Libro 02: `notebook/Libro-02-Core-Runtime/02-planificador-tareas.md`
 
-#### Modified
+#### Modificado
 
-- None (initial creation)
+- Nada (creación inicial)
 
-#### Deprecated
+#### Deprecado
 
-- None
+- Nada
 
-#### Removed
+#### Eliminado
 
-- None
+- Nada
 
-#### Fixed
+#### Corregido
 
-- None
+- Código y documentación traducidos completamente al español
+- Nombres de funciones del Motor Central: CoreEngine → MotorCentral
+- Métodos: start/stop → iniciar/detener
+- BinaryHeap: corregido ordenamiento para que Alta prioridad salga primero
 
-#### Security
+#### Seguridad
 
-- .gitignore configured to prevent:
-  - Rust build artifacts (/target/)
-  - Python cache (__pycache__/)
-  - Environment files (.env)
-  - Private keys and secrets
-  - Database files (*.db, *.sqlite)
-  - Model files (*.gguf, *.safetensors) — can be added with git-lfs
+- .gitignore configurado para prevenir:
+  - Artefactos de build Rust (/target/)
+  - Cache de Python (__pycache__/)
+  - Archivos de entorno (.env, .envrc)
+  - Claves privadas y secretos
+  - Archivos de base de datos (*.db, *.sqlite)
+  - Archivos de modelos (*.gguf, *.safetensors) — pueden agregarse con git-lfs
+- Planificador: Arc<Mutex<>> para acceso thread-safe
+- Sin unwrap() en código de biblioteca
 
-#### Documentation
+#### Documentación
 
-- README.md: Project overview, quick start, structure
-- CLAUDE.md: Code conventions, architecture principles, security checklist
-- ROADMAP.md: 17-phase roadmap with deliverables
-- docs/00-Project/README.md: Fase 0 status
-- /notebook/ structure created for future study materials
-
----
-
-## Unreleased
-
-### Next (Fase 1 - Core Runtime)
-
-- [ ] Task scheduler implementation (Tokio)
-- [ ] Process manager
-- [ ] Plugin framework
-- [ ] gRPC gateway Rust ↔ Python
-- [ ] RBAC manager
-- [ ] Tests (>80% coverage)
-- [ ] ARCHITECTURE.md documentation
-- [ ] Libro 02 for NotebookLM
+- README.md: Visión general del proyecto, inicio rápido, estructura
+- CLAUDE.md: Convenciones de código, principios de arquitectura, checklist de seguridad
+- ROADMAP.md: Roadmap de 17 fases con entregables
+- docs/00-Project/README.md: Estado de Fase 0
+- docs/01-Architecture/ARCHITECTURE.md: Diseño del sistema (4 libros técnicos)
+- /notebook/ estructura creada para materiales de estudio futuros
+- Estructura /docs con documentación didáctica
 
 ---
 
-## Notes
+## Sin publicar (Próximo)
 
-- **Language**: English for code, Spanish for documentation
-- **Versioning**: Semantic versioning (MAJOR.MINOR.PATCH)
-- **Releases**: One per phase completion
-- **Living Documentation**: Every code change comes with documentation
+### Fase 1 - Paso 3: Gestor de Configuración
+
+- [ ] Módulo config con soporte YAML
+- [ ] Carga/guardado de configuración
+- [ ] Validación de esquema
+- [ ] Variables de entorno
+- [ ] Tests (>80% cobertura)
+- [ ] Documentación técnica
+- [ ] Capítulo 4 del Libro 02
+
+### Fase 1 - Paso 4+
+
+- [ ] Motor de Plugins
+- [ ] Gateway gRPC (Rust ↔ Python)
+- [ ] Gestor de permisos RBAC
+- [ ] Tests completos (>80% cobertura)
+- [ ] Documentación de arquitectura
+- [ ] Libros de estudio para NotebookLM
 
 ---
 
-**Created**: 2026-08-04  
-**Last updated**: 2026-08-04
+## Notas
+
+- **Lenguaje**: Español para código, documentación y commits
+- **Versionamiento**: Semantic versioning (MAYOR.MENOR.PARCHE)
+- **Releases**: Una por fase completada
+- **Documentación Viva**: Todo cambio de código viene con documentación
+
+---
+
+**Creado**: 2026-08-04  
+**Última actualización**: 2026-08-04

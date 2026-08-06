@@ -19,6 +19,21 @@ homepage = "https://bblabs.io/elap"
 tokio = { version = "1.35", features = ["full"] }
 tokio-util = { version = "0.7" }
 
+# Web framework
+axum = { version = "0.7", features = ["macros", "ws"] }
+tower = { version = "0.4" }
+tower-http = { version = "0.5", features = ["trace", "cors"] }
+hyper = { version = "1.0" }
+futures = { version = "0.3" }
+
+# Authentication
+jsonwebtoken = { version = "9.2" }
+base64 = { version = "0.21" }
+
+# Database
+sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "sqlite", "postgres", "migrate"] }
+directories = { version = "5.0" }
+
 # gRPC
 tonic = { version = "0.10" }
 tonic-build = { version = "0.10" }
@@ -27,6 +42,7 @@ prost = { version = "0.12" }
 # Logging
 tracing = { version = "0.1" }
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+tracing-appender = { version = "0.2" }
 
 # CLI
 clap = { version = "4.4", features = ["derive"] }
@@ -34,6 +50,7 @@ clap = { version = "4.4", features = ["derive"] }
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0" }
+serde_yaml = { version = "0.9" }
 toml = { version = "0.8" }
 
 # Error handling
@@ -47,10 +64,14 @@ hex = { version = "0.4" }
 
 # Testing
 criterion = { version = "0.5" }
+tempfile = { version = "3.8" }
 
 # Utilities
 uuid = { version = "1.6", features = ["v4", "serde"] }
 chrono = { version = "0.4", features = ["serde"] }
+libloading = { version = "0.8" }
+num_cpus = { version = "1.16" }
+
 
 [profile.release]
 opt-level = 3

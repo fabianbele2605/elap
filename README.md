@@ -44,7 +44,7 @@ elap/
 
 ```bash
 # Clonar y entrar
-git clone https://github.com/bblabs/elap.git
+git clone https://github.com/fabianbele2605/elap.git
 cd elap
 
 # Compilar Rust
@@ -172,14 +172,16 @@ Todos didácticos, con ejemplos, analogías, preguntas frecuentes y glosario.
 
 ## 📄 Licencia
 
-Este proyecto es software propietario de BBLABS. Todos los derechos reservados.
+Este proyecto está bajo licencia **MIT**. Ver [LICENSE](LICENSE) para detalles.
+
+Copyright © 2026 Fabian Enrique Beleño Robles
 
 ---
 
 ## 📞 Contacto
 
-- **Email**: fabian.beleno@bblabs.io
-- **Organización**: BBLABS
+- **Email**: fabianrobles321@outlook.com
+- **GitHub**: [@fabianbele2605](https://github.com/fabianbele2605)
 - **Documentación**: Ver [docs/](docs/) y [notebook/](notebook/)
 
 ---

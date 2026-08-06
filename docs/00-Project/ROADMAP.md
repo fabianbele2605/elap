@@ -1,7 +1,7 @@
 # Roadmap Técnico de ELAP
 
 **Versión**: 1.0  
-**Última actualización**: 2026-08-04  
+**Última actualización**: 2026-08-05  
 **Duración estimada**: 17 semanas
 
 ---
@@ -9,13 +9,13 @@
 ## 📊 Vista general
 
 ```
-Fase 0: Fundacionales (Semana 1)          ██████
-Fase 1: Core Runtime (Semana 2)           ⏳
-Fase 2: Desktop Runtime (Semana 3)        ⏳
-Fase 3: Configuration Manager (Semana 4)  ⏳
-Fase 4: Logging (Semana 5)                ⏳
-Fase 5: Error Handling (Semana 6)         ⏳
-Fase 6: Plugin Runtime (Semana 7)         ⏳
+Fase 0: Fundacionales (Semana 1)          ██████ ✅
+Fase 1: Core Runtime (Semana 2)           ██████ ✅
+Fase 2: Desktop Runtime (Semana 3)        ██████ ✅
+Fase 3: Plugin Runtime (Semana 4)         ██████ ✅
+Fase 4: Configuration Manager (Semana 5)  ⏳
+Fase 5: Logging (Semana 6)                ⏳
+Fase 6: Error Handling (Semana 7)         ⏳
 Fase 7: Tool Engine (Semana 8)            ⏳
 Fase 8: Model Manager (Semana 9)          ⏳
 Fase 9: Python AI Runtime (Semana 10)     ⏳
@@ -31,9 +31,9 @@ Fase 17: Packaging (Semana 18)            ⏳
 
 ---
 
-## 🎯 Fase 0: Fundacionales (ACTUAL)
+## 🎯 Fase 0: Fundacionales
 
-**Estado**: 🔄 En progreso  
+**Estado**: ✅ Completada  
 **Semana**: 1  
 
 ### Objetivos
@@ -80,58 +80,86 @@ Fase 17: Packaging (Semana 18)            ⏳
 
 ## 🔧 Fase 1: Core Runtime
 
-**Estado**: ⏳ Por hacer  
+**Estado**: ✅ Completada  
 **Semana**: 2  
 
 ### Objetivos
 
-Implementar el corazón de la plataforma: task scheduling, process management, plugin framework.
+Implementar el corazón de la plataforma: task scheduling, process management, configuration, error handling, RBAC.
 
 ### Entregables
 
-- Task scheduler con Tokio (tokio::task, tokio::time)
-- Process spawner y manager
-- Plugin loader y registry
-- Config loader (TOML)
-- Error handling completo
-- Tests (>80% cobertura)
+- ✅ Task scheduler con Tokio (BinaryHeap, 23 tests)
+- ✅ Process spawner y manager (15 tests)
+- ✅ Config loader YAML (8 tests)
+- ✅ Error handling completo (2 tests)
+- ✅ RBAC y Auditoría (26 tests)
+- ✅ Tests: 75 tests totales, >85% cobertura
 
 ### Documentación
 
-- ARCHITECTURE.md (Core Runtime)
-- HOW_IT_WORKS.md
-- Libro 02 para NotebookLM
+- ✅ SCHEDULER.md, PROCESOS.md, CONFIGURACION.md, ERROR_HANDLING.md, SEGURIDAD.md
+- ✅ Libro 02 (6 capítulos completados: Intro, Scheduler, Procesos, Config, Errores, RBAC)
+- ✅ CHANGELOG.md actualizado
 
 ---
 
 ## 🖥️ Fase 2: Desktop Runtime
 
-**Estado**: ⏳ Por hacer  
+**Estado**: ✅ Completada (Pasos 1-5)  
 **Semana**: 3  
 
 ### Objetivos
 
-Implementar la capa de UI desktop usando Tauri.
+Implementar capa de interfaz desktop con IPC bridge y UI components.
 
 ### Entregables
 
-- Tauri setup y configuración
-- Window manager
-- Communication bridge (Rust ↔ TypeScript/React)
-- Basic UI components
-- Tests
+- ✅ Estructura Desktop Runtime (Paso 1)
+- ✅ IPC Bridge con 3 comandos (Paso 2)
+- ✅ UI Components serializables (Paso 3)
+- ✅ Integración con MotorCentral real (Paso 4)
+- ✅ 4 tests de integración pasando (Paso 5)
+- ✅ Documentación técnica (DESKTOP.md)
+- ✅ Capítulo 1 del Libro 03
 
-### Documentación
-
-- Desktop Architecture
-- Libro 03 para NotebookLM
+### Próximo: Paso 6
+- Implementación de frontend React/TypeScript
+- Conexión real de Tauri bridge
 
 ---
 
-## ⚙️ Fase 3: Configuration Manager
+## 🔌 Fase 3: Plugin Runtime
+
+**Estado**: ✅ Completada (Pasos 1-6)  
+**Semana**: 4  
+
+### Objetivos
+
+Sistema extensible para cargar y ejecutar plugins de terceros de forma segura.
+
+### Entregables
+
+- ✅ Plugin trait (6 métodos obligatorios)
+- ✅ PluginMetadata con serialización
+- ✅ PluginLoader con validación y hash SHA256
+- ✅ RegistroPlugins thread-safe con búsquedas
+- ✅ PluginSandbox con límites de recursos
+- ✅ 35 tests (110 totales en elap-core)
+- ✅ Documentación técnica (PLUGIN.md)
+- ✅ Capítulo 1 del Libro 04
+
+### Próximo: Paso 7+
+- Integración con MotorCentral
+- Plugin executor real
+- Carga dinámica de símbolos
+
+---
+
+## ⚙️ Fase 4: Configuration Manager
 
 **Estado**: ⏳ Por hacer  
-**Semana**: 4  
+**Semana**: 5  
 
 ### Objetivos
 
@@ -148,11 +176,11 @@ Sistema de configuración persistente y versionado.
 ### Documentación
 
 - Configuration Architecture
-- Libro 04 para NotebookLM
+- Libro 05 para NotebookLM
 
 ---
 
-## 📝 Fase 4: Logging
+## 📝 Fase 5: Logging
 
 **Estado**: ⏳ Por hacer  
 **Semana**: 5  
@@ -515,35 +543,37 @@ Empaquetamiento final: binarios, documentación, distribución.
 Al final del proyecto, tendremos **18 libros** completos para estudio:
 
 1. ✅ Libro 01 - Introducción (pendiente Cap 4, 5)
-2. ⏳ Libro 02 - Core Runtime (Fase 1)
-3. ⏳ Libro 03 - Desktop Runtime (Fase 2)
-4. ⏳ Libro 04 - Configuration Manager (Fase 3)
-5. ⏳ Libro 05 - Logging (Fase 4)
-6. ⏳ Libro 06 - Error Handling (Fase 5)
-7. ⏳ Libro 07 - Plugin Engine (Fase 6)
+2. ✅ Libro 02 - Core Runtime (Fase 1)
+3. ✅ Libro 03 - Desktop Runtime (Fase 2)
+4. ✅ Libro 04 - Plugin Runtime (Fase 3)
+5. ⏳ Libro 05 - Configuration Manager (Fase 4)
+6. ⏳ Libro 06 - Logging (Fase 5)
+7. ⏳ Libro 07 - Error Handling (Fase 6)
 8. ⏳ Libro 08 - Tool Engine (Fase 7)
 9. ⏳ Libro 09 - Model Manager (Fase 8)
-10. ⏳ Libro 10 - AI Runtime (Fase 9)
+10. ⏳ Libro 10 - Python AI Runtime (Fase 9)
 11. ⏳ Libro 11 - Memory Manager (Fase 10)
 12. ⏳ Libro 12 - Workflow Engine (Fase 11)
 13. ⏳ Libro 13 - Agent Runtime (Fase 12)
 14. ⏳ Libro 14 - Desktop GUI (Fase 13)
 15. ⏳ Libro 15 - Installer (Fase 14)
-16. ⏳ Libro 16 - Updates & Deployment (Fase 15)
+16. ⏳ Libro 16 - Updater (Fase 15)
 17. ⏳ Libro 17 - Testing (Fase 16)
-18. ⏳ Libro 18 - Enterprise Administration Guide (Fase 17)
+18. ⏳ Libro 18 - Packaging (Fase 17)
 
 ---
 
 ## 📋 Tracking
 
-| Fase | Estado | Inicio | Fin estimado | Documento | Libro |
-|------|--------|--------|--------------|-----------|-------|
-| 0 | 🔄 En progreso | 2026-08-04 | 2026-08-11 | README.md | - |
-| 1 | ⏳ Por hacer | 2026-08-11 | 2026-08-18 | ARCHITECTURE.md | Libro 02 |
-| 2 | ⏳ Por hacer | 2026-08-18 | 2026-08-25 | ARCHITECTURE.md | Libro 03 |
-| 3-17 | ⏳ Por hacer | 2026-08-25+ | - | - | - |
+| Fase | Estado | Documento | Libro |
+|------|--------|-----------|-------|
+| 0 | ✅ Completada | README.md | - |
+| 1 | ✅ Completada | ARCHITECTURE.md | Libro 02 |
+| 2 | ✅ Completada | DESKTOP.md | Libro 03 |
+| 3 | ✅ Completada | PLUGIN.md | Libro 04 |
+| 4 | ⏳ Por hacer | CONFIG.md | Libro 05 |
+| 5+ | ⏳ Por hacer | - | Libro 06+ |
 
 ---
 
-**Próximo**: Fase 1 - Core Runtime (cuando Fase 0 esté completada)
+**Próximo**: Fase 4 - Configuration Manager

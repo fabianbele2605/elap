@@ -2,33 +2,39 @@
 
 //! # ELAP Desktop Runtime
 //!
-//! Desktop application shell for ELAP using Tauri.
-//! Provides GUI and window management for the platform.
+//! Capa de interfaz gráfica para ELAP usando Tauri.
+//! Proporciona GUI y gestión de ventanas para la plataforma.
 
-use elap_core::MotorCentral;
+use elap_core::{MotorCentral, Configuracion};
 
-/// Desktop application manager
+/// Módulo de comunicación IPC (Inter-Process Communication)
+pub mod ipc;
+
+/// Módulo de componentes de interfaz de usuario
+pub mod ui;
+
+/// Gestor de aplicación desktop
 #[derive(Debug)]
 pub struct DesktopRuntime {
     core: MotorCentral,
 }
 
 impl DesktopRuntime {
-    /// Create a new DesktopRuntime
+    /// Crear una nueva instancia de DesktopRuntime
     pub fn new(core: MotorCentral) -> Self {
         Self { core }
     }
 
-    /// Initialize the desktop environment
+    /// Inicializar el entorno desktop
     pub async fn initialize(&self) -> Result<(), Box<dyn std::error::Error>> {
-        tracing::info!("Initializing Desktop Runtime");
+        tracing::info!("Inicializando Desktop Runtime");
         self.core.iniciar().await?;
         Ok(())
     }
 
-    /// Shutdown the desktop environment
+    /// Detener el entorno desktop
     pub async fn shutdown(&self) -> Result<(), Box<dyn std::error::Error>> {
-        tracing::info!("Shutting down Desktop Runtime");
+        tracing::info!("Deteniendo Desktop Runtime");
         self.core.detener().await?;
         Ok(())
     }
@@ -40,7 +46,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_desktop_runtime_creation() {
-        let core = MotorCentral::nuevo("MotorTest", "0.1.0");
+        let config = Configuracion::defecto();
+        let core = MotorCentral::nuevo(config);
         let desktop = DesktopRuntime::new(core);
         assert!(desktop.initialize().await.is_ok());
         assert!(desktop.shutdown().await.is_ok());
