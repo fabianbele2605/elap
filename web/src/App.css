@@ -1,0 +1,58 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #333;
+}
+
+.header {
+  background: white;
+  padding: 20px 40px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.header h1 {
+  margin: 0;
+  color: #667eea;
+  font-size: 28px;
+}
+
+.nav {
+  display: flex;
+  gap: 20px;
+  margin-top: 15px;
+}
+
+.nav button {
+  padding: 10px 20px;
+  border: none;
+  background: #f0f0f0;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.3s;
+  font-weight: 500;
+}
+
+.nav button.active {
+  background: #667eea;
+  color: white;
+}
+
+.nav button:hover {
+  background: #667eea;
+  color: white;
+}
+
+.main {
+  flex: 1;
+  padding: 40px;
+}
+
+.footer {
+  background: rgba(0,0,0,0.8);
+  color: white;
+  text-align: center;
+  padding: 20px;
+  font-size: 14px;
+}
