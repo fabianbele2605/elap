@@ -162,7 +162,7 @@ $ elap agent a1b2c3d4 delete
 export ELAP_SERVER="http://localhost:3000"
 
 # JWT Token (para endpoints protegidos)
-export ELAP_TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+export ELAP_TOKEN="your_jwt_token_here_xxx"
 ```
 
 ### Argumentos

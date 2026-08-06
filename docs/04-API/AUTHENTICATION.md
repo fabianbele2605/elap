@@ -153,7 +153,7 @@ La API implementa:
 **Response** (200 OK):
 ```json
 {
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token": "your_jwt_token_here_xxx",
   "usuario": "john_doe",
   "rol": "User"
 }
