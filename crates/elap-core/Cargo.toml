@@ -38,5 +38,8 @@ base64 = { workspace = true }
 sqlx = { workspace = true }
 directories = { workspace = true }
 
+[build-dependencies]
+tonic-build = { workspace = true }
+
 [dev-dependencies]
 tempfile = { workspace = true }

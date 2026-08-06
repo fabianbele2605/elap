@@ -9,14 +9,33 @@ function App() {
   const [tasks, setTasks] = useState([])
   const [activeTab, setActiveTab] = useState('dashboard')
 
+  const fetchAgents = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/agents')
+      const data = await response.json()
+      const transformedAgents = data.agentes.map(agent => ({
+        id: agent.id,
+        name: agent.nombre,
+        role: agent.rol || 'Usuario',
+        status: agent.estado === 'Inactivo' ? 'idle' : 'active',
+        objetivo: agent.objetivo,
+        progreso: agent.progreso,
+        modelo: agent.modelo || 'glm4:9b'
+      }))
+      setAgents(transformedAgents)
+    } catch (error) {
+      console.error('Error cargando agentes:', error)
+      // Fallback a mock data si falla
+      const mockAgents = [
+        { id: 'agent_1', name: 'Vendedor Bot', role: 'Sales', status: 'active', modelo: 'glm4:9b' },
+        { id: 'agent_2', name: 'Analizador', role: 'Analyzer', status: 'idle', modelo: 'glm4:9b' },
+      ]
+      setAgents(mockAgents)
+    }
+  }
+
   useEffect(() => {
-    // Simulación: cargar agentes
-    const mockAgents = [
-      { id: 'agent_1', name: 'Vendedor Bot', role: 'Sales', status: 'active' },
-      { id: 'agent_2', name: 'Analizador', role: 'Analyzer', status: 'idle' },
-      { id: 'agent_3', name: 'Validador', role: 'Validator', status: 'active' },
-    ]
-    setAgents(mockAgents)
+    fetchAgents()
 
     // Simulación: cargar tareas
     const mockTasks = [
@@ -55,7 +74,7 @@ function App() {
 
       <main className="main">
         {activeTab === 'dashboard' && <Dashboard agents={agents} tasks={tasks} />}
-        {activeTab === 'agents' && <AgentList agents={agents} />}
+        {activeTab === 'agents' && <AgentList agents={agents} onAgentCreated={fetchAgents} />}
         {activeTab === 'tasks' && <TaskMonitor tasks={tasks} />}
       </main>
 

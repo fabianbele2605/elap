@@ -16,6 +16,8 @@ pub struct AgenteBD {
     pub objetivo: String,
     /// Estado actual
     pub estado: String,
+    /// Modelo de IA asignado
+    pub modelo: String,
     /// Timestamp de creación
     pub created_at: String,
     /// Timestamp de actualización
@@ -65,6 +67,7 @@ impl Schema {
                 rol TEXT NOT NULL,
                 objetivo TEXT NOT NULL,
                 estado TEXT NOT NULL,
+                modelo TEXT NOT NULL DEFAULT 'glm4:9b',
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )",
