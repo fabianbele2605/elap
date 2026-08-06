@@ -1,1 +1,1 @@
-"""Test suite for ELAP AI Runtime"""
+"""Tests for ELAP AI Runtime."""
