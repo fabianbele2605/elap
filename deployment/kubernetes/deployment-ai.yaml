@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: elap-ai-runtime
+  labels:
+    app: elap
+    component: ai-runtime
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: elap
+      component: ai-runtime
+  template:
+    metadata:
+      labels:
+        app: elap
+        component: ai-runtime
+    spec:
+      containers:
+      - name: elap-ai-runtime
+        image: elap:ai-runtime-latest
+        imagePullPolicy: Always
+        env:
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        - name: QDRANT_URL
+          value: "http://qdrant:6333"
+        - name: OLLAMA_URL
+          value: "http://ollama:11434"
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        livenessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - "import sys; sys.exit(0)"
+          initialDelaySeconds: 30
+          periodSeconds: 60
