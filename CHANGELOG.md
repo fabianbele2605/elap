@@ -1,5 +1,49 @@
 # CHANGELOG — Historial de Cambios ELAP
 
+## [Fase 19] - 2026-08-05
+
+### ✨ Nuevas Funcionalidades
+
+#### Advanced RAG
+
+**Reranking con Cross-Encoders**:
+- Modelo: `cross-encoder/ms-marco-MiniLM-L-12-v2`
+- Lazy loading (fallback si no está instalado)
+- Ordena documentos por relevancia verdadera
+- Async execution con `asyncio.to_thread`
+
+**Semantic Cache**:
+- TTL configurable (default: 3600s)
+- Hash-based key (SHA256)
+- Estadísticas de cache activas
+- 100x latencia en hits
+
+**Hybrid Search**:
+- Combina BM25 (keyword) + Semantic (embedding)
+- Pesos ajustables (default: 0.7 semantic, 0.3 BM25)
+- Mejor recall (keywords) + precision (semantic)
+
+**Tests**:
+- 7 tests nuevos (reranker, cache, hybrid)
+- Coverage: 95%+
+- Async fixtures con pytest-asyncio
+
+### 📚 Documentación
+
+- `docs/09-Advanced/ADVANCED_RAG.md`: Guía técnica
+- `notebook/19-Advanced-RAG.md`: Capítulo didáctico (componentes, flujo, benchmarks)
+
+### 🎯 Cambios Arquitectónicos
+
+```
+RAG Pipeline v2:
+Query → [Semantic Cache] → [Embeddings] → [Vector DB]
+    → [Hybrid Search (BM25 + Semantic)] → [Reranking]
+    → [Cache Results] → Top-K Results
+```
+
+---
+
 ## [Fase 12] - 2026-08-05
 
 ### ✨ Nuevas Funcionalidades
