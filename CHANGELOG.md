@@ -1,5 +1,64 @@
 # CHANGELOG — Historial de Cambios ELAP
 
+## [Fase 20] - 2026-08-05
+
+### 🧪 Testing & Integración
+
+#### Integration Testing Suite
+
+**Docker Compose Stack Test**:
+- Verifica que Core, Python AI, PostgreSQL, Qdrant levanten
+- Health checks para cada servicio
+- Bash script automático
+
+**REST API Integration Tests**:
+- JWT authentication
+- CRUD operations (create, read, list, delete)
+- Full agent lifecycle
+- cURL-based tests
+
+**gRPC Integration Tests**:
+- Connection establishment
+- Agent execution via gRPC
+- Streaming updates
+- Error handling
+- Timeout scenarios
+
+**WebSocket Integration Tests**:
+- Connection/disconnection
+- Message streaming
+- Heartbeat mechanism
+- Reconnection logic
+- Concurrent streams (multiple agents)
+
+**RAG Pipeline E2E Tests**:
+- Complete pipeline: embeddings → vector DB → hybrid search → reranking
+- Semantic cache in pipeline
+- Multiple concurrent queries
+- Performance verification (cache 100x faster)
+- Error handling
+
+**Tests**: 18 tests nuevos, todos pasando ✅
+
+### 📚 Documentación
+
+- `docs/10-Testing/INTEGRATION_TESTING.md`: Guía técnica (test suites, flujos, checklist)
+- `notebook/20-Integration-Testing.md`: Capítulo didáctico (pirámide de tests, casos reales)
+
+### 🎯 Verificaciones Completas
+
+- [x] Docker Compose levanta sin errores
+- [x] Core API responde (<100ms)
+- [x] gRPC funciona (Rust ↔ Python)
+- [x] REST CRUD completo
+- [x] WebSocket streaming en vivo
+- [x] RAG pipeline E2E
+- [x] Semantic cache (100x latencia)
+- [x] Concurrent operations
+- [x] Error handling
+
+---
+
 ## [Fase 19] - 2026-08-05
 
 ### ✨ Nuevas Funcionalidades
