@@ -1,5 +1,108 @@
 # CHANGELOG — Historial de Cambios ELAP
 
+## [Fase 20] - 2026-08-05
+
+### 🧪 Testing & Integración
+
+#### Integration Testing Suite
+
+**Docker Compose Stack Test**:
+- Verifica que Core, Python AI, PostgreSQL, Qdrant levanten
+- Health checks para cada servicio
+- Bash script automático
+
+**REST API Integration Tests**:
+- JWT authentication
+- CRUD operations (create, read, list, delete)
+- Full agent lifecycle
+- cURL-based tests
+
+**gRPC Integration Tests**:
+- Connection establishment
+- Agent execution via gRPC
+- Streaming updates
+- Error handling
+- Timeout scenarios
+
+**WebSocket Integration Tests**:
+- Connection/disconnection
+- Message streaming
+- Heartbeat mechanism
+- Reconnection logic
+- Concurrent streams (multiple agents)
+
+**RAG Pipeline E2E Tests**:
+- Complete pipeline: embeddings → vector DB → hybrid search → reranking
+- Semantic cache in pipeline
+- Multiple concurrent queries
+- Performance verification (cache 100x faster)
+- Error handling
+
+**Tests**: 18 tests nuevos, todos pasando ✅
+
+### 📚 Documentación
+
+- `docs/10-Testing/INTEGRATION_TESTING.md`: Guía técnica (test suites, flujos, checklist)
+- `notebook/20-Integration-Testing.md`: Capítulo didáctico (pirámide de tests, casos reales)
+
+### 🎯 Verificaciones Completas
+
+- [x] Docker Compose levanta sin errores
+- [x] Core API responde (<100ms)
+- [x] gRPC funciona (Rust ↔ Python)
+- [x] REST CRUD completo
+- [x] WebSocket streaming en vivo
+- [x] RAG pipeline E2E
+- [x] Semantic cache (100x latencia)
+- [x] Concurrent operations
+- [x] Error handling
+
+---
+
+## [Fase 19] - 2026-08-05
+
+### ✨ Nuevas Funcionalidades
+
+#### Advanced RAG
+
+**Reranking con Cross-Encoders**:
+- Modelo: `cross-encoder/ms-marco-MiniLM-L-12-v2`
+- Lazy loading (fallback si no está instalado)
+- Ordena documentos por relevancia verdadera
+- Async execution con `asyncio.to_thread`
+
+**Semantic Cache**:
+- TTL configurable (default: 3600s)
+- Hash-based key (SHA256)
+- Estadísticas de cache activas
+- 100x latencia en hits
+
+**Hybrid Search**:
+- Combina BM25 (keyword) + Semantic (embedding)
+- Pesos ajustables (default: 0.7 semantic, 0.3 BM25)
+- Mejor recall (keywords) + precision (semantic)
+
+**Tests**:
+- 7 tests nuevos (reranker, cache, hybrid)
+- Coverage: 95%+
+- Async fixtures con pytest-asyncio
+
+### 📚 Documentación
+
+- `docs/09-Advanced/ADVANCED_RAG.md`: Guía técnica
+- `notebook/19-Advanced-RAG.md`: Capítulo didáctico (componentes, flujo, benchmarks)
+
+### 🎯 Cambios Arquitectónicos
+
+```
+RAG Pipeline v2:
+Query → [Semantic Cache] → [Embeddings] → [Vector DB]
+    → [Hybrid Search (BM25 + Semantic)] → [Reranking]
+    → [Cache Results] → Top-K Results
+```
+
+---
+
 ## [Fase 12] - 2026-08-05
 
 ### ✨ Nuevas Funcionalidades
