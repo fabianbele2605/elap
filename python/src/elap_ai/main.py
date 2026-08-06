@@ -78,10 +78,13 @@ async def main() -> None:
     runtime = AIRuntime()
     await runtime.start()
 
+    # Iniciar servidor gRPC
+    from .grpc_server import serve
+
     try:
-        # Keep running
-        while runtime.is_running:
-            await asyncio.sleep(1)
+        # Ejecutar servidor gRPC
+        logger.info("Starting gRPC server...")
+        await serve(runtime, port=50051)
     except KeyboardInterrupt:
         logger.info("Received interrupt signal")
     finally:

@@ -5,6 +5,13 @@
 //! El núcleo central de la Plataforma Enterprise Local de IA.
 //! Gestiona planificación de tareas, seguridad, plugins y comunicación IPC.
 
+// Módulos gRPC generados
+pub mod elap {
+    pub mod agent {
+        tonic::include_proto!("elap.agent");
+    }
+}
+
 pub mod error;
 pub mod logging;
 pub mod logging_v2;
@@ -18,8 +25,10 @@ pub mod plugin;
 pub mod tools;
 pub mod models;
 pub mod agents;
+pub mod agent_model_mapper;
 pub mod api;
 pub mod db;
+pub mod grpc_client;
 
 pub use core::MotorCentral;
 pub use error::ElapError;
@@ -46,6 +55,7 @@ pub use agents::{
     EjecutorAgente, AgentError, AgentIntegrado,
     SistemaMemoria, MemoriaCortoTermino, MemoriaLargoTermino,
 };
+pub use agent_model_mapper::{rol_to_modelo, get_role_model_info};
 pub use api::{
     AppState, crear_router, AgentEvent,
     Claims, ManagerJWT, RolAPI, Accion, ValidadorRBAC,

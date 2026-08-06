@@ -5,16 +5,14 @@
     "devPath": "http://localhost:5173",
     "frontendDist": "../dist"
   },
-  "app": {
-    "windows": [
-      {
-        "fullscreen": false,
-        "height": 900,
-        "resizable": true,
-        "title": "ELAP Dashboard",
-        "width": 1400
-      }
-    ],
+  "tauri": {
+    "window": {
+      "title": "ELAP Dashboard",
+      "width": 1400,
+      "height": 900,
+      "resizable": true,
+      "fullscreen": false
+    },
     "security": {
       "csp": null
     }

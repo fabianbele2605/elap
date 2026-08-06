@@ -8,7 +8,7 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use uuid::Uuid;
-use crate::{AgentIntegrado, EstadoAgente};
+use crate::{AgentIntegrado, EstadoAgente, rol_to_modelo, obtener_db, RepositorioAgente, grpc_client::AIRuntimeClient};
 use super::{state::AppState, auth::{Claims, ManagerJWT}, rbac::{ValidadorRBAC, Accion, RolAPI}};
 
 /// Solicitud para crear agente
@@ -28,6 +28,7 @@ pub struct AgentResponse {
     pub objetivo: String,
     pub estado: String,
     pub progreso: f32,
+    pub modelo: String,
 }
 
 /// Solicitud para agregar paso
@@ -66,20 +67,39 @@ pub async fn crear_agente(
     Json(payload): Json<CrearAgentRequest>,
 ) -> (StatusCode, Json<AgentResponse>) {
     let id = Uuid::new_v4().to_string();
-    let mut agente = AgentIntegrado::nuevo(payload.nombre.clone(), payload.rol, payload.objetivo);
+    let agente = AgentIntegrado::nuevo(payload.nombre.clone(), payload.rol.clone(), payload.objetivo.clone());
+
+    // Asignar modelo automáticamente según el rol
+    let modelo = rol_to_modelo(&payload.rol);
 
     let respuesta = AgentResponse {
         id: id.clone(),
-        nombre: payload.nombre,
-        rol: agente.agente.rol.clone(),
-        objetivo: agente.plan.objetivo.clone(),
+        nombre: payload.nombre.clone(),
+        rol: payload.rol.clone(),
+        objetivo: payload.objetivo.clone(),
         estado: format!("{:?}", agente.agente.estado),
         progreso: agente.plan.progreso(),
+        modelo: modelo.clone(),
     };
 
-    // Guardar en estado
+    // Guardar en BD y en estado
+    let state_clone = state.clone();
+    let id_clone = id.clone();
     tokio::spawn(async move {
-        state.guardar_agente(id, agente).await;
+        // Guardar en memoria
+        state_clone.guardar_agente(id_clone.clone(), agente).await;
+
+        // Guardar en BD
+        if let Ok(db) = obtener_db().await {
+            let _ = RepositorioAgente::guardar(
+                &db,
+                &id_clone,
+                &payload.nombre,
+                &payload.rol,
+                &payload.objetivo,
+                &modelo,
+            ).await;
+        }
     });
 
     (StatusCode::CREATED, Json(respuesta))
@@ -92,10 +112,13 @@ pub async fn listar_agentes(
     let agentes = state.listar_agentes().await;
     Json(json!({
         "total": agentes.len(),
-        "agentes": agentes.iter().map(|(id, nombre)| {
+        "agentes": agentes.iter().map(|(id, nombre, rol)| {
+            let modelo = rol_to_modelo(rol);
             json!({
                 "id": id,
                 "nombre": nombre,
+                "rol": rol,
+                "modelo": modelo,
             })
         }).collect::<Vec<_>>(),
     }))
@@ -108,6 +131,7 @@ pub async fn obtener_agente(
 ) -> Result<Json<AgentResponse>, StatusCode> {
     match state.obtener_agente(&id).await {
         Some(agente) => {
+            let modelo = rol_to_modelo(&agente.agente.rol);
             let respuesta = AgentResponse {
                 id: id.clone(),
                 nombre: agente.agente.nombre.clone(),
@@ -115,6 +139,7 @@ pub async fn obtener_agente(
                 objetivo: agente.plan.objetivo.clone(),
                 estado: format!("{:?}", agente.agente.estado),
                 progreso: agente.plan.progreso(),
+                modelo,
             };
             Ok(Json(respuesta))
         }
@@ -147,27 +172,37 @@ pub async fn agregar_paso(
 pub async fn ejecutar_agente(
     State(state): State<AppState>,
     Path(id): Path<String>,
+    Json(payload): Json<serde_json::Value>,
 ) -> Result<Json<EjecucionResponse>, StatusCode> {
-    let mut agente = match state.obtener_agente(&id).await {
+    let agente = match state.obtener_agente(&id).await {
         Some(a) => a,
         None => return Err(StatusCode::NOT_FOUND),
     };
 
-    match agente.ejecutar() {
-        Ok(_) => {
-            let estado = format!("{:?}", agente.agente.estado);
-            let pasos = agente.plan.paso_actual;
-            let progreso = agente.plan.progreso();
+    // Obtener query de la solicitud
+    let query = payload
+        .get("query")
+        .and_then(|v| v.as_str())
+        .unwrap_or("Ejecutar agente")
+        .to_string();
 
+    // Conectar a Python AI Runtime vía gRPC
+    let mut client = match AIRuntimeClient::conectar("http://127.0.0.1:50051").await {
+        Ok(c) => c,
+        Err(_) => {
+            return Err(StatusCode::SERVICE_UNAVAILABLE);
+        }
+    };
+
+    // Ejecutar agente en Python
+    match client.ejecutar_agente(&id, &query).await {
+        Ok(resultado) => {
             let respuesta = EjecucionResponse {
                 agente_id: id.clone(),
-                estado,
-                pasos_completados: pasos,
-                progreso,
+                estado: "completed".to_string(),
+                pasos_completados: 1,
+                progreso: 1.0,
             };
-
-            // Guardar estado actualizado
-            state.guardar_agente(id, agente).await;
 
             Ok(Json(respuesta))
         }
@@ -285,6 +320,7 @@ mod tests {
             objetivo: "Obj".to_string(),
             estado: "Inactivo".to_string(),
             progreso: 0.0,
+            modelo: "glm4:9b".to_string(),
         };
 
         assert_eq!(resp.progreso, 0.0);
