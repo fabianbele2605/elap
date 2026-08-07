@@ -4,6 +4,51 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [1.4.0] - 2026-08-06
+
+### Fase 25 - Streaming Responses (COMPLETADA)
+
+#### Agregado
+
+**Proto (gRPC)**
+- Nuevo RPC `ExecuteAgentStreaming` para streaming de respuestas
+- Mensaje `ExecuteAgentChunk` con campos: agent_id, chunk, progress, is_final, error
+- Regeneración de código gRPC en Python y Rust
+
+**Python (AI Runtime)**
+- Método `OllamaClient.generar_streaming()` para streaming de tokens
+- Implementación de `ExecuteAgentStreaming` en `AIRuntimeServicer`
+- Yield de tokens individuales desde Ollama
+
+**Rust (Core)**
+- Dependencias: `tokio-tungstenite`, `tungstenite`
+- Nuevo handler `ejecutar_agente_streaming()` en api/websocket.rs
+- WebSocket endpoint: `GET /agents/:id/execute/stream`
+- Manejo de conexiones streaming con progreso en vivo
+
+**Web (React)**
+- Componente `StreamingResponse.jsx` para visualización en tiempo real
+- Estilos `StreamingResponse.css` con progreso bar y badges de estado
+- Botón 🔄 en tabla de agentes para iniciar streaming
+- Integración en `App.jsx` con estado de sesión de streaming
+
+#### Beneficios
+
+| Métrica | Antes | Después |
+|---------|-------|---------|
+| Latencia primer token | 79s | <2s |
+| UX | Esperar en blanco | Ver escritura en vivo |
+| Cancelación | No posible | Cierra WebSocket |
+| Interrupción | No posible | Usuario puede detener |
+
+#### Tests
+
+- Compilación Rust: ✅ Sin errores
+- Python gRPC: ✅ Regenerado correctamente
+- Web: ✅ Componentes integrados
+
+---
+
 ## [0.5.0-alpha] - 2026-08-05
 
 ### Fase 3 - Plugin Runtime (Pasos 1-6 Completados)
