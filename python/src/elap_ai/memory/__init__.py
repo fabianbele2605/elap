@@ -1,5 +1,6 @@
-"""Memory Management - Short-term and Long-term."""
+"""Memory and RAG (Retrieval-Augmented Generation) system."""
 
-from elap_ai.memory.memory import MemoryManager, MemoryType
+from .embeddings import EmbeddingService
+from .vector_db import VectorStore
 
-__all__ = ["MemoryManager", "MemoryType"]
+__all__ = ["EmbeddingService", "VectorStore"]

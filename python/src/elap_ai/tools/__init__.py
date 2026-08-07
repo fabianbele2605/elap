@@ -1,5 +1,10 @@
-"""Tool Registry and Execution."""
+"""
+Tool registry and execution.
 
-from elap_ai.tools.registry import ToolRegistry
+Provides agent-callable tools for document processing,
+generation, and data analysis.
+"""
+
+from .registry import ToolRegistry
 
 __all__ = ["ToolRegistry"]

@@ -1,90 +1,210 @@
-"""Tool Registry for Agent Execution."""
+"""Tool registry for agent execution."""
 
-from typing import Any, Callable, Optional
+from typing import Optional, Any, Callable
 from dataclasses import dataclass
 
 
 @dataclass
 class Tool:
-    """Tool definition."""
+    """Definition of an executable tool."""
 
     name: str
     description: str
+    parameters: dict[str, Any]  # OpenAI schema
     func: Callable
-    input_schema: dict[str, Any]
-    output_schema: dict[str, Any]
 
 
 class ToolRegistry:
-    """Registry for managing agent tools."""
+    """Registry of available tools for agents."""
 
-    def __init__(self) -> None:
+    def __init__(self):
         """Initialize tool registry."""
-        self.tools: dict[str, Tool] = {}
+        self._tools: dict[str, Tool] = {}
 
-    def register(
-        self,
-        name: str,
-        description: str,
-        func: Callable,
-        input_schema: dict[str, Any],
-        output_schema: dict[str, Any],
-    ) -> None:
-        """Register a tool.
+    def register(self, name: str, description: str, parameters: dict, func: Callable) -> None:
+        """
+        Register a tool.
 
         Args:
             name: Tool name
-            description: Tool description
-            func: Callable tool function
-            input_schema: Input parameter schema
-            output_schema: Output value schema
+            description: Human description
+            parameters: JSON schema for parameters
+            func: Callable function
         """
-        tool = Tool(
+        self._tools[name] = Tool(
             name=name,
             description=description,
+            parameters=parameters,
             func=func,
-            input_schema=input_schema,
-            output_schema=output_schema,
         )
-        self.tools[name] = tool
-
-    async def execute(self, tool_name: str, **kwargs: Any) -> Any:
-        """Execute a tool.
-
-        Args:
-            tool_name: Name of tool to execute
-            **kwargs: Tool parameters
-
-        Returns:
-            Tool execution result
-
-        Raises:
-            ValueError: If tool not found
-        """
-        if tool_name not in self.tools:
-            raise ValueError(f"Tool not found: {tool_name}")
-
-        tool = self.tools[tool_name]
-        result = tool.func(**kwargs)
-
-        # Handle async functions
-        if hasattr(result, "__await__"):
-            return await result
-
-        return result
-
-    def list_tools(self) -> list[dict[str, Any]]:
-        """List all registered tools."""
-        return [
-            {
-                "name": tool.name,
-                "description": tool.description,
-                "input_schema": tool.input_schema,
-                "output_schema": tool.output_schema,
-            }
-            for tool in self.tools.values()
-        ]
 
     def get_tool(self, name: str) -> Optional[Tool]:
         """Get tool by name."""
-        return self.tools.get(name)
+        return self._tools.get(name)
+
+    def list_tools(self) -> list[dict]:
+        """
+        List all registered tools in OpenAI format.
+
+        Returns:
+            List of tool definitions
+        """
+        return [
+            {
+                "type": "function",
+                "function": {
+                    "name": tool.name,
+                    "description": tool.description,
+                    "parameters": tool.parameters,
+                }
+            }
+            for tool in self._tools.values()
+        ]
+
+    def execute_tool(self, name: str, **kwargs) -> Any:
+        """
+        Execute a tool.
+
+        Args:
+            name: Tool name
+            **kwargs: Tool arguments
+
+        Returns:
+            Tool result
+        """
+        tool = self.get_tool(name)
+        if tool is None:
+            raise ValueError(f"Tool not found: {name}")
+
+        return tool.func(**kwargs)
+
+
+# Global registry
+_global_registry = ToolRegistry()
+
+
+def get_registry() -> ToolRegistry:
+    """Get global tool registry."""
+    return _global_registry
+
+
+def register_document_tools(registry: ToolRegistry) -> None:
+    """Register all document-related tools."""
+    from .documents.readers import DocumentReader
+    from .documents.writers import DocumentGenerator
+    from .documents.charts import ChartGenerator
+
+    # Document reading tools
+    registry.register(
+        name="read_pdf",
+        description="Read and extract text from PDF files",
+        parameters={
+            "type": "object",
+            "properties": {
+                "file_path": {
+                    "type": "string",
+                    "description": "Path to PDF file"
+                }
+            },
+            "required": ["file_path"],
+        },
+        func=DocumentReader.read_pdf,
+    )
+
+    registry.register(
+        name="read_excel",
+        description="Read Excel spreadsheet",
+        parameters={
+            "type": "object",
+            "properties": {
+                "file_path": {
+                    "type": "string",
+                    "description": "Path to Excel file"
+                }
+            },
+            "required": ["file_path"],
+        },
+        func=DocumentReader.read_excel,
+    )
+
+    registry.register(
+        name="read_word",
+        description="Read Word document (.docx)",
+        parameters={
+            "type": "object",
+            "properties": {
+                "file_path": {
+                    "type": "string",
+                    "description": "Path to Word document"
+                }
+            },
+            "required": ["file_path"],
+        },
+        func=DocumentReader.read_word,
+    )
+
+    # Document generation tools
+    registry.register(
+        name="generate_pdf_report",
+        description="Generate professional PDF report",
+        parameters={
+            "type": "object",
+            "properties": {
+                "title": {
+                    "type": "string",
+                    "description": "Report title"
+                },
+                "company_name": {
+                    "type": "string",
+                    "description": "Company name for header"
+                },
+                "sections": {
+                    "type": "array",
+                    "description": "Report sections",
+                }
+            },
+            "required": ["title", "sections"],
+        },
+        func=DocumentGenerator.generate_pdf_report,
+    )
+
+    registry.register(
+        name="generate_excel_report",
+        description="Generate Excel workbook with data",
+        parameters={
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "object",
+                    "description": "Data to include"
+                },
+                "title": {
+                    "type": "string",
+                    "description": "Workbook title"
+                }
+            },
+            "required": ["data"],
+        },
+        func=DocumentGenerator.generate_excel_report,
+    )
+
+    # Chart tools
+    registry.register(
+        name="bar_chart",
+        description="Generate bar chart",
+        parameters={
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "object",
+                    "description": "Data for chart"
+                },
+                "title": {
+                    "type": "string",
+                    "description": "Chart title"
+                }
+            },
+            "required": ["data", "title"],
+        },
+        func=ChartGenerator.bar_chart,
+    )
