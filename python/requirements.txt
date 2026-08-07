@@ -1,0 +1,26 @@
+# ELAP AI Runtime Dependencies
+# Python 3.10+
+
+# Core AI/LLM
+langgraph>=0.0.1
+langchain>=0.1.0
+pydantic>=2.0
+python-dotenv>=1.0
+
+# Async/HTTP
+aiohttp>=3.8
+asyncio-contextmanager>=1.0.0
+
+# gRPC
+grpcio>=1.60.0
+grpcio-tools>=1.60.0
+protobuf>=3.19.0
+
+# Development (optional)
+# Uncomment for dev: pip install -r requirements.txt[dev]
+pytest>=7.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.0
+black>=23.0
+flake8>=6.0
+mypy>=1.0

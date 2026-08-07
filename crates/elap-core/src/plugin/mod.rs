@@ -8,9 +8,11 @@ pub mod metadata;
 pub mod loader;
 pub mod registry;
 pub mod sandbox;
+pub mod research_plugin;
 
 pub use plugin_trait::Plugin;
 pub use metadata::PluginMetadata;
 pub use loader::PluginLoader;
 pub use registry::RegistroPlugins;
 pub use sandbox::{PluginSandbox, ConfiguracionSandbox, PoliticaEjecucion};
+pub use research_plugin::ResearchPlugin;
