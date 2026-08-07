@@ -99,7 +99,7 @@ def test_search_returns_metadata(temp_db_path):
 def test_delete_collection(temp_db_path):
     """Test deleting a collection."""
     store = VectorStore(db_path=temp_db_path)
-    store.create_collection("temp")
+    store.create_collection("temp", metadata={"type": "temp"})
 
     assert "temp" in store.list_collections()
 

@@ -76,7 +76,7 @@ class DocumentPipeline:
 
         # Create collection if needed
         if collection_name not in self.vector_store.list_collections():
-            self.vector_store.create_collection(collection_name)
+            self.vector_store.create_collection(collection_name, metadata={"type": "documents"})
 
         # Index chunks
         doc_id = file_path.stem
