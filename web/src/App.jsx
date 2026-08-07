@@ -71,7 +71,7 @@ function App() {
       {/* Title Bar */}
       <div className="title-bar">
         <div className="title-bar-left">
-          <span>⚡ ELAP v1.4.0</span>
+          <span>ELAP v1.4.0</span>
           <span>—</span>
           <span>Enterprise Local AI Platform</span>
         </div>

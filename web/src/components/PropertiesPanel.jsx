@@ -32,7 +32,7 @@ export default function PropertiesPanel({ agent, loading }) {
           </div>
           <div className="property-row">
             <span className="property-label">Status</span>
-            <span className="property-value">✅ Online</span>
+            <span className="property-value">Online</span>
           </div>
           <div className="property-row">
             <span className="property-label">Availability</span>

@@ -31,13 +31,13 @@ export default function StatusBar({ systemStatus }) {
       </div>
 
       <div className="status-section">
-        <span>👤 Admin User</span>
+        <span>Admin User</span>
         <span style={{ color: '#999999' }}>|</span>
-        <span>🔔 2</span>
+        <span>Notifications: 2</span>
         <span style={{ color: '#999999' }}>|</span>
-        <span>🕐 {getCurrentTime()}</span>
+        <span>{getCurrentTime()}</span>
         <span style={{ color: '#999999' }}>|</span>
-        <span>🔋 92%</span>
+        <span>Battery: 92%</span>
       </div>
     </div>
   )

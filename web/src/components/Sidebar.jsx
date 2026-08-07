@@ -8,22 +8,23 @@ export default function Sidebar({ agents, activeAgentId, onSelectAgent, systemSt
     agent.role.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  const agentIcons = {
-    Sales: '📈',
-    IT: '🛠️',
-    HR: '👥',
-    Analytics: '📊',
-    Research: '🔬',
-    Finance: '💰',
-    Support: '🎧',
-    Legal: '⚖️'
+  const agentInitials = {
+    Sales: 'SA',
+    IT: 'IT',
+    HR: 'HR',
+    Analytics: 'AN',
+    Research: 'RE',
+    Finance: 'FI',
+    Support: 'SU',
+    Legal: 'LE'
   }
 
   return (
     <div className="sidebar-agents">
       <div className="sidebar-header">
-        <span>⚡</span>
-        <span>Agents</span>
+        <span style={{ width: '24px', height: '24px', borderRadius: '6px', background: '#0052cc', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '12px', fontWeight: '700' }}>E</span>
+        <span>ELAP</span>
+        <span style={{ marginLeft: 'auto', fontFamily: 'monospace', fontSize: '10px', color: '#999999' }}>v1.4.0</span>
       </div>
 
       <input
@@ -41,13 +42,25 @@ export default function Sidebar({ agents, activeAgentId, onSelectAgent, systemSt
             className={`agent-item ${activeAgentId === agent.id ? 'active' : ''}`}
             onClick={() => onSelectAgent(agent.id)}
           >
-            <span className="agent-item-icon">
-              {agentIcons[agent.role] || '🤖'}
+            <span className="agent-item-icon" style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '6px',
+              background: activeAgentId === agent.id ? '#0052cc' : '#f0f0f0',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '11px',
+              fontWeight: '700',
+              color: activeAgentId === agent.id ? 'white' : '#666666',
+              flexShrink: 0
+            }}>
+              {agentInitials[agent.role] || 'AG'}
             </span>
             <div className="agent-item-content">
               <span className="agent-item-name">{agent.name}</span>
               <span className="agent-item-role">{agent.role}</span>
-              <span className="agent-item-status">✅ Online</span>
+              <span className="agent-item-status">Online</span>
             </div>
             <div className="status-dot"></div>
           </div>
@@ -59,7 +72,7 @@ export default function Sidebar({ agents, activeAgentId, onSelectAgent, systemSt
         <div className="connection-status">
           <div className="status-item">
             <div className="status-indicator"></div>
-            <span>Rust Core (3000)</span>
+            <span>Rust Core (localhost:3000)</span>
           </div>
           <div className="status-item">
             <div className="status-indicator"></div>

@@ -69,11 +69,11 @@ export default function ChatArea({ agent, messages, activeTab, onTabChange, onMe
   }
 
   const tabs = [
-    { id: 'chat', label: '💬 Chat' },
-    { id: 'dashboard', label: '📊 Dashboard' },
-    { id: 'tools', label: '🛠️ Tools' },
-    { id: 'knowledge', label: '📚 Knowledge' },
-    { id: 'history', label: '📋 History' }
+    { id: 'chat', label: 'Chat' },
+    { id: 'dashboard', label: 'Dashboard' },
+    { id: 'tools', label: 'Tools' },
+    { id: 'knowledge', label: 'Knowledge' },
+    { id: 'history', label: 'History' }
   ]
 
   return (
