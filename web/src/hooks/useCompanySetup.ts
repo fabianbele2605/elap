@@ -43,7 +43,8 @@ export function useCompanySetup() {
     });
 
     try {
-      // Step 1: Send configuration to backend
+      // Step 1: Send configuration to Rust backend
+      // Rust will forward to Python gRPC
       const setupResponse = await fetch('http://localhost:3000/company/setup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -51,46 +52,71 @@ export function useCompanySetup() {
       });
 
       if (!setupResponse.ok) {
-        throw new Error('Error en configuración de empresa');
+        throw new Error(`Error en configuración de empresa: ${setupResponse.status}`);
       }
 
       const setupData = await setupResponse.json();
+      const companyId = setupData.company_id || fullConfig.nombreEmpresa.replace(/\s+/g, '_');
 
-      // Step 2: Poll for status
+      // Step 2: Poll for status with exponential backoff
       let attempts = 0;
-      const maxAttempts = 60; // 60 attempts * 2s = 2 minutes max
+      const maxAttempts = 120; // 120 * 1s = 2 minutes max
+      let backoffMs = 500; // Start with 500ms
 
       const pollStatus = async (): Promise<void> => {
         if (attempts >= maxAttempts) {
-          throw new Error('Timeout generando documentos');
+          throw new Error('Timeout: documentos tardaron más de 2 minutos');
         }
 
         attempts++;
 
-        // Simulate: en producción sería /company/{id}/status
-        const statusResponse = await fetch(
-          `http://localhost:3000/company/${fullConfig.nombreEmpresa}/status`,
-          {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-          }
-        );
+        try {
+          // Fetch real status from backend
+          const statusResponse = await fetch(
+            `http://localhost:3000/company/${companyId}/status`,
+            {
+              method: 'GET',
+              headers: { 'Content-Type': 'application/json' },
+            }
+          );
 
-        if (statusResponse.ok) {
-          const statusData = await statusResponse.json();
+          if (statusResponse.ok) {
+            const statusData = await statusResponse.json();
 
-          if (statusData.status === 'completed') {
+            // Update UI with latest status
+            const completedDocs = statusData.documents_generated || 0;
             setStatus({
-              status: 'completed',
-              documentsGenerated: statusData.documents_generated || 15,
-              message: `¡${statusData.documents_generated || 15} documentos generados exitosamente!`,
+              status: statusData.status === 'completed' ? 'completed' : 'generating',
+              documentsGenerated: completedDocs,
+              message:
+                statusData.status === 'completed'
+                  ? `¡${completedDocs} documentos generados exitosamente!`
+                  : `Generando documentos... ${completedDocs}/15 completados`,
             });
-            return;
+
+            // If completed, stop polling
+            if (statusData.status === 'completed') {
+              return;
+            }
+          } else if (statusResponse.status === 404) {
+            // Generación aún no iniciada, esperar
+            setStatus((prev) => ({
+              ...prev,
+              message: 'Iniciando generación de documentos...',
+            }));
+          } else {
+            throw new Error(`Error obteniendo estado: ${statusResponse.status}`);
           }
+        } catch (fetchErr) {
+          // Log pero continúa intentando (el servidor podría estar ocupado)
+          console.warn(`Poll attempt ${attempts} failed:`, fetchErr);
         }
 
-        // Keep polling
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        // Wait with exponential backoff (max 3 seconds)
+        const waitTime = Math.min(backoffMs, 3000);
+        backoffMs = Math.min(backoffMs * 1.2, 3000);
+
+        await new Promise((resolve) => setTimeout(resolve, waitTime));
         await pollStatus();
       };
 

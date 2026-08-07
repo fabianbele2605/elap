@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CompanyConfigForm } from './CompanyConfigForm';
 import { GenerationProgress } from './GenerationProgress';
+import { DocumentsGeneratedDashboard } from './DocumentsGeneratedDashboard';
 import { useCompanySetup } from '../hooks/useCompanySetup';
 
 interface Document {
@@ -17,8 +18,9 @@ interface KnowledgePackWizardProps {
 export const KnowledgePackWizard: React.FC<KnowledgePackWizardProps> = ({
   onSuccess,
 }) => {
-  const [phase, setPhase] = useState<'form' | 'progress'>('form');
+  const [phase, setPhase] = useState<'form' | 'progress' | 'dashboard'>('form');
   const [documents, setDocuments] = useState<Document[]>([]);
+  const [companyName, setCompanyName] = useState('');
   const { generateDocuments, status } = useCompanySetup();
 
   const TOTAL_DOCUMENTS = 15;
@@ -41,6 +43,7 @@ export const KnowledgePackWizard: React.FC<KnowledgePackWizardProps> = ({
   ];
 
   const handleFormComplete = async (config: any) => {
+    setCompanyName(config.nombreEmpresa);
     setPhase('progress');
 
     // Initialize documents
@@ -52,45 +55,10 @@ export const KnowledgePackWizard: React.FC<KnowledgePackWizardProps> = ({
     }));
     setDocuments(initialDocs);
 
-    // Simulate document generation with staggered progress
-    const simulateGeneration = async () => {
-      for (let i = 0; i < TOTAL_DOCUMENTS; i++) {
-        // Transition to generating
-        setDocuments((prev) =>
-          prev.map((doc, idx) =>
-            idx === i ? { ...doc, status: 'generating' as const } : doc
-          )
-        );
-
-        // Simulate progress (0% to 100%)
-        for (let progress = 0; progress <= 100; progress += Math.random() * 50) {
-          await new Promise((resolve) => setTimeout(resolve, 100));
-          setDocuments((prev) =>
-            prev.map((doc, idx) =>
-              idx === i ? { ...doc, progress: Math.min(progress, 100) } : doc
-            )
-          );
-        }
-
-        // Mark as complete
-        setDocuments((prev) =>
-          prev.map((doc, idx) =>
-            idx === i
-              ? { ...doc, status: 'ready' as const, progress: 100 }
-              : doc
-          )
-        );
-
-        // Small delay between documents
-        await new Promise((resolve) => setTimeout(resolve, 300));
-      }
-    };
-
-    // Actually call the backend
+    // Actually call the backend for real generation
     try {
       await generateDocuments(config);
-      // If backend call succeeds, we're done
-      // Update documents to show all as ready
+      // If backend call succeeds, update documents to show all as ready
       setDocuments((prev) =>
         prev.map((doc) => ({
           ...doc,
@@ -99,15 +67,20 @@ export const KnowledgePackWizard: React.FC<KnowledgePackWizardProps> = ({
         }))
       );
     } catch (err) {
-      // If error, run simulation anyway for UX
-      await simulateGeneration();
+      console.error('Error generating documents:', err);
+      // Show error state
+      setDocuments((prev) =>
+        prev.map((doc) => ({
+          ...doc,
+          status: 'error' as const,
+        }))
+      );
     }
   };
 
   const handleProgressComplete = () => {
-    if (onSuccess) {
-      onSuccess();
-    }
+    // Transition to dashboard view
+    setPhase('dashboard');
   };
 
   const handleCancel = () => {
@@ -128,6 +101,23 @@ export const KnowledgePackWizard: React.FC<KnowledgePackWizardProps> = ({
           estimatedTime={status.estimatedTime}
           onCancel={handleCancel}
           onComplete={handleProgressComplete}
+        />
+      )}
+      {phase === 'dashboard' && (
+        <DocumentsGeneratedDashboard
+          companyName={companyName}
+          onDownload={(docId) => {
+            console.log('Download:', docId);
+            // TODO: Implementar descarga real
+          }}
+          onPreview={(docId) => {
+            console.log('Preview:', docId);
+            // TODO: Implementar vista previa
+          }}
+          onRegenerate={(docId) => {
+            console.log('Regenerate:', docId);
+            // TODO: Implementar regeneración
+          }}
         />
       )}
     </>
