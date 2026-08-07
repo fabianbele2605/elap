@@ -1,0 +1,1 @@
+elap-desktop binary compiled successfully
