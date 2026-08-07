@@ -4,6 +4,8 @@ import asyncio
 import logging
 from typing import Optional
 
+from .ollama_client import OllamaClient
+
 logger = logging.getLogger(__name__)
 
 
@@ -23,6 +25,7 @@ class AIRuntime:
         self.name = name
         self.version = version
         self.is_running = False
+        self.ollama_client = OllamaClient()
         logger.info(f"Initialized {name} v{version}")
 
     async def start(self) -> None:
@@ -53,24 +56,30 @@ class AIRuntime:
         """
         return self.is_running
 
-    async def process_query(self, query: str) -> str:
-        """Process a user query
+    async def process_query(self, query: str, modelo: str = "glm4:9b") -> str:
+        """Process a user query usando Ollama
 
         Args:
             query: User query string
+            modelo: Modelo a usar (default: glm4:9b)
 
         Returns:
-            Response string
+            Response string desde el modelo
         """
         if not self.is_running:
             raise RuntimeError("Runtime not running")
 
-        logger.info(f"Processing query: {query[:50]}...")
+        logger.info(f"Processing query with {modelo}: {query[:50]}...")
 
-        # Placeholder: actual processing will be implemented in Phase 1
-        await asyncio.sleep(0.1)
-
-        return f"Response to: {query[:30]}..."
+        try:
+            # Llamar a Ollama real
+            respuesta = await self.ollama_client.generar(modelo, query)
+            logger.info(f"Query processed successfully")
+            return respuesta
+        except Exception as e:
+            logger.error(f"Error processing query: {str(e)}")
+            # Fallback a respuesta mock si Ollama falla
+            return f"Error: {str(e)}"
 
 
 async def main() -> None:
@@ -78,10 +87,13 @@ async def main() -> None:
     runtime = AIRuntime()
     await runtime.start()
 
+    # Iniciar servidor gRPC
+    from .grpc_server import serve
+
     try:
-        # Keep running
-        while runtime.is_running:
-            await asyncio.sleep(1)
+        # Ejecutar servidor gRPC
+        logger.info("Starting gRPC server...")
+        await serve(runtime, port=50051)
     except KeyboardInterrupt:
         logger.info("Received interrupt signal")
     finally:

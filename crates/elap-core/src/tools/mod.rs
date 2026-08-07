@@ -12,6 +12,7 @@ pub mod http_tool;
 pub mod sql_tool;
 pub mod ssh_tool;
 pub mod system_tool;
+pub mod web_search;
 pub mod sandbox;
 pub mod executor;
 
@@ -24,5 +25,6 @@ pub use http_tool::HttpTool;
 pub use sql_tool::SqlTool;
 pub use ssh_tool::SshTool;
 pub use system_tool::SystemTool;
+pub use web_search::WebSearchTool;
 pub use sandbox::{SandboxHerramienta, PoliticaHerramienta, ContextoEjecucion, ValidadorSeguridad};
 pub use executor::{EjecutorHerramientas, ResultadoEjecucion};

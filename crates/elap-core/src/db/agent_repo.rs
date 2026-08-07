@@ -12,27 +12,27 @@ impl RepositorioAgente {
     /// Guardar agente
     pub async fn guardar(
         db: &Database,
-        id: String,
-        nombre: String,
-        rol: String,
-        objetivo: String,
-        estado: String,
+        id: &str,
+        nombre: &str,
+        rol: &str,
+        objetivo: &str,
+        modelo: &str,
     ) -> ResultadoElap<()> {
         sqlx::query(
-            "INSERT INTO agentes (id, nombre, rol, objetivo, estado)
-             VALUES (?, ?, ?, ?, ?)
+            "INSERT INTO agentes (id, nombre, rol, objetivo, estado, modelo)
+             VALUES (?, ?, ?, ?, 'Inactivo', ?)
              ON CONFLICT(id) DO UPDATE SET
              nombre = excluded.nombre,
              rol = excluded.rol,
              objetivo = excluded.objetivo,
-             estado = excluded.estado,
+             modelo = excluded.modelo,
              updated_at = CURRENT_TIMESTAMP"
         )
         .bind(id)
         .bind(nombre)
         .bind(rol)
         .bind(objetivo)
-        .bind(estado)
+        .bind(modelo)
         .execute(db)
         .await?;
 
@@ -42,7 +42,7 @@ impl RepositorioAgente {
     /// Obtener agente por ID
     pub async fn obtener(db: &Database, id: &str) -> ResultadoElap<Option<AgenteBD>> {
         let agente = sqlx::query_as::<_, AgenteBD>(
-            "SELECT id, nombre, rol, objetivo, estado, created_at, updated_at
+            "SELECT id, nombre, rol, objetivo, estado, modelo, created_at, updated_at
              FROM agentes WHERE id = ?"
         )
         .bind(id)
@@ -55,7 +55,7 @@ impl RepositorioAgente {
     /// Listar todos los agentes
     pub async fn listar(db: &Database) -> ResultadoElap<Vec<AgenteBD>> {
         let agentes = sqlx::query_as::<_, AgenteBD>(
-            "SELECT id, nombre, rol, objetivo, estado, created_at, updated_at
+            "SELECT id, nombre, rol, objetivo, estado, modelo, created_at, updated_at
              FROM agentes ORDER BY created_at DESC"
         )
         .fetch_all(db)

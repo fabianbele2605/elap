@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package elap.agent;
+
+// Solicitud para ejecutar un agente
+message ExecuteAgentRequest {
+    string agent_id = 1;
+    string query = 2;
+}
+
+// Respuesta de ejecución del agente
+message ExecuteAgentResponse {
+    string agent_id = 1;
+    string status = 2;     // "running", "completed", "error"
+    string result = 3;     // Resultado de la ejecución
+    float progress = 4;    // 0.0 a 1.0
+    string error = 5;      // Mensaje de error si aplica
+}
+
+// Solicitud de health check
+message HealthCheckRequest {
+    string service = 1;
+}
+
+// Respuesta de health check
+message HealthCheckResponse {
+    string status = 1;     // "ok", "error"
+    string message = 2;
+}
+
+// Chunk de respuesta en streaming
+message ExecuteAgentChunk {
+    string agent_id = 1;
+    string chunk = 2;      // Token o fragmento de respuesta
+    float progress = 3;    // 0.0 a 1.0
+    bool is_final = 4;     // True si es el último chunk
+    string error = 5;      // Mensaje de error si aplica
+}
+
+// Servicio principal del AI Runtime
+service AIRuntimeService {
+    // Ejecutar un agente (respuesta completa)
+    rpc ExecuteAgent(ExecuteAgentRequest) returns (ExecuteAgentResponse);
+
+    // Ejecutar un agente con streaming (tokens en vivo)
+    rpc ExecuteAgentStreaming(ExecuteAgentRequest) returns (stream ExecuteAgentChunk);
+
+    // Health check
+    rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+}

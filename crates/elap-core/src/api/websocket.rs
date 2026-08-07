@@ -83,6 +83,15 @@ impl AgentEvent {
     }
 }
 
+/// WebSocket handler para streaming de ejecución
+pub async fn ejecutar_agente_streaming(
+    ws: WebSocketUpgrade,
+    Path(id): Path<String>,
+    State(state): State<AppState>,
+) -> impl IntoResponse {
+    ws.on_upgrade(|socket| handle_streaming_socket(socket, id, state))
+}
+
 /// WebSocket handler para monitorear agente
 pub async fn monitorear_agente(
     ws: WebSocketUpgrade,
@@ -90,6 +99,72 @@ pub async fn monitorear_agente(
     State(state): State<AppState>,
 ) -> impl IntoResponse {
     ws.on_upgrade(|socket| handle_socket(socket, id, state))
+}
+
+/// Manejar conexión WebSocket para streaming de ejecución
+async fn handle_streaming_socket(socket: WebSocket, agente_id: String, state: AppState) {
+    let (mut sender, mut receiver) = socket.split();
+
+    // Enviar evento de conexión
+    let evento = AgentEvent {
+        tipo: "streaming_iniciado".to_string(),
+        datos: json!({
+            "agente_id": agente_id.clone(),
+            "mensaje": "Streaming de ejecución iniciado"
+        }),
+        timestamp: chrono::Utc::now().to_rfc3339(),
+    };
+    let _ = sender.send(axum::extract::ws::Message::Text(evento.to_json_string())).await;
+
+    // Recibir query del cliente
+    if let Some(Ok(axum::extract::ws::Message::Text(query))) = receiver.next().await {
+        // Conectar a gRPC para obtener streaming
+        let evento_procesando = AgentEvent {
+            tipo: "procesando".to_string(),
+            datos: json!({
+                "query": &query,
+                "estado": "conectando a AI Runtime"
+            }),
+            timestamp: chrono::Utc::now().to_rfc3339(),
+        };
+        let _ = sender.send(axum::extract::ws::Message::Text(evento_procesando.to_json_string())).await;
+
+        // TODO: Llamar a gRPC ExecuteAgentStreaming aquí
+        // Por ahora, simulamos tokens
+        let respuesta_simulada = "Esto es una respuesta de prueba. Los tokens llegarían desde gRPC streaming.";
+
+        for (i, palabra) in respuesta_simulada.split_whitespace().enumerate() {
+            let evento_token = AgentEvent {
+                tipo: "token".to_string(),
+                datos: json!({
+                    "chunk": palabra,
+                    "indice": i,
+                    "progreso": (i as f32 / respuesta_simulada.split_whitespace().count() as f32) * 100.0
+                }),
+                timestamp: chrono::Utc::now().to_rfc3339(),
+            };
+
+            if sender.send(axum::extract::ws::Message::Text(evento_token.to_json_string())).await.is_err() {
+                break;
+            }
+
+            // Simular latencia de streaming
+            tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+        }
+
+        // Enviar evento final
+        let evento_final = AgentEvent {
+            tipo: "streaming_completado".to_string(),
+            datos: json!({
+                "estado": "completo"
+            }),
+            timestamp: chrono::Utc::now().to_rfc3339(),
+        };
+        let _ = sender.send(axum::extract::ws::Message::Text(evento_final.to_json_string())).await;
+    } else {
+        let evento_error = AgentEvent::error("No se recibió query".to_string());
+        let _ = sender.send(axum::extract::ws::Message::Text(evento_error.to_json_string())).await;
+    }
 }
 
 /// Manejar conexión WebSocket

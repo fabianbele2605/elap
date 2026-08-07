@@ -33,11 +33,11 @@ impl AppState {
     }
 
     /// Listar todos los agentes
-    pub async fn listar_agentes(&self) -> Vec<(String, String)> {
+    pub async fn listar_agentes(&self) -> Vec<(String, String, String)> {
         let agentes = self.agentes.read().await;
         agentes
             .iter()
-            .map(|(id, agente)| (id.clone(), agente.agente.nombre.clone()))
+            .map(|(id, agente)| (id.clone(), agente.agente.nombre.clone(), agente.agente.rol.clone()))
             .collect()
     }
 
@@ -81,5 +81,6 @@ mod tests {
         let lista = state.listar_agentes().await;
 
         assert_eq!(lista.len(), 1);
+        assert_eq!(lista[0].2, "Role"); // Verificar que devuelve el rol
     }
 }
