@@ -1,6 +1,7 @@
 """gRPC Server para AI Runtime"""
 
 import asyncio
+import json
 import logging
 from typing import Optional
 
@@ -10,6 +11,11 @@ from grpc import aio
 # Importar los tipos generados desde proto
 # Nota: primero ejecutar: python -m grpc_tools.protoc -I./src/elap_ai --python_out=./src/elap_ai --grpc_python_out=./src/elap_ai ./src/elap_ai/agent.proto
 
+from .agents import LangGraphAgent
+from .memory import VectorStore
+from .pipelines import DocumentPipeline
+from .tools.documents import DocumentReader, DocumentGenerator
+
 logger = logging.getLogger(__name__)
 
 
@@ -18,7 +24,10 @@ class AIRuntimeServicer:
 
     def __init__(self, ai_runtime):
         self.ai_runtime = ai_runtime
-        logger.info("AIRuntimeServicer initialized")
+        self.vector_store = VectorStore(db_path="./data/chromadb")
+        self.document_pipeline = DocumentPipeline(self.vector_store)
+        self.agents: dict = {}  # Cache de agentes
+        logger.info("AIRuntimeServicer initialized with RAG support")
 
     async def ExecuteAgent(self, request, context):
         """Ejecutar un agente
@@ -125,6 +134,143 @@ class AIRuntimeServicer:
             status="ok",
             message="AI Runtime is healthy"
         )
+
+    async def SearchDocuments(self, request, context):
+        """Buscar documentos en RAG
+
+        Args:
+            request: SearchDocumentsRequest con collection y query
+            context: gRPC context
+
+        Returns:
+            SearchDocumentsResponse con chunks recuperados
+        """
+        try:
+            logger.info(f"SearchDocuments: collection={request.collection}, query={request.query[:50]}...")
+
+            # Buscar en RAG
+            chunks = self.document_pipeline.search(
+                collection_name=request.collection,
+                query=request.query,
+                top_k=request.top_k or 5
+            )
+
+            from . import agent_pb2
+            return agent_pb2.SearchDocumentsResponse(
+                status="success",
+                chunks=chunks,
+                count=len(chunks),
+                error=""
+            )
+        except Exception as e:
+            logger.error(f"Error searching documents: {str(e)}")
+            from . import agent_pb2
+            return agent_pb2.SearchDocumentsResponse(
+                status="error",
+                chunks=[],
+                count=0,
+                error=str(e)
+            )
+
+    async def GenerateReport(self, request, context):
+        """Generar reporte en PDF o Excel
+
+        Args:
+            request: GenerateReportRequest con titulo, sections, formato
+            context: gRPC context
+
+        Returns:
+            GenerateReportResponse con archivo binario
+        """
+        try:
+            logger.info(f"GenerateReport: title={request.title}, format={request.format}")
+
+            # Parsear secciones del JSON
+            sections = json.loads(request.sections_json)
+
+            # Generar según formato
+            if request.format.lower() == "pdf":
+                report_bytes = DocumentGenerator.generate_pdf_report(
+                    title=request.title,
+                    sections=sections,
+                    company_name=request.company_name or "Empresa"
+                )
+            elif request.format.lower() == "excel":
+                import pandas as pd
+                # Convertir secciones a DataFrames
+                data = {}
+                for section in sections:
+                    data[section.get("title", "Sheet")] = pd.DataFrame(section.get("data", []))
+                report_bytes = DocumentGenerator.generate_excel_report(
+                    data=data,
+                    title=request.title
+                )
+            else:
+                raise ValueError(f"Unsupported format: {request.format}")
+
+            from . import agent_pb2
+            return agent_pb2.GenerateReportResponse(
+                status="success",
+                file_bytes=report_bytes,
+                filename=f"{request.title}.{request.format.lower()}",
+                error=""
+            )
+        except Exception as e:
+            logger.error(f"Error generating report: {str(e)}")
+            from . import agent_pb2
+            return agent_pb2.GenerateReportResponse(
+                status="error",
+                file_bytes=b"",
+                filename="",
+                error=str(e)
+            )
+
+    async def ExecuteAgentWithRAG(self, request, context):
+        """Ejecutar agente con contexto de RAG
+
+        Args:
+            request: ExecuteAgentWithRAGRequest
+            context: gRPC context
+
+        Returns:
+            ExecuteAgentResponse con resultado enriquecido
+        """
+        try:
+            logger.info(f"ExecuteAgentWithRAG: agent_id={request.agent_id}, query={request.query[:50]}...")
+
+            # Buscar documentos relevantes si se proporciona colección
+            context_docs = []
+            if request.rag_collection:
+                context_docs = self.document_pipeline.search(
+                    collection_name=request.rag_collection,
+                    query=request.query,
+                    top_k=3
+                )
+
+            # Ejecutar agente (mantener compatibilidad con Ollama por ahora)
+            # TODO: Integrar con LangGraphAgent cuando esté completamente funcional
+            result = await self.ai_runtime.process_query(request.query)
+
+            from . import agent_pb2
+            return agent_pb2.ExecuteAgentWithRAGResponse(
+                agent_id=request.agent_id,
+                status="completed",
+                result=result,
+                context_chunks=context_docs,
+                context_count=len(context_docs),
+                error=""
+            )
+        except Exception as e:
+            logger.error(f"Error executing agent with RAG: {str(e)}")
+            from . import agent_pb2
+            return agent_pb2.ExecuteAgentWithRAGResponse(
+                agent_id=request.agent_id,
+                status="error",
+                result="",
+                context_chunks=[],
+                context_count=0,
+                error=str(e)
+            )
 
 
 async def serve(ai_runtime, port: int = 50051):

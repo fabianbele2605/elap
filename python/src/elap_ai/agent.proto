@@ -37,6 +37,56 @@ message ExecuteAgentChunk {
     string error = 5;      // Mensaje de error si aplica
 }
 
+// === NUEVOS MENSAJES PARA FASE 2 ===
+
+// Solicitud de búsqueda en documentos
+message SearchDocumentsRequest {
+    string collection = 1;    // Nombre de colección
+    string query = 2;         // Texto de búsqueda
+    int32 top_k = 3;          // Número de resultados
+}
+
+// Respuesta de búsqueda
+message SearchDocumentsResponse {
+    string status = 1;        // "success" o "error"
+    repeated string chunks = 2;  // Fragmentos recuperados
+    int32 count = 3;          // Cantidad de resultados
+    string error = 4;         // Mensaje de error
+}
+
+// Solicitud de generación de reporte
+message GenerateReportRequest {
+    string title = 1;         // Título del reporte
+    string sections_json = 2; // JSON con secciones {title, content, data}
+    string format = 3;        // "pdf" o "excel"
+    string company_name = 4;  // Nombre de empresa para header
+}
+
+// Respuesta de generación de reporte
+message GenerateReportResponse {
+    string status = 1;        // "success" o "error"
+    bytes file_bytes = 2;     // Contenido del archivo
+    string filename = 3;      // Nombre del archivo generado
+    string error = 4;         // Mensaje de error
+}
+
+// Solicitud de ejecución con RAG
+message ExecuteAgentWithRAGRequest {
+    string agent_id = 1;
+    string query = 2;
+    string rag_collection = 3;  // Colección para buscar contexto
+}
+
+// Respuesta de ejecución con RAG
+message ExecuteAgentWithRAGResponse {
+    string agent_id = 1;
+    string status = 2;        // "completed" o "error"
+    string result = 3;        // Respuesta del agente
+    repeated string context_chunks = 4;  // Chunks de contexto recuperados
+    int32 context_count = 5;  // Cantidad de chunks
+    string error = 6;         // Mensaje de error
+}
+
 // Servicio principal del AI Runtime
 service AIRuntimeService {
     // Ejecutar un agente (respuesta completa)
@@ -47,4 +97,15 @@ service AIRuntimeService {
 
     // Health check
     rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+
+    // === NUEVOS RPC PARA FASE 2 ===
+
+    // Buscar documentos en RAG
+    rpc SearchDocuments(SearchDocumentsRequest) returns (SearchDocumentsResponse);
+
+    // Generar reporte (PDF/Excel)
+    rpc GenerateReport(GenerateReportRequest) returns (GenerateReportResponse);
+
+    // Ejecutar agente con contexto RAG
+    rpc ExecuteAgentWithRAG(ExecuteAgentWithRAGRequest) returns (ExecuteAgentWithRAGResponse);
 }

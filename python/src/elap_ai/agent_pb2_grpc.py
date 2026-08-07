@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-from . import agent_pb2 as agent__pb2
+import agent_pb2 as agent__pb2
 
 GRPC_GENERATED_VERSION = '1.83.0'
 GRPC_VERSION = grpc.__version__
@@ -50,6 +50,21 @@ class AIRuntimeServiceStub:
                 request_serializer=agent__pb2.HealthCheckRequest.SerializeToString,
                 response_deserializer=agent__pb2.HealthCheckResponse.FromString,
                 _registered_method=True)
+        self.SearchDocuments = channel.unary_unary(
+                '/elap.agent.AIRuntimeService/SearchDocuments',
+                request_serializer=agent__pb2.SearchDocumentsRequest.SerializeToString,
+                response_deserializer=agent__pb2.SearchDocumentsResponse.FromString,
+                _registered_method=True)
+        self.GenerateReport = channel.unary_unary(
+                '/elap.agent.AIRuntimeService/GenerateReport',
+                request_serializer=agent__pb2.GenerateReportRequest.SerializeToString,
+                response_deserializer=agent__pb2.GenerateReportResponse.FromString,
+                _registered_method=True)
+        self.ExecuteAgentWithRAG = channel.unary_unary(
+                '/elap.agent.AIRuntimeService/ExecuteAgentWithRAG',
+                request_serializer=agent__pb2.ExecuteAgentWithRAGRequest.SerializeToString,
+                response_deserializer=agent__pb2.ExecuteAgentWithRAGResponse.FromString,
+                _registered_method=True)
 
 
 class AIRuntimeServiceServicer:
@@ -77,6 +92,29 @@ class AIRuntimeServiceServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def SearchDocuments(self, request, context):
+        """=== NUEVOS RPC PARA FASE 2 ===
+
+        Buscar documentos en RAG
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GenerateReport(self, request, context):
+        """Generar reporte (PDF/Excel)
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ExecuteAgentWithRAG(self, request, context):
+        """Ejecutar agente con contexto RAG
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_AIRuntimeServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -94,6 +132,21 @@ def add_AIRuntimeServiceServicer_to_server(servicer, server):
                     servicer.HealthCheck,
                     request_deserializer=agent__pb2.HealthCheckRequest.FromString,
                     response_serializer=agent__pb2.HealthCheckResponse.SerializeToString,
+            ),
+            'SearchDocuments': grpc.unary_unary_rpc_method_handler(
+                    servicer.SearchDocuments,
+                    request_deserializer=agent__pb2.SearchDocumentsRequest.FromString,
+                    response_serializer=agent__pb2.SearchDocumentsResponse.SerializeToString,
+            ),
+            'GenerateReport': grpc.unary_unary_rpc_method_handler(
+                    servicer.GenerateReport,
+                    request_deserializer=agent__pb2.GenerateReportRequest.FromString,
+                    response_serializer=agent__pb2.GenerateReportResponse.SerializeToString,
+            ),
+            'ExecuteAgentWithRAG': grpc.unary_unary_rpc_method_handler(
+                    servicer.ExecuteAgentWithRAG,
+                    request_deserializer=agent__pb2.ExecuteAgentWithRAGRequest.FromString,
+                    response_serializer=agent__pb2.ExecuteAgentWithRAGResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -178,6 +231,87 @@ class AIRuntimeService:
             '/elap.agent.AIRuntimeService/HealthCheck',
             agent__pb2.HealthCheckRequest.SerializeToString,
             agent__pb2.HealthCheckResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SearchDocuments(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/elap.agent.AIRuntimeService/SearchDocuments',
+            agent__pb2.SearchDocumentsRequest.SerializeToString,
+            agent__pb2.SearchDocumentsResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GenerateReport(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/elap.agent.AIRuntimeService/GenerateReport',
+            agent__pb2.GenerateReportRequest.SerializeToString,
+            agent__pb2.GenerateReportResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ExecuteAgentWithRAG(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/elap.agent.AIRuntimeService/ExecuteAgentWithRAG',
+            agent__pb2.ExecuteAgentWithRAGRequest.SerializeToString,
+            agent__pb2.ExecuteAgentWithRAGResponse.FromString,
             options,
             channel_credentials,
             insecure,
