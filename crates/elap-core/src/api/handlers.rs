@@ -46,6 +46,7 @@ pub struct EjecucionResponse {
     pub estado: String,
     pub pasos_completados: usize,
     pub progreso: f32,
+    pub respuesta: String,
 }
 
 /// Error de API
@@ -202,6 +203,7 @@ pub async fn ejecutar_agente(
                 estado: "completed".to_string(),
                 pasos_completados: 1,
                 progreso: 1.0,
+                respuesta: resultado, // ✅ Ahora usa la respuesta real del gRPC
             };
 
             Ok(Json(respuesta))

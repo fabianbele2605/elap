@@ -51,7 +51,7 @@ function App() {
   return (
     <div className="app">
       <header className="header">
-        <h1>🚀 ELAP Dashboard v1.2.0</h1>
+        <h1>🚀 ELAP Dashboard v1.5.0</h1>
         <nav className="nav">
           <button
             className={activeTab === 'dashboard' ? 'active' : ''}
@@ -95,7 +95,7 @@ function App() {
       </main>
 
       <footer className="footer">
-        <p>ELAP Enterprise Local AI Platform • v1.2.0</p>
+        <p>ELAP Enterprise Local AI Platform • v1.5.0</p>
       </footer>
     </div>
   )

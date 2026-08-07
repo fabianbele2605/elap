@@ -1,26 +1,35 @@
 {
+  "productName": "ELAP",
+  "version": "1.5.0",
+  "identifier": "io.bblabs.elap",
   "build": {
-    "beforeBuildCommand": "",
+    "beforeBuildCommand": "cd ../../web && npm run build",
     "beforeDevCommand": "",
-    "devPath": "../",
-    "frontendDist": "../../../src-tauri/dist"
+    "devUrl": "http://localhost:5173",
+    "frontendDist": "../../web/dist"
   },
   "app": {
     "windows": [
       {
         "title": "ELAP - Enterprise Local AI Platform",
-        "width": 1200,
-        "height": 800,
+        "width": 1400,
+        "height": 900,
         "resizable": true,
-        "fullscreen": false
+        "fullscreen": false,
+        "label": "main"
       }
     ],
     "security": {
       "csp": null
     }
   },
-  "package": {
-    "productName": "ELAP",
-    "version": "0.1.0"
+  "bundle": {
+    "active": true,
+    "targets": ["appimage"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/icon.ico"
+    ]
   }
 }

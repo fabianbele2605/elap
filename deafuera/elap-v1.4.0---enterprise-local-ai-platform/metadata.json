@@ -1,0 +1,6 @@
+{
+  "name": "ELAP v1.4.0 - Enterprise Local AI Platform",
+  "description": "Desktop application for local enterprise AI orchestration, multi-agent management, RAG knowledge bases, tool chains, analytics dashboard, and local LLM integration.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

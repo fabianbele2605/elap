@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@keyframes elapIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes elapDot{0%,100%{opacity:.25}50%{opacity:1}}
+body{margin:0;background:#e9e9ec}
+a{color:#0052cc;text-decoration:none}a:hover{color:#0a3399}
+input::placeholder{color:#999999}
+input{font-family:inherit}
+*{box-sizing:border-box}
+</style>
+</helmet>
+<div style="width:2560px;height:1600px;padding:22px;display:flex;background:radial-gradient(120% 120% at 50% 0%,#f2f2f4 0%,#e4e4e8 100%);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Helvetica,sans-serif;color:#1a1a1a">
+<div style="flex:1;display:flex;flex-direction:column;min-width:0;background:#ffffff;border:1px solid #dcdcdf;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12),0 1px 3px rgba(0,0,0,.05);overflow:hidden">
+
+  <div style="height:38px;flex:none;display:flex;align-items:center;padding:0 14px;background:rgba(250,250,251,.82);backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid #ececee;position:relative">
+    <div style="display:flex;gap:8px;align-items:center">
+      <span style="width:12px;height:12px;border-radius:50%;background:#ff5f57;border:1px solid rgba(0,0,0,.06)"></span>
+      <span style="width:12px;height:12px;border-radius:50%;background:#febc2e;border:1px solid rgba(0,0,0,.06)"></span>
+      <span style="width:12px;height:12px;border-radius:50%;background:#28c840;border:1px solid rgba(0,0,0,.06)"></span>
+    </div>
+    <div style="position:absolute;left:0;right:0;text-align:center;font-size:13px;font-weight:600;letter-spacing:-.3px;color:#3a3a3c;pointer-events:none">ELAP — Enterprise Local AI Platform</div>
+  </div>
+
+  <div style="flex:1;display:flex;min-height:0">
+
+    <div style="width:280px;flex:none;display:flex;flex-direction:column;border-right:1px solid #ececee;background:#fcfcfd">
+      <div style="padding:18px 20px 14px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;gap:10px">
+        <span style="width:24px;height:24px;border-radius:6px;background:#0052cc;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700">E</span>
+        <span style="font-size:14px;font-weight:700;letter-spacing:.5px">ELAP</span>
+        <span style="margin-left:auto;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;color:#999999">v1.4.0</span>
+      </div>
+
+      <div style="padding:16px 20px 12px">
+        <div style="position:relative">
+          <span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);width:11px;height:11px;border:1.5px solid #b0b0b3;border-radius:50%"></span>
+          <span style="position:absolute;left:20px;top:22px;width:5px;height:1.5px;background:#b0b0b3;transform:rotate(45deg)"></span>
+          <input value="{{ query }}" onChange="{{ onQuery }}" placeholder="Search agents..." style="width:100%;background:#ffffff;border:1px solid #e5e5e5;border-radius:6px;padding:9px 12px 9px 30px;font-size:13px;color:#1a1a1a;outline:none;transition:all 150ms cubic-bezier(.4,0,.2,1)" style-focus="border-color:#0052cc;box-shadow:0 0 0 3px rgba(0,82,204,.1)" />
+        </div>
+      </div>
+
+      <div style="flex:1;overflow-y:auto;padding:0 14px 8px;display:flex;flex-direction:column;gap:8px">
+        <sc-for list="{{ agents }}" as="a" hint-placeholder-count="5">
+          <div onClick="{{ a.select }}" style="{{ a.cardStyle }}">
+            <span style="{{ a.chipStyle }}">{{ a.initials }}</span>
+            <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+              <span style="{{ a.nameStyle }}">{{ a.name }}</span>
+              <span style="font-size:11px;color:#666666">{{ a.role }}</span>
+            </span>
+            <span style="width:6px;height:6px;border-radius:50%;background:#27ae60;margin-top:5px"></span>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="margin-top:auto;padding:14px 20px 16px;border-top:1px solid #f0f0f0;display:flex;flex-direction:column;gap:12px">
+        <button style="width:100%;background:#0052cc;border:none;padding:10px 14px;border-radius:6px;font-size:12px;font-weight:600;letter-spacing:.3px;color:#fff;cursor:pointer;transition:all 100ms cubic-bezier(.4,0,.2,1);font-family:inherit" style-hover="background:#0a3399;box-shadow:0 2px 8px rgba(0,82,204,.15)" style-active="background:#082280;transform:scale(.98)">+ NEW AGENT</button>
+        <div style="display:flex;flex-direction:column;gap:7px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;color:#27ae60">
+          <span style="display:flex;align-items:center;gap:7px"><span style="width:5px;height:5px;border-radius:50%;background:#27ae60"></span>Rust Core (localhost:3000)</span>
+          <span style="display:flex;align-items:center;gap:7px"><span style="width:5px;height:5px;border-radius:50%;background:#27ae60"></span>Python gRPC (50051)</span>
+          <span style="display:flex;align-items:center;gap:7px"><span style="width:5px;height:5px;border-radius:50%;background:#27ae60"></span>Ollama (11434)</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+
+      <div style="height:56px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 24px;border-bottom:1px solid #e5e5e5;box-shadow:0 1px 3px rgba(0,0,0,.05);z-index:1">
+        <div style="display:flex;align-items:center">
+          <span style="display:flex;align-items:center;gap:8px;background:#f0f4ff;border:1px solid #0052cc;padding:5px 11px;border-radius:4px;font-size:13px;font-weight:600;color:#0052cc">
+            <span style="{{ activeDot }}"></span>{{ activeName }}
+          </span>
+          <span style="width:1px;height:20px;background:#e5e5e5;margin:0 16px"></span>
+          <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:#666666">{{ activeModel }}</span>
+          <span style="width:1px;height:20px;background:#e5e5e5;margin:0 16px"></span>
+          <span style="display:flex;align-items:center;gap:7px;font-size:12px;font-weight:500;color:#27ae60"><span style="width:6px;height:6px;border-radius:50%;background:#27ae60"></span>{{ readyLabel }}</span>
+        </div>
+        <div style="display:flex;align-items:center">
+          <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:#666666">Tokens: {{ tokens }} / 4000</span>
+          <span style="width:1px;height:20px;background:#e5e5e5;margin:0 16px"></span>
+          <span style="font-size:12px;color:#999999">{{ clock }}</span>
+        </div>
+      </div>
+
+      <div style="flex:none;display:flex;padding:0 24px;border-bottom:1px solid #e5e5e5">
+        <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="5">
+          <span onClick="{{ t.select }}" style="{{ t.style }}">{{ t.label }}</span>
+        </sc-for>
+      </div>
+
+      <sc-if value="{{ isChat }}" hint-placeholder-val="{{ true }}">
+        <div style="flex:1;min-height:0;display:flex;flex-direction:column">
+          <div style="flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:18px">
+            <sc-for list="{{ messages }}" as="m" hint-placeholder-count="4">
+              <div style="{{ m.rowStyle }}">
+                <div style="{{ m.bubbleStyle }}">{{ m.text }}{{ m.stream }}</div>
+                <span style="font-size:10px;color:#999999;margin-top:6px">{{ m.time }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="flex:none;display:flex;gap:12px;padding:16px 24px;border-top:1px solid #e5e5e5;background:#ffffff">
+            <input value="{{ draft }}" onChange="{{ onDraft }}" onKeyDown="{{ onKey }}" placeholder="Escribe tu pregunta..." style="flex:1;background:#fff;border:1px solid #d5d5d5;border-radius:6px;padding:10px 14px;font-size:13px;color:#1a1a1a;outline:none;transition:all 150ms ease" style-focus="border-color:#0052cc;box-shadow:0 0 0 3px rgba(0,82,204,.1)" />
+            <button onClick="{{ send }}" style="background:#0052cc;border:none;padding:10px 22px;border-radius:6px;font-size:13px;font-weight:600;color:#fff;cursor:pointer;font-family:inherit;transition:all 100ms cubic-bezier(.4,0,.2,1)" style-hover="background:#0a3399;box-shadow:0 4px 12px rgba(0,82,204,.2);transform:translateY(-1px)" style-active="background:#082280;transform:translateY(0)">Send</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isPanel }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:1;min-height:0;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:14px">
+          <span style="font-size:11px;font-weight:700;letter-spacing:.3px;color:#1a1a1a">{{ panelTitle }}</span>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px">
+            <sc-for list="{{ panelRows }}" as="r" hint-placeholder-count="4">
+              <div style="border:1px solid #f0f0f0;border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;transition:all 150ms" style-hover="border-color:#e5e5e5;box-shadow:0 2px 4px rgba(0,0,0,.03)">
+                <span style="font-size:12px;font-weight:600;color:#1a1a1a">{{ r.label }}</span>
+                <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#666666">{{ r.value }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+
+    <div style="width:300px;flex:none;display:flex;flex-direction:column;border-left:1px solid #ececee;background:#fcfcfd">
+      <div style="padding:19px 20px;border-bottom:1px solid #f0f0f0;font-size:12px;font-weight:700;letter-spacing:.5px;color:#1a1a1a">PROPERTIES</div>
+      <div style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:16px">
+
+        <div style="background:#fff;border:1px solid #f0f0f0;border-radius:6px;padding:14px 16px;transition:all 150ms" style-hover="border-color:#e5e5e5;box-shadow:0 2px 4px rgba(0,0,0,.03)">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.3px;margin-bottom:12px">AGENT DETAILS</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <sc-for list="{{ details }}" as="d" hint-placeholder-count="5">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+                <span style="font-size:12px;font-weight:500;color:#666666">{{ d.label }}</span>
+                <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#1a1a1a;background:#f9f9f9;padding:4px 8px;border-radius:3px">{{ d.value }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="background:#fff;border:1px solid #f0f0f0;border-radius:6px;padding:14px 16px;transition:all 150ms" style-hover="border-color:#e5e5e5;box-shadow:0 2px 4px rgba(0,0,0,.03)">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.3px;margin-bottom:12px">TOOLS</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <sc-for list="{{ tools }}" as="t" hint-placeholder-count="4">
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <span style="font-size:12px;color:#1a1a1a">{{ t.name }}</span>
+                <span style="font-size:11px;color:#27ae60;font-weight:600">✓</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="background:#fff;border:1px solid #f0f0f0;border-radius:6px;padding:14px 16px;transition:all 150ms" style-hover="border-color:#e5e5e5;box-shadow:0 2px 4px rgba(0,0,0,.03)">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.3px;margin-bottom:12px">KNOWLEDGE SOURCES</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <sc-for list="{{ knowledge }}" as="k" hint-placeholder-count="4">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+                <span style="font-size:12px;color:#1a1a1a">{{ k.name }}</span>
+                <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;color:#666666;background:#f9f9f9;padding:3px 7px;border-radius:3px">{{ k.state }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div style="height:32px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 24px;border-top:1px solid #e5e5e5;background:#ffffff;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;color:#666666">
+    <div style="display:flex;gap:16px;align-items:center">
+      <span style="display:flex;align-items:center;gap:6px"><span style="width:5px;height:5px;border-radius:50%;background:#27ae60"></span>Rust Core (3000)</span>
+      <span style="display:flex;align-items:center;gap:6px"><span style="width:5px;height:5px;border-radius:50%;background:#27ae60"></span>Python gRPC (50051)</span>
+      <span style="display:flex;align-items:center;gap:6px"><span style="width:5px;height:5px;border-radius:50%;background:#27ae60"></span>Ollama (11434)</span>
+    </div>
+    <div style="display:flex;gap:12px">
+      <span>CPU 45%</span><span style="color:#d5d5d5">|</span><span>RAM 2.3GB / 8GB</span><span style="color:#d5d5d5">|</span><span>Disk 340GB / 1TB</span>
+    </div>
+    <div style="display:flex;gap:14px;align-items:center">
+      <span>Admin User</span><span style="color:#d5d5d5">|</span><span>Alerts 2</span><span style="color:#d5d5d5">|</span><span>{{ clock }}</span><span style="color:#d5d5d5">|</span><span>Battery 92%</span>
+    </div>
+  </div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{}">
+const AGENTS = [
+  { id:'agent_a1f92c', name:'Sales Agent', role:'Revenue operations', initials:'SA', color:'#17a2b8', model:'glm4:9b' },
+  { id:'agent_b7d310', name:'IT Support', role:'Infrastructure', initials:'IT', color:'#0052cc', model:'qwen2.5:14b' },
+  { id:'agent_c2e845', name:'Analytics', role:'Business intelligence', initials:'AN', color:'#6f42c1', model:'glm4:9b' },
+  { id:'agent_d9a173', name:'Research', role:'Market intelligence', initials:'RE', color:'#28a745', model:'llama3.1:8b' },
+  { id:'agent_e4c608', name:'Finance', role:'Controlling', initials:'FI', color:'#fd7e14', model:'mistral:7b' }
+];
+const TABS = ['Chat','Dashboard','Tools','Knowledge','History'];
+const TOOLS = ['Web Search','Data Analysis','Report Generation','Database Query'];
+const KNOWLEDGE = [
+  { name:'Sales Database', state:'Live' },
+  { name:'Q3 Report', state:'Cached' },
+  { name:'Market Data', state:'Updated' },
+  { name:'Company Docs', state:'Vectorized' }
+];
+const DASH = [
+  { label:'Requests today', value:'1,284' },
+  { label:'Avg. latency', value:'412 ms' },
+  { label:'Tokens processed', value:'3.7 M' },
+  { label:'Cache hit rate', value:'87.4 %' },
+  { label:'Active sessions', value:'12' },
+  { label:'Uptime', value:'99.98 %' }
+];
+
+function stamp(d) {
+  return d.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', hour12:true });
+}
+
+class Component extends DCLogic {
+  state = {
+    activeId: 'agent_a1f92c',
+    tab: 'Chat',
+    query: '',
+    draft: '',
+    tokens: 523,
+    progress: 0,
+    clock: stamp(new Date()),
+    messages: [
+      { id:1, role:'user', text:'¿Cómo cerró el pipeline de Q3 frente al objetivo?', time:'09:41 AM' },
+      { id:2, role:'assistant', text:'Q3 cerró en 4.28 M USD sobre un objetivo de 4.00 M (107%). El crecimiento vino de cuentas enterprise en EMEA, con un ciclo de venta medio de 41 días.', time:'09:42 AM' },
+      { id:3, role:'user', text:'Desglosa el resultado por región y señala los riesgos de Q4.', time:'09:44 AM' },
+      { id:4, role:'assistant', text:'Analizando datos de Q3', time:'09:45 AM', streaming:true }
+    ]
+  };
+
+  componentDidMount() {
+    this._clock = setInterval(() => this.setState({ clock: stamp(new Date()) }), 20000);
+    this._prog = setInterval(() => {
+      if (!this.state.messages.some(m => m.streaming)) return;
+      this.setState(s => ({ progress: s.progress >= 67 ? 12 : s.progress + 3 }));
+    }, 90);
+  }
+  componentWillUnmount() { clearInterval(this._clock); clearInterval(this._prog); }
+
+  send = () => {
+    const text = this.state.draft.trim();
+    if (!text) return;
+    const now = stamp(new Date());
+    const uid = Date.now();
+    this.setState(s => ({
+      draft: '',
+      tokens: s.tokens + Math.round(text.length / 3),
+      progress: 0,
+      messages: s.messages.filter(m => !m.streaming).concat(
+        { id: uid, role:'user', text, time: now },
+        { id: uid + 1, role:'assistant', text:'Consultando fuentes locales', time: now, streaming:true }
+      )
+    }));
+    clearTimeout(this._reply);
+    this._reply = setTimeout(() => {
+      this.setState(s => ({
+        tokens: s.tokens + 148,
+        messages: s.messages.map(m => m.id === uid + 1
+          ? { id:m.id, role:'assistant', time:m.time, text:'Consulta resuelta contra Sales Database y Q3 Report. El resumen se ha adjuntado al hilo y las fuentes quedaron registradas en el historial de la sesión.' }
+          : m)
+      }));
+    }, 3200);
+  };
+
+  streamNode(text) {
+    const pct = Math.max(this.state.progress, 8);
+    return React.createElement('span', { style:{ display:'block' } },
+      React.createElement('span', null, text + ' '),
+      [0,1,2].map(i => React.createElement('span', {
+        key:i,
+        style:{ display:'inline-block', width:'4px', height:'4px', borderRadius:'50%', background:'#666', margin:'0 1.5px 2px', animation:'elapDot 1.5s ease-in-out infinite', animationDelay:(i*0.25)+'s' }
+      })),
+      React.createElement('span', { style:{ display:'block', height:'2px', borderRadius:'1px', background:'#e5e5e5', marginTop:'10px', overflow:'hidden' } },
+        React.createElement('span', { style:{ display:'block', height:'100%', width:pct+'%', background:'#0052cc', transition:'width 300ms cubic-bezier(.4,0,.2,1)' } })
+      )
+    );
+  }
+
+  renderVals() {
+    const s = this.state;
+    const active = AGENTS.find(a => a.id === s.activeId) || AGENTS[0];
+    const q = s.query.trim().toLowerCase();
+
+    const agents = AGENTS.filter(a => !q || a.name.toLowerCase().includes(q) || a.role.toLowerCase().includes(q)).map(a => {
+      const on = a.id === s.activeId;
+      return {
+        ...a,
+        select: () => this.setState({ activeId: a.id }),
+        cardStyle: {
+          display:'flex', gap:'10px', alignItems:'flex-start', padding:'11px 13px', borderRadius:'6px', cursor:'pointer',
+          background: on ? '#f0f4ff' : '#ffffff',
+          border: '1px solid ' + (on ? '#0052cc' : '#f0f0f0'),
+          transition:'background 150ms cubic-bezier(.4,0,.2,1), border-color 150ms cubic-bezier(.4,0,.2,1)'
+        },
+        chipStyle: {
+          width:'22px', height:'22px', flex:'none', borderRadius:'5px', display:'flex', alignItems:'center', justifyContent:'center',
+          fontSize:'9.5px', fontWeight:700, letterSpacing:'.2px', color:'#fff', background:a.color
+        },
+        nameStyle: { fontSize:'13px', fontWeight:600, color: on ? '#0052cc' : '#1a1a1a' }
+      };
+    });
+
+    const tabs = TABS.map(t => {
+      const on = t === s.tab;
+      return {
+        label: t,
+        select: () => this.setState({ tab: t }),
+        style: {
+          padding:'14px 16px', fontSize:'12px', fontWeight: on ? 600 : 500, cursor:'pointer',
+          color: on ? '#0052cc' : '#666666',
+          borderBottom:'2px solid ' + (on ? '#0052cc' : 'transparent'),
+          marginBottom:'-1px', transition:'color 150ms, border-color 150ms'
+        }
+      };
+    });
+
+    const messages = s.messages.map(m => {
+      const user = m.role === 'user';
+      return {
+        text: m.streaming ? '' : m.text,
+        stream: m.streaming ? this.streamNode(m.text) : null,
+        time: m.time,
+        rowStyle: { display:'flex', flexDirection:'column', alignItems: user ? 'flex-end' : 'flex-start', animation:'elapIn 300ms ease both' },
+        bubbleStyle: {
+          maxWidth:'min(70%, 720px)', padding:'12px 16px', fontSize:'13px', lineHeight:1.5,
+          background: user ? '#f0f4ff' : '#f9f9f9',
+          border:'1px solid ' + (user ? '#0052cc' : '#e5e5e5'),
+          color: user ? '#0052cc' : '#1a1a1a',
+          borderRadius: user ? '8px 2px 8px 8px' : '2px 8px 8px 8px'
+        }
+      };
+    });
+
+    const panels = {
+      Dashboard: { title:'SESSION METRICS', rows: DASH },
+      Tools: { title:'ENABLED TOOLS', rows: TOOLS.map(t => ({ label:t, value:'enabled' })) },
+      Knowledge: { title:'KNOWLEDGE SOURCES', rows: KNOWLEDGE.map(k => ({ label:k.name, value:k.state.toLowerCase() })) },
+      History: { title:'SESSION HISTORY', rows: s.messages.map(m => ({ label: m.role === 'user' ? 'You' : active.name, value: m.time + ' · ' + m.text.slice(0, 46) + '…' })) }
+    };
+    const panel = panels[s.tab];
+
+    return {
+      agents, tabs, messages,
+      query: s.query,
+      onQuery: e => this.setState({ query: e.target.value }),
+      draft: s.draft,
+      onDraft: e => this.setState({ draft: e.target.value }),
+      onKey: e => { if (e.key === 'Enter') this.send(); },
+      send: this.send,
+      isChat: s.tab === 'Chat',
+      isPanel: s.tab !== 'Chat',
+      panelTitle: panel ? panel.title : '',
+      panelRows: panel ? panel.rows : [],
+      activeName: active.name,
+      activeModel: active.model,
+      activeDot: { width:'6px', height:'6px', borderRadius:'50%', background:active.color },
+      readyLabel: s.messages.some(m => m.streaming) ? 'Generating' : 'Ready',
+      tokens: s.tokens,
+      clock: s.clock,
+      details: [
+        { label:'ID', value: active.id },
+        { label:'Role', value: active.role.split(' ')[0] },
+        { label:'Model', value: active.model },
+        { label:'Status', value:'online' },
+        { label:'Availability', value:'24/7' }
+      ],
+      tools: TOOLS.map(t => ({ name: t })),
+      knowledge: KNOWLEDGE
+    };
+  }
+}
+</script>
+</body>
+</html>
