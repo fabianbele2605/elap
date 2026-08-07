@@ -1,102 +1,115 @@
 import { useState, useEffect } from 'react'
 import './App.css'
-import Dashboard from './pages/Dashboard'
-import AgentList from './components/AgentList'
-import TaskMonitor from './components/TaskMonitor'
-import StreamingResponse from './components/StreamingResponse'
+import Sidebar from './components/Sidebar'
+import ChatArea from './components/ChatArea'
+import PropertiesPanel from './components/PropertiesPanel'
+import StatusBar from './components/StatusBar'
 
 function App() {
   const [agents, setAgents] = useState([])
-  const [tasks, setTasks] = useState([])
-  const [activeTab, setActiveTab] = useState('dashboard')
-  const [streamingSession, setStreamingSession] = useState(null)
+  const [activeAgentId, setActiveAgentId] = useState(null)
+  const [messages, setMessages] = useState([])
+  const [activeTab, setActiveTab] = useState('chat')
+  const [loading, setLoading] = useState(true)
+  const [systemStatus, setSystemStatus] = useState({
+    rustCore: false,
+    pythonGrpc: false,
+    ollama: false,
+    cpu: 0,
+    ram: 0
+  })
 
   const fetchAgents = async () => {
     try {
       const response = await fetch('http://localhost:3000/agents')
       const data = await response.json()
-      const transformedAgents = data.agentes.map(agent => ({
+      const transformed = data.agentes.map(agent => ({
         id: agent.id,
         name: agent.nombre,
-        role: agent.rol || 'Usuario',
-        status: agent.estado === 'Inactivo' ? 'idle' : 'active',
-        objetivo: agent.objetivo,
-        progreso: agent.progreso,
-        modelo: agent.modelo || 'glm4:9b'
+        role: agent.rol,
+        model: agent.modelo,
+        status: 'online'
       }))
-      setAgents(transformedAgents)
+      setAgents(transformed)
+      if (transformed.length > 0 && !activeAgentId) {
+        setActiveAgentId(transformed[0].id)
+      }
+      setLoading(false)
     } catch (error) {
-      console.error('Error cargando agentes:', error)
-      // Fallback a mock data si falla
-      const mockAgents = [
-        { id: 'agent_1', name: 'Vendedor Bot', role: 'Sales', status: 'active', modelo: 'glm4:9b' },
-        { id: 'agent_2', name: 'Analizador', role: 'Analyzer', status: 'idle', modelo: 'glm4:9b' },
-      ]
-      setAgents(mockAgents)
+      console.error('Error fetching agents:', error)
+      setLoading(false)
+    }
+  }
+
+  const checkSystemStatus = async () => {
+    try {
+      const rustCheck = fetch('http://localhost:3000/agents').then(() => true).catch(() => false)
+      const ollamaCheck = fetch('http://localhost:11434/api/tags').then(() => true).catch(() => false)
+
+      const [rust, ollama] = await Promise.all([rustCheck, ollamaCheck])
+      setSystemStatus(prev => ({
+        ...prev,
+        rustCore: rust,
+        ollama: ollama
+      }))
+    } catch (error) {
+      console.error('Error checking system status:', error)
     }
   }
 
   useEffect(() => {
     fetchAgents()
-
-    // Simulación: cargar tareas
-    const mockTasks = [
-      { id: 'task_1', description: 'Procesar pedidos', status: 'running', progress: 65 },
-      { id: 'task_2', description: 'Validar datos', status: 'completed', progress: 100 },
-      { id: 'task_3', description: 'Generar reporte', status: 'pending', progress: 0 },
-    ]
-    setTasks(mockTasks)
+    checkSystemStatus()
+    const interval = setInterval(checkSystemStatus, 5000)
+    return () => clearInterval(interval)
   }, [])
 
+  const activeAgent = agents.find(a => a.id === activeAgentId)
+
   return (
-    <div className="app">
-      <header className="header">
-        <h1>🚀 ELAP Dashboard v1.2.0</h1>
-        <nav className="nav">
-          <button
-            className={activeTab === 'dashboard' ? 'active' : ''}
-            onClick={() => setActiveTab('dashboard')}
-          >
-            Dashboard
-          </button>
-          <button
-            className={activeTab === 'agents' ? 'active' : ''}
-            onClick={() => setActiveTab('agents')}
-          >
-            Agents
-          </button>
-          <button
-            className={activeTab === 'tasks' ? 'active' : ''}
-            onClick={() => setActiveTab('tasks')}
-          >
-            Tasks
-          </button>
-        </nav>
-      </header>
+    <div className="elap-desktop">
+      {/* Title Bar */}
+      <div className="title-bar">
+        <div className="title-bar-left">
+          <span>⚡ ELAP v1.4.0</span>
+          <span>—</span>
+          <span>Enterprise Local AI Platform</span>
+        </div>
+        <div className="title-bar-right">
+          <div className="window-control">−</div>
+          <div className="window-control">□</div>
+          <div className="window-control">✕</div>
+        </div>
+      </div>
 
-      <main className="main">
-        {activeTab === 'dashboard' && <Dashboard agents={agents} tasks={tasks} />}
-        {activeTab === 'agents' && (
-          <AgentList
-            agents={agents}
-            onAgentCreated={fetchAgents}
-            onStreamingStart={(agentId, query) => setStreamingSession({ agentId, query })}
-          />
-        )}
-        {activeTab === 'tasks' && <TaskMonitor tasks={tasks} />}
+      {/* Main Content */}
+      <div className="main-content">
+        {/* Left Sidebar */}
+        <Sidebar
+          agents={agents}
+          activeAgentId={activeAgentId}
+          onSelectAgent={setActiveAgentId}
+          systemStatus={systemStatus}
+        />
 
-        {streamingSession && (
-          <StreamingResponse
-            agentId={streamingSession.agentId}
-            query={streamingSession.query}
-            onClose={() => setStreamingSession(null)}
-          />
-        )}
-      </main>
+        {/* Center Chat Area */}
+        <ChatArea
+          agent={activeAgent}
+          messages={messages}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onMessageSend={(msg) => setMessages([...messages, msg])}
+        />
 
-      <footer className="footer">
-        <p>ELAP Enterprise Local AI Platform • v1.2.0</p>
-      </footer>
+        {/* Right Properties Panel */}
+        <PropertiesPanel
+          agent={activeAgent}
+          loading={loading}
+        />
+      </div>
+
+      {/* Bottom Status Bar */}
+      <StatusBar systemStatus={systemStatus} />
     </div>
   )
 }

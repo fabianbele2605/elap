@@ -4,6 +4,58 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [1.5.0] - 2026-08-06
+
+### Fase 27 - Professional Desktop UI Implementation (COMPLETADA)
+
+#### Agregado
+
+**React Components**
+- `Sidebar.jsx` (280px): Agent list, search, filter, status
+- `ChatArea.jsx` (flex): Messages, tabs (Chat/Dashboard/Tools/Knowledge/History), input
+- `PropertiesPanel.jsx` (300px): Agent details, tools, knowledge sources
+- `StatusBar.jsx` (32px): Connection status, system resources, user info
+
+**Styling (App.css)**
+- Sistema de colores corporativo (#0052cc azul, #1a1a1a texto)
+- Tipografía profesional (SF Pro Display, SF Pro Text, SF Mono)
+- Layout 3-paneles con flexbox
+- Transiciones suaves (150ms cubic-bezier)
+- Sombras sutiles (elevation system)
+- Espaciado 8px grid
+- 450+ líneas CSS profesional
+
+**Architecture**
+- State management en App.jsx
+- Props drilling para data flow
+- Integración API REST (localhost:3000/agents)
+- Health checks cada 5s (Rust, Python, Ollama)
+- WebSocket ready para streaming
+
+#### Beneficios
+
+| Métrica | Valor |
+|---------|-------|
+| Build time | 618ms |
+| Bundle size JS | 154 KB (gzip 48.68 KB) |
+| Bundle size CSS | 11.3 KB (gzip 2.61 KB) |
+| Compilation errors | 0 |
+| Warnings | 0 |
+| Design reference | Claude Design professional |
+
+#### Tests
+
+- [x] React components render sin errores
+- [x] CSS builds exitosamente
+- [x] 3-panel layout correcto
+- [x] Agent selection funciona
+- [x] Tab switching funciona
+- [x] API integration (fetch agents)
+- [x] Status bar real-time
+- [ ] WebSocket streaming (Phase 28)
+
+---
+
 ## [1.4.0] - 2026-08-06
 
 ### Fase 25 - Streaming Responses (COMPLETADA)
