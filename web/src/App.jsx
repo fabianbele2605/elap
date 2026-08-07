@@ -3,11 +3,13 @@ import './App.css'
 import Dashboard from './pages/Dashboard'
 import AgentList from './components/AgentList'
 import TaskMonitor from './components/TaskMonitor'
+import StreamingResponse from './components/StreamingResponse'
 
 function App() {
   const [agents, setAgents] = useState([])
   const [tasks, setTasks] = useState([])
   const [activeTab, setActiveTab] = useState('dashboard')
+  const [streamingSession, setStreamingSession] = useState(null)
 
   const fetchAgents = async () => {
     try {
@@ -74,8 +76,22 @@ function App() {
 
       <main className="main">
         {activeTab === 'dashboard' && <Dashboard agents={agents} tasks={tasks} />}
-        {activeTab === 'agents' && <AgentList agents={agents} onAgentCreated={fetchAgents} />}
+        {activeTab === 'agents' && (
+          <AgentList
+            agents={agents}
+            onAgentCreated={fetchAgents}
+            onStreamingStart={(agentId, query) => setStreamingSession({ agentId, query })}
+          />
+        )}
         {activeTab === 'tasks' && <TaskMonitor tasks={tasks} />}
+
+        {streamingSession && (
+          <StreamingResponse
+            agentId={streamingSession.agentId}
+            query={streamingSession.query}
+            onClose={() => setStreamingSession(null)}
+          />
+        )}
       </main>
 
       <footer className="footer">

@@ -12,7 +12,7 @@ const AGENT_ROLES = [
   'Custom'
 ]
 
-export default function AgentList({ agents, onAgentCreated }) {
+export default function AgentList({ agents, onAgentCreated, onStreamingStart }) {
   const [showForm, setShowForm] = useState(false)
   const [formData, setFormData] = useState({
     nombre: '',
@@ -20,6 +20,7 @@ export default function AgentList({ agents, onAgentCreated }) {
     objetivo: ''
   })
   const [loading, setLoading] = useState(false)
+  const [queryInputs, setQueryInputs] = useState({})
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -104,6 +105,7 @@ export default function AgentList({ agents, onAgentCreated }) {
             <th>Role</th>
             <th>Status</th>
             <th>Model</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -119,6 +121,29 @@ export default function AgentList({ agents, onAgentCreated }) {
               </td>
               <td className="model-cell">
                 <code>{agent.modelo || 'glm4:9b'}</code>
+              </td>
+              <td>
+                <div className="action-cell">
+                  <input
+                    type="text"
+                    placeholder="Query..."
+                    className="query-input"
+                    value={queryInputs[agent.id] || ''}
+                    onChange={(e) => setQueryInputs(prev => ({
+                      ...prev,
+                      [agent.id]: e.target.value
+                    }))}
+                  />
+                  <button
+                    className="btn-stream"
+                    onClick={() => {
+                      const query = queryInputs[agent.id] || 'Hola';
+                      onStreamingStart(agent.id, query);
+                    }}
+                  >
+                    🔄
+                  </button>
+                </div>
               </td>
             </tr>
           ))}

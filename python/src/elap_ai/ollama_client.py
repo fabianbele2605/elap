@@ -37,7 +37,7 @@ class OllamaClient:
                 payload = {
                     "model": modelo,
                     "prompt": prompt,
-                    "stream": False,  # Por ahora sin streaming
+                    "stream": False,
                 }
 
                 logger.info(f"Calling Ollama: model={modelo}, prompt={prompt[:50]}...")
@@ -62,6 +62,53 @@ class OllamaClient:
             raise Exception(f"Timeout calling Ollama model {modelo}")
         except Exception as e:
             logger.error(f"Error calling Ollama: {str(e)}")
+            raise
+
+    async def generar_streaming(self, modelo: str, prompt: str):
+        """Genera texto en streaming, yield token por token
+
+        Args:
+            modelo: Nombre del modelo (ej: "glm4:9b")
+            prompt: Texto de entrada
+
+        Yields:
+            Tokens de respuesta uno por uno
+        """
+        try:
+            async with aiohttp.ClientSession(timeout=self.timeout) as session:
+                payload = {
+                    "model": modelo,
+                    "prompt": prompt,
+                    "stream": True,
+                }
+
+                logger.info(f"Streaming Ollama: model={modelo}, prompt={prompt[:50]}...")
+
+                async with session.post(
+                    f"{self.base_url}/api/generate",
+                    json=payload,
+                ) as response:
+                    if response.status != 200:
+                        error_text = await response.text()
+                        logger.error(f"Ollama error: {error_text}")
+                        raise Exception(f"Ollama error: {error_text}")
+
+                    async for line in response.content:
+                        if line:
+                            import json
+                            try:
+                                data = json.loads(line.decode().strip())
+                                token = data.get("response", "")
+                                if token:
+                                    yield token
+                            except json.JSONDecodeError:
+                                pass
+
+        except asyncio.TimeoutError:
+            logger.error(f"Ollama streaming timeout for model {modelo}")
+            raise Exception(f"Timeout calling Ollama model {modelo}")
+        except Exception as e:
+            logger.error(f"Error calling Ollama streaming: {str(e)}")
             raise
 
     async def listar_modelos(self) -> list:

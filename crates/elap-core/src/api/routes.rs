@@ -21,6 +21,7 @@ pub fn crear_router(state: AppState) -> Router {
         .route("/agents/:id", delete(handlers::eliminar_agente))
         // WebSocket
         .route("/agents/:id/watch", get(websocket::monitorear_agente))
+        .route("/agents/:id/execute/stream", get(websocket::ejecutar_agente_streaming))
         .with_state(state)
         .layer(middleware::cors_layer())
         .layer(middleware::logging_layer())
