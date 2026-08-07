@@ -22,6 +22,11 @@ pub fn crear_router(state: AppState) -> Router {
         // WebSocket
         .route("/agents/:id/watch", get(websocket::monitorear_agente))
         .route("/agents/:id/execute/stream", get(websocket::ejecutar_agente_streaming))
+        // === NUEVAS RUTAS FASE 2 ===
+        .route("/agents/:id/tools", get(handlers::listar_herramientas_agente))
+        // Documentos y RAG
+        .route("/documents/search", post(handlers::buscar_documentos))
+        .route("/documents/generate-report", post(handlers::generar_reporte))
         .with_state(state)
         .layer(middleware::cors_layer())
         .layer(middleware::logging_layer())

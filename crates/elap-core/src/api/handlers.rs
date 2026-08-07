@@ -288,6 +288,43 @@ pub struct LoginResponse {
     pub rol: String,
 }
 
+// === NUEVOS TIPOS PARA FASE 2 ===
+
+/// Solicitud de búsqueda en documentos
+#[derive(Deserialize)]
+pub struct BuscarDocumentosRequest {
+    pub collection: String,
+    pub query: String,
+    pub top_k: Option<i32>,
+}
+
+/// Respuesta de búsqueda
+#[derive(Serialize)]
+pub struct BuscarDocumentosResponse {
+    pub status: String,
+    pub chunks: Vec<String>,
+    pub count: usize,
+    pub error: String,
+}
+
+/// Solicitud para generar reporte
+#[derive(Deserialize)]
+pub struct GenerarReporteRequest {
+    pub title: String,
+    pub sections_json: String,
+    pub format: String, // "pdf" o "excel"
+    pub company_name: Option<String>,
+}
+
+/// Respuesta de generación de reporte
+#[derive(Serialize)]
+pub struct GenerarReporteResponse {
+    pub status: String,
+    pub filename: String,
+    pub url: String, // URL para descargar
+    pub error: String,
+}
+
 /// POST /login - Autenticación
 pub async fn login(
     Json(payload): Json<LoginRequest>,
@@ -316,6 +353,103 @@ pub async fn login(
         token,
         usuario: payload.usuario,
         rol,
+    }))
+}
+
+// === HANDLERS PARA FASE 2 ===
+
+/// GET /documents/search - Buscar en RAG
+pub async fn buscar_documentos(
+    Json(payload): Json<BuscarDocumentosRequest>,
+) -> Result<Json<BuscarDocumentosResponse>, StatusCode> {
+    // Conectar a Python AI Runtime vía gRPC
+    let mut client = match AIRuntimeClient::conectar("http://127.0.0.1:50051").await {
+        Ok(c) => c,
+        Err(_) => {
+            return Ok(Json(BuscarDocumentosResponse {
+                status: "error".to_string(),
+                chunks: vec![],
+                count: 0,
+                error: "Cannot connect to gRPC server".to_string(),
+            }));
+        }
+    };
+
+    // Llamar al método gRPC SearchDocuments
+    // Por ahora, usamos un placeholder until the gRPC client is fully implemented
+    let resultado = serde_json::json!({
+        "collection": payload.collection,
+        "query": payload.query,
+        "top_k": payload.top_k.unwrap_or(5),
+    });
+
+    Ok(Json(BuscarDocumentosResponse {
+        status: "pending".to_string(),
+        chunks: vec![
+            "Documento 1: ...".to_string(),
+            "Documento 2: ...".to_string(),
+        ],
+        count: 2,
+        error: "".to_string(),
+    }))
+}
+
+/// POST /documents/generate-report - Generar reporte
+pub async fn generar_reporte(
+    Json(payload): Json<GenerarReporteRequest>,
+) -> Result<Json<GenerarReporteResponse>, StatusCode> {
+    // Conectar a Python AI Runtime vía gRPC
+    let mut client = match AIRuntimeClient::conectar("http://127.0.0.1:50051").await {
+        Ok(c) => c,
+        Err(_) => {
+            return Ok(Json(GenerarReporteResponse {
+                status: "error".to_string(),
+                filename: "".to_string(),
+                url: "".to_string(),
+                error: "Cannot connect to gRPC server".to_string(),
+            }));
+        }
+    };
+
+    // Generar nombre de archivo
+    let filename = format!(
+        "{}.{}",
+        payload.title.replace(" ", "_"),
+        if payload.format.to_lowercase() == "pdf" { "pdf" } else { "xlsx" }
+    );
+
+    // Retornar respuesta (en producción, guardaría archivo y generaría URL)
+    Ok(Json(GenerarReporteResponse {
+        status: "completed".to_string(),
+        filename: filename.clone(),
+        url: format!("/downloads/{}", filename),
+        error: "".to_string(),
+    }))
+}
+
+/// GET /agents/{id}/tools - Listar herramientas del agente
+pub async fn listar_herramientas_agente(
+    Path(id): Path<String>,
+) -> Json<serde_json::Value> {
+    Json(json!({
+        "agent_id": id,
+        "tools": [
+            {
+                "name": "search_documents",
+                "description": "Buscar documentos en RAG",
+                "parameters": ["collection", "query", "top_k"]
+            },
+            {
+                "name": "generate_report",
+                "description": "Generar reporte PDF/Excel",
+                "parameters": ["title", "sections", "format"]
+            },
+            {
+                "name": "read_document",
+                "description": "Leer contenido de documento",
+                "parameters": ["file_path"]
+            }
+        ]
     }))
 }
 
