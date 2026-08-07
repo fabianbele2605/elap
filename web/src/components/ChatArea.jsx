@@ -1,8 +1,12 @@
 import { useState, useRef, useEffect } from 'react'
+import useWebSocketStream from '../hooks/useWebSocketStream'
+import StreamingMessage from './StreamingMessage'
 
 export default function ChatArea({ agent, messages, activeTab, onTabChange, onMessageSend }) {
   const [inputValue, setInputValue] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [allMessages, setAllMessages] = useState([])
+  const [streamingQuery, setStreamingQuery] = useState(null)
+  const { isStreaming, text, progress, error, startStream, stopStream } = useWebSocketStream(agent?.id, streamingQuery)
   const messagesEndRef = useRef(null)
 
   const scrollToBottom = () => {
@@ -13,53 +17,38 @@ export default function ChatArea({ agent, messages, activeTab, onTabChange, onMe
     scrollToBottom()
   }, [messages])
 
-  const handleSendMessage = async () => {
-    if (!inputValue.trim() || !agent) return
+  const handleSendMessage = () => {
+    if (!inputValue.trim() || !agent || isStreaming) return
 
+    const query = inputValue
     const userMessage = {
       id: `msg_${Date.now()}`,
-      text: inputValue,
+      text: query,
       type: 'user',
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
 
-    onMessageSend(userMessage)
+    setAllMessages(prev => [...prev, userMessage])
     setInputValue('')
-    setLoading(true)
 
-    try {
-      const response = await fetch('http://localhost:3000/agents', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          agentId: agent.id,
-          query: inputValue
-        })
-      })
+    // Iniciar streaming con WebSocket
+    setStreamingQuery(query)
+    startStream()
+  }
 
-      const data = await response.json()
-
+  // Cuando termina el streaming, agregar mensaje a historial
+  useEffect(() => {
+    if (!isStreaming && text && streamingQuery) {
       const assistantMessage = {
         id: `msg_${Date.now()}_asst`,
-        text: data.response || 'Sin respuesta',
+        text: text,
         type: 'assistant',
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }
-
-      onMessageSend(assistantMessage)
-    } catch (error) {
-      console.error('Error sending message:', error)
-      const errorMessage = {
-        id: `msg_${Date.now()}_error`,
-        text: 'Error al procesar el mensaje',
-        type: 'assistant',
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      }
-      onMessageSend(errorMessage)
-    } finally {
-      setLoading(false)
+      setAllMessages(prev => [...prev, assistantMessage])
+      setStreamingQuery(null)
     }
-  }
+  }, [isStreaming, text])
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -123,20 +112,46 @@ export default function ChatArea({ agent, messages, activeTab, onTabChange, onMe
       {activeTab === 'chat' && (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
           <div className="chat-messages">
-            {messages.length === 0 ? (
+            {allMessages.length === 0 && !isStreaming ? (
               <div style={{ textAlign: 'center', color: '#999999', marginTop: '40px' }}>
                 <p style={{ fontSize: '14px' }}>No messages yet</p>
                 <p style={{ fontSize: '12px', marginTop: '8px' }}>Start a conversation with the agent</p>
               </div>
             ) : (
-              messages.map(msg => (
-                <div key={msg.id} className={`message ${msg.type}`}>
-                  <div>
-                    <div className="message-bubble">{msg.text}</div>
-                    <span className="message-time">{msg.time}</span>
+              <>
+                {allMessages.map(msg => (
+                  <div key={msg.id} className={`message ${msg.type}`}>
+                    <div>
+                      <div className="message-bubble">{msg.text}</div>
+                      <span className="message-time">{msg.time}</span>
+                    </div>
                   </div>
-                </div>
-              ))
+                ))}
+
+                {/* Mostrar streaming en vivo */}
+                {isStreaming && (
+                  <StreamingMessage
+                    text={text}
+                    progress={progress}
+                    isStreaming={true}
+                    timestamp={new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  />
+                )}
+
+                {error && (
+                  <div style={{
+                    padding: '12px 16px',
+                    background: '#fff5f5',
+                    border: '1px solid #feb2b2',
+                    borderRadius: '6px',
+                    color: '#c53030',
+                    fontSize: '13px',
+                    marginTop: '12px'
+                  }}>
+                    Error: {error}
+                  </div>
+                )}
+              </>
             )}
             <div ref={messagesEndRef} />
           </div>
@@ -150,14 +165,18 @@ export default function ChatArea({ agent, messages, activeTab, onTabChange, onMe
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
-              disabled={loading || !agent}
+              disabled={isStreaming || !agent}
             />
             <button
               className="btn-send"
               onClick={handleSendMessage}
-              disabled={loading || !agent || !inputValue.trim()}
+              disabled={isStreaming || !agent || !inputValue.trim()}
+              style={{
+                opacity: isStreaming ? 0.6 : 1,
+                cursor: isStreaming ? 'not-allowed' : 'pointer'
+              }}
             >
-              {loading ? '...' : 'Send'}
+              {isStreaming ? 'Streaming...' : 'Send'}
             </button>
           </div>
         </div>
