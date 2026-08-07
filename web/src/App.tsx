@@ -22,7 +22,8 @@ import { NewAgentModal } from './components/modals/NewAgentModal';
 import { SettingsModal } from './components/modals/SettingsModal';
 import { InstallAgentsModal } from './components/modals/InstallAgentsModal';
 import { EMPRESA_CONTEXTO, SISTEMA_PROMPT_EMPRESA } from './config/empresa_contexto';
-import { MessageSquare, BarChart2, Wrench, BookOpen, History, Sliders } from 'lucide-react';
+import { MessageSquare, BarChart2, Wrench, BookOpen, History, Sliders, FileText } from 'lucide-react';
+import DocumentsPage from './pages/DocumentsPage';
 
 export default function App() {
   const [agents, setAgents] = useState<Agent[]>(INITIAL_AGENTS);
@@ -437,6 +438,18 @@ export default function App() {
                 <History className="w-3.5 h-3.5 text-rose-700" />
                 <span>'History'</span>
               </button>
+
+              <button
+                onClick={() => setActiveTab('documents')}
+                className={`px-3 py-1 rounded-t-lg text-xs font-semibold flex items-center gap-1.5 transition-all border-t border-x ${
+                  activeTab === 'documents'
+                    ? 'bg-white text-blue-600 border-slate-200 shadow-sm'
+                    : 'text-slate-700 hover:text-slate-700 border-transparent hover:bg-slate-100'
+                }`}
+              >
+                <FileText className="w-3.5 h-3.5 text-orange-600" />
+                <span>'Documentos'</span>
+              </button>
             </div>
 
             <div className="hidden sm:flex items-center gap-2 text-[12px] font-mono text-slate-700">
@@ -478,12 +491,16 @@ export default function App() {
             )}
 
             {activeTab === 'history' && (
-              <HistoryTab 
+              <HistoryTab
                 historyItems={historyItems}
                 onSelectSession={(id) => {
                   setActiveTab('chat');
                 }}
               />
+            )}
+
+            {activeTab === 'documents' && (
+              <DocumentsPage />
             )}
           </div>
         </main>
