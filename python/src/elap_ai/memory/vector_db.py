@@ -63,7 +63,7 @@ class VectorStore:
             ids: List of document IDs (auto-generated if not provided)
         """
         if collection_name not in self._collections:
-            self.create_collection(collection_name)
+            self.create_collection(collection_name, metadata={"type": "documents"})
 
         collection = self._collections[collection_name]
 
@@ -74,12 +74,21 @@ class VectorStore:
         if ids is None:
             ids = [f"doc_{i}" for i in range(len(documents))]
 
+        # Ensure metadata is never empty for chromadb
+        if metadata is None:
+            metadata = [{"index": i} for i in range(len(documents))]
+        else:
+            # Add index to each metadata dict if not present
+            for i, m in enumerate(metadata):
+                if not m or not any(k for k in m.keys()):
+                    metadata[i] = {"index": i}
+
         # Add to collection
         collection.add(
             ids=ids,
             documents=documents,
             embeddings=embeddings,
-            metadatas=metadata or [{}] * len(documents),
+            metadatas=metadata,
         )
 
     def search(
