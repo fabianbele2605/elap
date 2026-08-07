@@ -1,45 +1,10 @@
 version: '3.9'
 
 services:
-  # ELAP Core API
-  core:
-    build:
-      context: ../../
-      dockerfile: deployment/docker/Dockerfile.core
-    ports:
-      - "3000:3000"
-      - "50051:50051"
-    environment:
-      - RUST_LOG=info
-      - DATABASE_URL=postgresql://elap:elap@postgres:5432/elap
-    depends_on:
-      postgres:
-        condition: service_healthy
-      qdrant:
-        condition: service_healthy
-    networks:
-      - elap-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # Python AI Runtime
-  ai-runtime:
-    build:
-      context: ../../
-      dockerfile: deployment/docker/Dockerfile.python
-    environment:
-      - PYTHONUNBUFFERED=1
-    depends_on:
-      - core
-    networks:
-      - elap-network
-
-  # PostgreSQL Database
+  # PostgreSQL Database (requerido por Rust)
   postgres:
     image: postgres:16-alpine
+    container_name: elap-postgres
     environment:
       POSTGRES_USER: elap
       POSTGRES_PASSWORD: elap
@@ -56,9 +21,10 @@ services:
       timeout: 5s
       retries: 5
 
-  # Qdrant Vector DB
+  # Qdrant Vector DB (para RAG)
   qdrant:
     image: qdrant/qdrant:latest
+    container_name: elap-qdrant
     ports:
       - "6333:6333"
     volumes:
@@ -71,17 +37,70 @@ services:
       timeout: 5s
       retries: 5
 
-  # Ollama (Optional - for local models)
+  # Ollama (Local LLM models)
   ollama:
     image: ollama/ollama:latest
+    container_name: elap-ollama
     ports:
       - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
     networks:
       - elap-network
-    profiles:
-      - with-ollama
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ELAP Core API (Rust REST + gRPC)
+  core:
+    container_name: elap-core
+    build:
+      context: ../../
+      dockerfile: deployment/docker/Dockerfile.core
+    ports:
+      - "3000:3000"
+    environment:
+      - RUST_LOG=info
+      - DATABASE_URL=postgresql://elap:elap@postgres:5432/elap
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+    networks:
+      - elap-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/agents"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # Python AI Runtime (gRPC server)
+  ai-runtime:
+    container_name: elap-ai-runtime
+    build:
+      context: ../../
+      dockerfile: deployment/docker/Dockerfile.python
+    environment:
+      - PYTHONUNBUFFERED=1
+      - OLLAMA_URL=http://ollama:11434
+    depends_on:
+      ollama:
+        condition: service_healthy
+    networks:
+      - elap-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import grpc"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
 
 volumes:
   postgres_data:
