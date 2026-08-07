@@ -56,6 +56,58 @@ class AIRuntimeServicer:
                 error=str(e)
             )
 
+    async def ExecuteAgentStreaming(self, request, context):
+        """Ejecutar un agente con streaming de respuesta
+
+        Args:
+            request: ExecuteAgentRequest con agent_id y query
+            context: gRPC context
+
+        Yields:
+            ExecuteAgentChunk con tokens individuales
+        """
+        try:
+            logger.info(f"ExecuteAgentStreaming: agent_id={request.agent_id}, query={request.query[:50]}...")
+
+            from . import agent_pb2
+
+            # Obtener modelo correspondiente al agente
+            modelo = "glm4:9b"  # Default, podría venir del request
+
+            # Streaming desde Ollama
+            chunk_index = 0
+            async for token in self.ai_runtime.ollama_client.generar_streaming(modelo, request.query):
+                chunk_index += 1
+
+                # Enviar chunk
+                yield agent_pb2.ExecuteAgentChunk(
+                    agent_id=request.agent_id,
+                    chunk=token,
+                    progress=min(0.95 + (chunk_index * 0.001), 0.99),  # Progreso simulado
+                    is_final=False,
+                    error=""
+                )
+
+            # Enviar chunk final
+            yield agent_pb2.ExecuteAgentChunk(
+                agent_id=request.agent_id,
+                chunk="",
+                progress=1.0,
+                is_final=True,
+                error=""
+            )
+
+        except Exception as e:
+            logger.error(f"Error executing agent stream: {str(e)}")
+            from . import agent_pb2
+            yield agent_pb2.ExecuteAgentChunk(
+                agent_id=request.agent_id,
+                chunk="",
+                progress=0.0,
+                is_final=True,
+                error=str(e)
+            )
+
     async def HealthCheck(self, request, context):
         """Health check
 

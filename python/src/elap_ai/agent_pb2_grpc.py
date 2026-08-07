@@ -40,6 +40,11 @@ class AIRuntimeServiceStub:
                 request_serializer=agent__pb2.ExecuteAgentRequest.SerializeToString,
                 response_deserializer=agent__pb2.ExecuteAgentResponse.FromString,
                 _registered_method=True)
+        self.ExecuteAgentStreaming = channel.unary_stream(
+                '/elap.agent.AIRuntimeService/ExecuteAgentStreaming',
+                request_serializer=agent__pb2.ExecuteAgentRequest.SerializeToString,
+                response_deserializer=agent__pb2.ExecuteAgentChunk.FromString,
+                _registered_method=True)
         self.HealthCheck = channel.unary_unary(
                 '/elap.agent.AIRuntimeService/HealthCheck',
                 request_serializer=agent__pb2.HealthCheckRequest.SerializeToString,
@@ -52,7 +57,14 @@ class AIRuntimeServiceServicer:
     """
 
     def ExecuteAgent(self, request, context):
-        """Ejecutar un agente
+        """Ejecutar un agente (respuesta completa)
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ExecuteAgentStreaming(self, request, context):
+        """Ejecutar un agente con streaming (tokens en vivo)
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -72,6 +84,11 @@ def add_AIRuntimeServiceServicer_to_server(servicer, server):
                     servicer.ExecuteAgent,
                     request_deserializer=agent__pb2.ExecuteAgentRequest.FromString,
                     response_serializer=agent__pb2.ExecuteAgentResponse.SerializeToString,
+            ),
+            'ExecuteAgentStreaming': grpc.unary_stream_rpc_method_handler(
+                    servicer.ExecuteAgentStreaming,
+                    request_deserializer=agent__pb2.ExecuteAgentRequest.FromString,
+                    response_serializer=agent__pb2.ExecuteAgentChunk.SerializeToString,
             ),
             'HealthCheck': grpc.unary_unary_rpc_method_handler(
                     servicer.HealthCheck,
@@ -107,6 +124,33 @@ class AIRuntimeService:
             '/elap.agent.AIRuntimeService/ExecuteAgent',
             agent__pb2.ExecuteAgentRequest.SerializeToString,
             agent__pb2.ExecuteAgentResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ExecuteAgentStreaming(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_stream(
+            request,
+            target,
+            '/elap.agent.AIRuntimeService/ExecuteAgentStreaming',
+            agent__pb2.ExecuteAgentRequest.SerializeToString,
+            agent__pb2.ExecuteAgentChunk.FromString,
             options,
             channel_credentials,
             insecure,
