@@ -182,10 +182,31 @@ pub async fn ejecutar_agente(
 
     // Obtener query de la solicitud
     let query = payload
-        .get("query")
+        .get("prompt")
         .and_then(|v| v.as_str())
         .unwrap_or("Ejecutar agente")
         .to_string();
+
+    // Obtener system prompt del agente
+    let system_prompt = payload
+        .get("systemPrompt")
+        .and_then(|v| v.as_str())
+        .unwrap_or("Eres un asistente profesional. Responde en español de forma clara y concisa.")
+        .to_string();
+
+    // Obtener contexto de empresa si existe
+    let sistema_prompt_empresa = payload
+        .get("sistemaPromptEmpresa")
+        .and_then(|v| v.as_str())
+        .unwrap_or("")
+        .to_string();
+
+    // Construir prompt con system context + empresa context
+    let prompt_con_contexto = if !sistema_prompt_empresa.is_empty() {
+        format!("{}\n\n{}\n\nUsuario: {}", sistema_prompt_empresa, system_prompt, query)
+    } else {
+        format!("{}\n\nUsuario: {}", system_prompt, query)
+    };
 
     // Conectar a Python AI Runtime vía gRPC
     let mut client = match AIRuntimeClient::conectar("http://127.0.0.1:50051").await {
@@ -195,8 +216,8 @@ pub async fn ejecutar_agente(
         }
     };
 
-    // Ejecutar agente en Python
-    match client.ejecutar_agente(&id, &query).await {
+    // Ejecutar agente en Python con contexto
+    match client.ejecutar_agente(&id, &prompt_con_contexto).await {
         Ok(resultado) => {
             let respuesta = EjecucionResponse {
                 agente_id: id.clone(),

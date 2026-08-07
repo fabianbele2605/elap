@@ -21,6 +21,7 @@ import { HistoryTab } from './components/tabs/HistoryTab';
 import { NewAgentModal } from './components/modals/NewAgentModal';
 import { SettingsModal } from './components/modals/SettingsModal';
 import { InstallAgentsModal } from './components/modals/InstallAgentsModal';
+import { EMPRESA_CONTEXTO, SISTEMA_PROMPT_EMPRESA } from './config/empresa_contexto';
 import { MessageSquare, BarChart2, Wrench, BookOpen, History, Sliders } from 'lucide-react';
 
 export default function App() {
@@ -90,7 +91,7 @@ export default function App() {
       sender: 'assistant',
       agentId: selectedAgent.id,
       agentName: selectedAgent.name,
-      text: `Hello! I am **${selectedAgent.name}** (${selectedAgent.role} Specialist).\n\nHow can I assist you with local AI orchestration today?`,
+      text: `¡Hola! Soy **${selectedAgent.name}** (Especialista en ${selectedAgent.role}).\n\n¿Cómo puedo ayudarte hoy?`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
   ] : [];
@@ -125,18 +126,32 @@ export default function App() {
           role: selectedAgent.role,
           systemPrompt: selectedAgent.systemPrompt,
           model: selectedAgent.model,
-          history: updatedMessages
+          history: updatedMessages,
+          empresaContexto: EMPRESA_CONTEXTO,
+          sistemaPromptEmpresa: SISTEMA_PROMPT_EMPRESA
         })
       });
 
       const data = await res.json();
+
+      // Post-procesar respuesta para limpiar markdown y caracteres especiales
+      let respuestaLimpia = data.respuesta || "Error procesando la solicitud";
+      respuestaLimpia = respuestaLimpia
+        .replace(/\*\*(.+?)\*\*/g, '$1')  // **negrita** → negrita
+        .replace(/\*(.+?)\*/g, '$1')      // *cursiva* → cursiva
+        .replace(/###\s/g, '')            // ### → (quita heading)
+        .replace(/##\s/g, '')             // ## → (quita heading)
+        .replace(/#\s/g, '')              // # → (quita heading)
+        .replace(/\[\[(.+?)\]\]/g, '$1')  // [[link]] → link
+        .replace(/\[(.*?)\]\((.*?)\)/g, '$1') // [text](url) → text
+        .trim();
 
       const assistantMsg: Message = {
         id: `asst_${Date.now()}`,
         sender: 'assistant',
         agentId: selectedAgent.id,
         agentName: selectedAgent.name,
-        text: data.respuesta || "Error procesando la solicitud",
+        text: respuestaLimpia,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         tokens: data.tokens || { prompt: 110, completion: 240, total: 350 },
         thoughts: data.thoughts || [
