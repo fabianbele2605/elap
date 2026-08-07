@@ -91,10 +91,18 @@ class DocumentPipeline:
             for i in range(len(chunks))
         ]
 
+        # Ensure metadata has at least one key per dict for chromadb
+        clean_metadata = []
+        for m in chunk_metadata:
+            if not m:
+                clean_metadata.append({"index": len(clean_metadata)})
+            else:
+                clean_metadata.append(m)
+
         self.vector_store.add_documents(
             collection_name=collection_name,
             documents=chunks,
-            metadata=chunk_metadata,
+            metadata=clean_metadata,
             ids=chunk_ids,
         )
 
@@ -122,6 +130,10 @@ class DocumentPipeline:
         Returns:
             List of relevant chunks
         """
+        # Ensure collection exists with metadata
+        if collection_name not in self.vector_store.list_collections():
+            self.vector_store.create_collection(collection_name, metadata={"type": "search"})
+
         results = self.vector_store.search(collection_name, query, top_k)
         return [r["document"] for r in results]
 

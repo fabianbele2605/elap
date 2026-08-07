@@ -60,7 +60,8 @@ def test_process_csv_file(pipeline, sample_csv_file):
     """Test processing a CSV file."""
     result = pipeline.process_file(
         file_path=sample_csv_file,
-        collection_name="test_employees"
+        collection_name="test_employees",
+        metadata={"type": "csv", "source": "test"}
     )
 
     assert result["status"] == "success"
@@ -105,7 +106,8 @@ def test_search_after_processing(pipeline, sample_csv_file):
     # Process file
     pipeline.process_file(
         file_path=sample_csv_file,
-        collection_name="employees"
+        collection_name="employees",
+        metadata={"type": "csv"}
     )
 
     # Search

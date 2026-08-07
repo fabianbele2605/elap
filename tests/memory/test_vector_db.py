@@ -112,11 +112,11 @@ def test_multiple_collections(temp_db_path):
     """Test managing multiple collections."""
     store = VectorStore(db_path=temp_db_path)
 
-    store.create_collection("collection_a")
-    store.create_collection("collection_b")
+    store.create_collection("collection_a", metadata={"type": "a"})
+    store.create_collection("collection_b", metadata={"type": "b"})
 
-    store.add_documents("collection_a", ["Doc A"])
-    store.add_documents("collection_b", ["Doc B"])
+    store.add_documents("collection_a", ["Doc A"], metadata=[{"source": "a"}])
+    store.add_documents("collection_b", ["Doc B"], metadata=[{"source": "b"}])
 
     results_a = store.search("collection_a", "A")
     results_b = store.search("collection_b", "B")
