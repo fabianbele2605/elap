@@ -380,19 +380,624 @@ Generado automáticamente por ELAP — {datetime.now().strftime('%d/%m/%Y')}
 
 
 # ============================================================================
+# RRHH TEMPLATES (5) — 2 MÁS
+# ============================================================================
+
+
+class PoliticaDeAusenciasTemplate(DocumentTemplate):
+    @staticmethod
+    def render(config: Dict[str, Any]) -> str:
+        return f"""
+# POLÍTICA DE AUSENCIAS
+
+## {config['nombreEmpresa']}
+
+### 1. OBJETIVO
+
+Establecer procedimientos para manejo de ausencias del personal, incluyendo
+incapacidades, permisos y licencias.
+
+### 2. TIPOS DE AUSENCIA
+
+**Incapacidades:**
+- Enfermedad: Requerida incapacidad médica
+- Máximo 3 días consecutivos sin aprobación
+- Después de 3 días: Requiere certificado médico
+
+**Permisos:**
+- Personal: Hasta 2 horas/mes sin afectar salario
+- Familiares: Hasta 1 día por evento (matrimonio, defunción)
+- Médicos: Consultas programadas (máximo 1 por mes)
+
+**Licencias:**
+- Maternidad: 12 semanas remuneradas
+- Paternidad: 8 días remunerados
+- Calamidad doméstica: Hasta 5 días según severidad
+
+### 3. PROCEDIMIENTO DE NOTIFICACIÓN
+
+1. Notificar al supervisor inmediatamente
+2. Enviar justificante a RRHH dentro de 24h
+3. Para incapacidades > 3 días: Certificado médico obligatorio
+4. Confirmación de RRHH al empleado
+
+### 4. DESCUENTOS
+
+- Ausentismo no justificado: Descuento de 1 día de salario
+- Después de 3 ausencias injustificadas: Amonestación escrita
+- Después de 5: Suspensión o despido disciplinario
+
+### 5. EXCEPCIONES
+
+- Emergencias médicas: No aplica descuento si se justifica en 24h
+- Actos legales: Considerados ausentismo justificado
+
+Generado automáticamente por ELAP — {datetime.now().strftime('%d/%m/%Y')}
+"""
+
+
+class ProcedimientoDeContratacionTemplate(DocumentTemplate):
+    @staticmethod
+    def render(config: Dict[str, Any]) -> str:
+        return f"""
+# PROCEDIMIENTO DE CONTRATACIÓN
+
+## {config['nombreEmpresa']}
+
+### 1. PROPÓSITO
+
+Estandarizar el proceso de selección, evaluación e incorporación de nuevo personal.
+
+### 2. REQUISITOS PREVIOS
+
+Antes de abrir convocatoria:
+
+- Aprobación presupuestal del puesto
+- Descripción clara de funciones
+- Definición de competencias requeridas
+- Salario autorizado
+
+### 3. ETAPAS DE SELECCIÓN
+
+**Etapa 1: Reclutamiento (1-2 semanas)**
+- Publicación en bolsas de empleo
+- Invitación de candidatos internos
+- Cierre de convocatoria
+- Preselección inicial
+
+**Etapa 2: Evaluación Técnica (1 semana)**
+- Revisión de hojas de vida
+- Pruebas técnicas/de competencias
+- Entrevistas técnicas
+- Selección de finalistas
+
+**Etapa 3: Entrevista Final (3-5 días)**
+- Entrevista con gerente
+- Entrevista con CEO/Junta
+- Verificación de referencias
+- Oferta condicional
+
+**Etapa 4: Incorporación (1 semana)**
+- Firma de contrato
+- Prueba psicotécnica
+- Examen médico
+- Inducción
+
+### 4. CRITERIOS DE SELECCIÓN
+
+- Experiencia relevante: Mínimo requerido
+- Competencias técnicas: Evaluación práctica
+- Competencias blandas: Entrevista comportamental
+- Compatibilidad cultural: Allineación con valores
+
+### 5. TIEMPOS MÁXIMOS
+
+- Reclutamiento a oferta: 21 días
+- Oferta a incorporación: 14 días
+- Total proceso: 35 días máximo
+
+Generado automáticamente por ELAP — {datetime.now().strftime('%d/%m/%Y')}
+"""
+
+
+# ============================================================================
+# FINANZAS TEMPLATES (3) — 1 MÁS
+# ============================================================================
+
+
+class ReportesFinancierosTemplate(DocumentTemplate):
+    @staticmethod
+    def render(config: Dict[str, Any]) -> str:
+        ano = datetime.now().year
+        ingresos = config.get('presupuestoAnual', 500000000) * 1.1
+        gastos = config.get('presupuestoAnual', 500000000)
+        utilidad = ingresos - gastos
+
+        return f"""
+# REPORTES FINANCIEROS {ano}
+
+## {config['nombreEmpresa']}
+
+### ESTADO DE RESULTADOS
+
+| Concepto | Valor |
+|----------|-------|
+| **Ingresos por ventas** | ${ingresos:,.0f} |
+| Menos: Costo de ventas | ${ingresos * 0.45:,.0f} |
+| **Utilidad bruta** | ${ingresos * 0.55:,.0f} |
+| Menos: Gastos operacionales | ${gastos * 0.40:,.0f} |
+| **Utilidad operacional** | ${ingresos * 0.15:,.0f} |
+| Menos: Impuestos (30%) | ${(ingresos * 0.15) * 0.30:,.0f} |
+| **Utilidad neta** | ${utilidad * 0.70:,.0f} |
+
+### ANÁLISIS DE RENDIMIENTO
+
+**Margen de Utilidad Neta:** {(utilidad / ingresos * 100):.1f}%
+- Target: 15-20%
+- Performance: {"NORMAL" if 10 < (utilidad / ingresos * 100) < 25 else "REQUIERE ATENCIÓN"}
+
+**Crecimiento Esperado:** {config.get('crecimientoEsperado', '15-20%')}
+- Estrategia: Expansión de mercados
+- Inversión requerida: ${ingresos * 0.20:,.0f}
+
+### FLUJO DE CAJA PROYECTADO
+
+**Trimestre Q1:** ${ingresos * 0.25:,.0f}
+**Trimestre Q2:** ${ingresos * 0.30:,.0f}
+**Trimestre Q3:** ${ingresos * 0.22:,.0f}
+**Trimestre Q4:** ${ingresos * 0.23:,.0f}
+
+### RATIOS FINANCIEROS
+
+- Rentabilidad sobre activos (ROA): 12.5%
+- Rentabilidad sobre patrimonio (ROE): 18.3%
+- Razón de liquidez: 1.8x
+- Razón de endeudamiento: 0.6x
+
+Generado automáticamente por ELAP — {datetime.now().strftime('%d/%m/%Y')}
+"""
+
+
+# ============================================================================
+# OPERACIONES TEMPLATES (4) — 3 MÁS
+# ============================================================================
+
+
+class MatrizDeProcesosTemplate(DocumentTemplate):
+    @staticmethod
+    def render(config: Dict[str, Any]) -> str:
+        return f"""
+# MATRIZ DE PROCESOS
+
+## {config['nombreEmpresa']}
+
+### PROCESOS ESTRATÉGICOS
+
+| Proceso | Responsable | Frecuencia | KPI |
+|---------|-------------|-----------|-----|
+| Planeación Estratégica | CEO | Anual | Cumplimiento de metas |
+| Gestión de Portafolio | CTO | Trimestral | Rentabilidad por producto |
+| Análisis de Mercado | Marketing | Mensual | Participación de mercado |
+
+### PROCESOS CLAVE
+
+| Proceso | Responsable | Frecuencia | KPI |
+|---------|-------------|-----------|-----|
+| Gestión de Ventas | Ventas | Diaria | Cumplimiento de cuota |
+| Servicio al Cliente | Operaciones | 24/7 | NPS > 70 |
+| Desarrollo de Productos | Ingeniería | Contínuo | Entrega a tiempo |
+| Gestión de Inventario | Logística | Diaria | Rotación óptima |
+| Gestión de Calidad | Operaciones | Diaria | Defectos < 0.1% |
+
+### PROCESOS DE APOYO
+
+| Proceso | Responsable | Frecuencia | KPI |
+|---------|-------------|-----------|-----|
+| Gestión de RRHH | RRHH | Mensual | Rotación <10% |
+| Gestión Financiera | Contabilidad | Semanal | Reporte a tiempo |
+| Gestión de TI | IT | Contínuo | Uptime > 99.5% |
+| Auditoría Interna | Auditoría | Trimestral | Hallazgos resueltos |
+
+### INTERACCIONES DE PROCESOS
+
+```
+Estratégicos (Dirección General)
+    ↓
+Clave (Generadores de valor)
+    ↓
+Apoyo (Sustentadores)
+```
+
+Generado automáticamente por ELAP — {datetime.now().strftime('%d/%m/%Y')}
+"""
+
+
+class ProcedimientosOperacionalesTemplate(DocumentTemplate):
+    @staticmethod
+    def render(config: Dict[str, Any]) -> str:
+        return f"""
+# PROCEDIMIENTOS OPERACIONALES
+
+## {config['nombreEmpresa']}
+
+### 1. GESTIÓN DE PEDIDOS
+
+**Paso 1:** Recepción de solicitud
+- Validar formato de pedido
+- Verificar cliente en base de datos
+- Asignar número de referencia
+
+**Paso 2:** Confirmación de disponibilidad
+- Consultar inventario
+- Validar capacidad de producción
+- Confirmar fecha de entrega
+
+**Paso 3:** Procesamiento
+- Crear orden de compra
+- Enviar a almacén/producción
+- Notificar al cliente
+
+**Paso 4:** Entrega
+- Empacar según estándares
+- Generar documentos
+- Seguimiento hasta destino
+
+**SLA:** 95% de pedidos entregados a tiempo
+
+### 2. GESTIÓN DE DEVOLUCIONES
+
+**Causas aceptadas:**
+- Producto defectuoso
+- Entrega incorrecta
+- Cambio de cliente (hasta 5 días)
+
+**Procedimiento:**
+1. Cliente reporta en línea/teléfono
+2. RRHH genera RMA
+3. Inspección de producto
+4. Reembolso/reemplazo en 10 días
+
+### 3. CONTROL DE CALIDAD
+
+**Inspección en Entrada:**
+- 100% de materias primas
+- Revisión contra especificaciones
+- Rechazo si no cumple
+
+**Inspección en Proceso:**
+- Muestreo cada 2 horas
+- Verificación de parámetros críticos
+- Documentación obligatoria
+
+**Inspección Final:**
+- Revisión de empaque
+- Prueba funcional (si aplica)
+- Etiquetado correcto
+
+Generado automáticamente por ELAP — {datetime.now().strftime('%d/%m/%Y')}
+"""
+
+
+class PoliticaDeComprasTemplate(DocumentTemplate):
+    @staticmethod
+    def render(config: Dict[str, Any]) -> str:
+        return f"""
+# POLÍTICA DE COMPRAS
+
+## {config['nombreEmpresa']}
+
+### 1. OBJETIVO
+
+Asegurar que todas las compras se realicen de forma ética, eficiente y económica
+manteniendo estándares de calidad.
+
+### 2. AUTORIZACIÓN POR MONTO
+
+| Monto | Autorización | Proceso |
+|------|---|---|
+| < $500,000 | Jefe de área | 1 cotización |
+| $500K - $2M | Gerente | 2 cotizaciones |
+| $2M - $10M | Director | 3 cotizaciones competitivas |
+| > $10M | CEO + Junta | Licitación abierta |
+
+### 3. PROCESO DE COMPRA
+
+1. **Solicitud**
+   - Requisición con especificaciones
+   - Aprobación del presupuesto
+   - Justificación comercial
+
+2. **Cotización**
+   - Obtener ofertas de 2-3 proveedores
+   - Comparar precio, calidad, plazo
+   - Documentar análisis
+
+3. **Orden**
+   - Generar PO con términos claros
+   - Enviar a proveedor seleccionado
+   - Confirmar recepción
+
+4. **Recepción**
+   - Inspección de calidad
+   - Verificar cantidad
+   - Revisar factura
+
+5. **Pago**
+   - Procesar contra factura
+   - Cumplir términos de crédito
+   - Documentar gasto
+
+### 4. SELECCIÓN DE PROVEEDORES
+
+Criterios de evaluación:
+- Precio competitivo (40%)
+- Calidad certificada (30%)
+- Entrega a tiempo (20%)
+- Servicio post-venta (10%)
+
+### 5. TÉRMINOS Y CONDICIONES
+
+- **Plazo de pago:** 30 días neto
+- **Descuentos por volumen:** Negociables
+- **Retenciones:** 8% impuesto a la renta
+- **Garantía:** Mínimo 1 año en equipos
+
+Generado automáticamente por ELAP — {datetime.now().strftime('%d/%m/%Y')}
+"""
+
+
+# ============================================================================
+# LEGAL TEMPLATES (2)
+# ============================================================================
+
+
+class TerminosYCondicionesTemplate(DocumentTemplate):
+    @staticmethod
+    def render(config: Dict[str, Any]) -> str:
+        return f"""
+# TÉRMINOS Y CONDICIONES
+
+## {config['nombreEmpresa']}
+
+**Última actualización:** {datetime.now().strftime('%d de %B de %Y')}
+
+### 1. ACEPTACIÓN
+
+Al acceder y utilizar este sitio web o servicios de {config['nombreEmpresa']},
+aceptas estar legalmente vinculado por estos términos y condiciones.
+
+### 2. USO PERMITIDO
+
+El usuario se compromete a:
+- Usar los servicios solo para fines legítimos
+- No reproducir ni distribuir contenido sin autorización
+- No intentar acceso no autorizado a sistemas
+- Cumplir todas las leyes aplicables
+
+### 3. LIMITACIÓN DE RESPONSABILIDAD
+
+{config['nombreEmpresa']} no será responsable por:
+- Daños indirectos, incidentales o consecuentes
+- Pérdida de datos o ingresos
+- Interrupciones del servicio por causas externas
+
+### 4. PROPIEDAD INTELECTUAL
+
+Todo contenido (textos, imágenes, software) es propiedad de {config['nombreEmpresa']}
+y está protegido por derechos de autor. No está permitida la reproducción
+sin permiso escrito.
+
+### 5. PRIVACIDAD
+
+Consultar Política de Privacidad para información sobre:
+- Recopilación de datos
+- Uso de información
+- Derechos del usuario
+
+### 6. MODIFICACIONES
+
+{config['nombreEmpresa']} se reserva el derecho de modificar estos términos.
+Los cambios serán notificados con 15 días de anticipación.
+
+### 7. RESOLUCIÓN DE DISPUTAS
+
+- Primer intento: Resolución amigable
+- Si falla: Mediación
+- Última instancia: Arbitraje conforme a leyes locales
+
+Generado automáticamente por ELAP — {datetime.now().strftime('%d/%m/%Y')}
+"""
+
+
+class PoliticaDePrivacidadTemplate(DocumentTemplate):
+    @staticmethod
+    def render(config: Dict[str, Any]) -> str:
+        return f"""
+# POLÍTICA DE PRIVACIDAD
+
+## {config['nombreEmpresa']}
+
+**Efectiva desde:** {datetime.now().strftime('%d de %B de %Y')}
+
+### 1. INFORMACIÓN QUE RECOPILAMOS
+
+Podemos recopilar:
+- Información de identificación personal (nombre, email, teléfono)
+- Información de transacciones (compras, pagos)
+- Información técnica (IP, cookies, navegador)
+- Información de preferencias (mediante formularios)
+
+### 2. USO DE INFORMACIÓN
+
+Utilizamos información para:
+- Prestar servicios solicitados
+- Mejorar nuestros productos/servicios
+- Comunicaciones de marketing (con consentimiento)
+- Análisis estadísticos
+- Cumplimiento legal
+
+### 3. PROTECCIÓN DE DATOS
+
+Implementamos medidas:
+- Encriptación SSL en transferencias
+- Control de acceso basado en roles
+- Auditorías de seguridad regulares
+- Capacitación en privacidad del personal
+
+### 4. DERECHOS DEL USUARIO
+
+Tienes derecho a:
+- Acceder a tus datos personales
+- Solicitar corrección de inexactitudes
+- Pedir eliminación (derecho al olvido)
+- Portabilidad de datos
+- Retirar consentimiento en cualquier momento
+
+### 5. COOKIES
+
+Usamos cookies para:
+- Preferencias del usuario
+- Sesiones de usuario
+- Análisis de tráfico
+- Publicidad personalizada
+
+Los usuarios pueden desactivar cookies en su navegador.
+
+### 6. RETENCIÓN DE DATOS
+
+- Datos de transacciones: 7 años (requisito fiscal)
+- Datos de contacto: Mientras active la cuenta
+- Cookies: Según configuración del navegador
+
+### 7. TERCEROS
+
+No compartimos información con terceros excepto:
+- Proveedores de servicios (bajo contrato)
+- Cuando la ley lo requiere
+- Con consentimiento explícito del usuario
+
+### 8. CAMBIOS A ESTA POLÍTICA
+
+Notificaremos cambios importantes 30 días antes de implementar.
+
+**Contacto Privacidad:** {config.get('contactoRRHH', '[contact]')}
+
+Generado automáticamente por ELAP — {datetime.now().strftime('%d/%m/%Y')}
+"""
+
+
+# ============================================================================
+# VENTAS TEMPLATES (1)
+# ============================================================================
+
+
+class EstrategiaComercialTemplate(DocumentTemplate):
+    @staticmethod
+    def render(config: Dict[str, Any]) -> str:
+        return f"""
+# ESTRATEGIA COMERCIAL
+
+## {config['nombreEmpresa']}
+
+**Año Fiscal:** {datetime.now().year}
+
+### 1. VISIÓN Y OBJETIVOS
+
+**Visión:** Ser líderes en {config['sector']} reconocidos por innovación y servicio.
+
+**Objetivos Comerciales {datetime.now().year}:**
+- Incrementar ingresos {config.get('crecimientoEsperado', '15-20%')}
+- Expandir a 2 nuevos mercados geográficos
+- Aumentar participación de mercado en 5%
+- Mejorar retención de clientes a 95%
+
+### 2. SEGMENTACIÓN DE CLIENTES
+
+**Segmento Premium:**
+- Grandes empresas, ingresos > $100M
+- Margen: 35%
+- Target: 20% de cartera
+
+**Segmento Enterprise:**
+- Empresas medianas, ingresos $10-100M
+- Margen: 28%
+- Target: 50% de cartera
+
+**Segmento SME:**
+- Pequeñas empresas, ingresos < $10M
+- Margen: 20%
+- Target: 30% de cartera
+
+### 3. PRODUCTOS Y SERVICIOS
+
+**Productos Principales:**
+{', '.join(config.get('productos', ['Producto A', 'Producto B']))}
+
+**Servicios Complementarios:**
+{', '.join(config.get('servicios', ['Servicio A', 'Servicio B']))}
+
+**Clientes Clave:**
+{config.get('clientesPrincipales', 'A definir')}
+
+### 4. ESTRATEGIA DE PRECIOS
+
+- Penetración en nuevos mercados: -10% introductorio
+- Productos existentes: Aumento inflacionario + 2%
+- Servicios premium: +15% vs competencia
+
+### 5. CANALES DE DISTRIBUCIÓN
+
+- Venta directa: 40%
+- Distribuidores: 35%
+- Online: 25%
+
+### 6. PLAN DE MARKETING
+
+**Campañas {datetime.now().year}:**
+- Q1: Lanzamiento de nuevos productos
+- Q2: Expansión geográfica
+- Q3: Retención y upsell
+- Q4: Consolidación de logros
+
+**Budget Estimado:** ${config.get('presupuestoAnual', 500000000) * 0.15:,.0f}
+
+### 7. MÉTRICAS DE ÉXITO
+
+- Revenue crecimiento: {config.get('crecimientoEsperado', '15-20%')}
+- Customer Acquisition Cost (CAC): < ${config.get('salarioPromedio', 3000000) * 5:,.0f}
+- Lifetime Value (LTV): > ${config.get('salarioPromedio', 3000000) * 20:,.0f}
+- Net Promoter Score (NPS): > 70
+- Churn rate: < 5% anual
+
+Generado automáticamente por ELAP — {datetime.now().strftime('%d/%m/%Y')}
+"""
+
+
+# ============================================================================
 # TEMPLATE REGISTRY
 # ============================================================================
 
 DOCUMENT_TEMPLATES = {
-    # RRHH
+    # RRHH (5)
     'manual_empleado': ManualDelEmpleadoTemplate,
     'politica_vacaciones': PoliticaVacacionesTemplate,
     'codigo_conducta': CodigoDeConductaTemplate,
-    # Finanzas
+    'politica_ausencias': PoliticaDeAusenciasTemplate,
+    'procedimiento_contratacion': ProcedimientoDeContratacionTemplate,
+    # Finanzas (3)
     'presupuesto_anual': PresupuestoAnualTemplate,
     'politica_gastos': PoliticaDeGastosTemplate,
-    # Operaciones
+    'reportes_financieros': ReportesFinancierosTemplate,
+    # Operaciones (4)
     'politica_calidad': PoliticaDeCalidadTemplate,
+    'matriz_procesos': MatrizDeProcesosTemplate,
+    'procedimientos_operacionales': ProcedimientosOperacionalesTemplate,
+    'politica_compras': PoliticaDeComprasTemplate,
+    # Legal (2)
+    'terminos_condiciones': TerminosYCondicionesTemplate,
+    'politica_privacidad': PoliticaDePrivacidadTemplate,
+    # Ventas (1)
+    'estrategia_comercial': EstrategiaComercialTemplate,
 }
 
 

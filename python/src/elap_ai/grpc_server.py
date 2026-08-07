@@ -15,6 +15,7 @@ from .agents import LangGraphAgent
 from .memory import VectorStore
 from .pipelines import DocumentPipeline
 from .tools.documents import DocumentReader, DocumentGenerator
+from .document_generation_service import DocumentGenerationService
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +27,9 @@ class AIRuntimeServicer:
         self.ai_runtime = ai_runtime
         self.vector_store = VectorStore(db_path="./data/chromadb")
         self.document_pipeline = DocumentPipeline(self.vector_store)
+        self.document_generation_service = DocumentGenerationService(self.vector_store)
         self.agents: dict = {}  # Cache de agentes
-        logger.info("AIRuntimeServicer initialized with RAG support")
+        logger.info("AIRuntimeServicer initialized with RAG support and Document Generation")
 
     async def ExecuteAgent(self, request, context):
         """Ejecutar un agente
@@ -271,6 +273,97 @@ class AIRuntimeServicer:
                 context_count=0,
                 error=str(e)
             )
+
+    async def GenerateDocuments(self, request, context):
+        """Generar 15 documentos personalizados basados en configuración de empresa
+
+        Args:
+            request: GenerateDocumentsRequest con CompanyConfig
+            context: gRPC context
+
+        Returns:
+            GenerateDocumentsResponse con documentos generados
+        """
+        try:
+            logger.info(f"GenerateDocuments: company={request.config.nombreEmpresa}")
+
+            # Convertir protobuf config a dict
+            company_config = {
+                "nombreEmpresa": request.config.nombreEmpresa,
+                "sector": request.config.sector,
+                "ubicacion": request.config.ubicacion,
+                "anoFundacion": request.config.anoFundacion,
+                "website": request.config.website or "",
+                "numEmpleados": request.config.numEmpleados,
+                "departamentos": list(request.config.departamentos),
+                "ceo": request.config.ceo or "",
+                "contactoRRHH": request.config.contactoRRHH or "",
+                "productos": list(request.config.productos),
+                "servicios": list(request.config.servicios),
+                "clientesPrincipales": request.config.clientesPrincipales or "",
+                "salarioPromedio": request.config.salarioPromedio,
+                "presupuestoAnual": request.config.presupuestoAnual or 0,
+                "crecimientoEsperado": request.config.crecimientoEsperado or "15-20%",
+            }
+
+            # Generar documentos (usa simulación por ahora, pero es asyncio-compatible)
+            template_names = list(request.template_names) if request.template_names else None
+            result = await self.document_generation_service.generate_documents(
+                company_config, template_names
+            )
+
+            logger.info(f"Generated {result.get('total_documents')} documents successfully")
+
+            # Nota: Aquí necesitaríamos convertir a protobuf cuando esté compilado
+            # Por ahora, retornamos un dict que será serializado
+            return {
+                "status": "success",
+                "company_id": result.get("company_id"),
+                "total_documents": result.get("total_documents"),
+                "documents_indexed": result.get("documents_indexed"),
+                "overall_status": result.get("overall_status"),
+            }
+
+        except Exception as e:
+            logger.error(f"Error generating documents: {str(e)}")
+            return {
+                "status": "error",
+                "company_id": "",
+                "total_documents": 0,
+                "documents_indexed": 0,
+                "overall_status": "error",
+                "error": str(e),
+            }
+
+    async def GetGenerationStatus(self, request, context):
+        """Obtener estado de generación de documentos
+
+        Args:
+            request: GetGenerationStatusRequest con company_id
+            context: gRPC context
+
+        Returns:
+            GetGenerationStatusResponse con estado actual
+        """
+        try:
+            logger.info(f"GetGenerationStatus: company_id={request.company_id}")
+
+            result = self.document_generation_service.get_generation_status(
+                request.company_id
+            )
+
+            logger.info(f"Generation status: {result.get('overall_status')}")
+
+            # Retornar resultado
+            return result
+
+        except Exception as e:
+            logger.error(f"Error getting generation status: {str(e)}")
+            return {
+                "company_id": request.company_id,
+                "overall_status": "error",
+                "error": str(e),
+            }
 
 
 async def serve(ai_runtime, port: int = 50051):

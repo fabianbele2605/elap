@@ -87,6 +87,73 @@ message ExecuteAgentWithRAGResponse {
     string error = 6;         // Mensaje de error
 }
 
+// === NUEVOS MENSAJES PARA FASE 3 ===
+
+// Configuración de empresa para generación de documentos
+message CompanyConfig {
+    string nombreEmpresa = 1;
+    string sector = 2;
+    string ubicacion = 3;
+    int32 anoFundacion = 4;
+    string website = 5;
+    int32 numEmpleados = 6;
+    repeated string departamentos = 7;
+    string ceo = 8;
+    string contactoRRHH = 9;
+    repeated string productos = 10;
+    repeated string servicios = 11;
+    string clientesPrincipales = 12;
+    int32 salarioPromedio = 13;
+    int32 presupuestoAnual = 14;
+    string crecimientoEsperado = 15;
+}
+
+// Solicitud de generación de documentos
+message GenerateDocumentsRequest {
+    CompanyConfig config = 1;
+    repeated string template_names = 2;  // Si vacío, genera todos los 15
+}
+
+// Documento generado
+message GeneratedDocument {
+    string id = 1;
+    string title = 2;
+    string template_name = 3;
+    string status = 4;         // "generating", "ready", "error"
+    int32 progress = 5;        // 0-100
+    bytes content = 6;         // Contenido del documento
+    string error = 7;          // Mensaje de error si aplica
+    string indexed_in_rag = 8; // "yes", "no", "pending"
+}
+
+// Respuesta de generación de documentos
+message GenerateDocumentsResponse {
+    string company_id = 1;
+    string status = 2;         // "completed", "error", "partial"
+    repeated GeneratedDocument documents = 3;
+    int32 total_documents = 4;
+    string rag_collection_name = 5;
+    int32 documents_indexed = 6;
+    string error = 7;
+}
+
+// Solicitud de estado de generación
+message GetGenerationStatusRequest {
+    string company_id = 1;
+}
+
+// Respuesta de estado
+message GetGenerationStatusResponse {
+    string company_id = 1;
+    string overall_status = 2;  // "completed", "generating", "error"
+    repeated GeneratedDocument documents = 3;
+    int32 total_documents = 4;
+    int32 completed_documents = 5;
+    int32 documents_indexed = 6;
+    float progress_percentage = 7;
+    string error = 8;
+}
+
 // Servicio principal del AI Runtime
 service AIRuntimeService {
     // Ejecutar un agente (respuesta completa)
@@ -108,4 +175,12 @@ service AIRuntimeService {
 
     // Ejecutar agente con contexto RAG
     rpc ExecuteAgentWithRAG(ExecuteAgentWithRAGRequest) returns (ExecuteAgentWithRAGResponse);
+
+    // === NUEVOS RPC PARA FASE 3 ===
+
+    // Generar 15 documentos personalizados
+    rpc GenerateDocuments(GenerateDocumentsRequest) returns (GenerateDocumentsResponse);
+
+    // Obtener estado de generación
+    rpc GetGenerationStatus(GetGenerationStatusRequest) returns (GetGenerationStatusResponse);
 }
