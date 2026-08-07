@@ -26,6 +26,7 @@ pub mod tools;
 pub mod models;
 pub mod agents;
 pub mod agent_model_mapper;
+pub mod agent_orchestrator;
 pub mod api;
 pub mod db;
 pub mod grpc_client;
@@ -56,6 +57,7 @@ pub use agents::{
     SistemaMemoria, MemoriaCortoTermino, MemoriaLargoTermino,
 };
 pub use agent_model_mapper::{rol_to_modelo, get_role_model_info};
+pub use agent_orchestrator::{AgentOrchestrator, TipoAgente, InfoAgente, SolicitudDelegacion, RespuestaDelegacion};
 pub use api::{
     AppState, crear_router, AgentEvent,
     Claims, ManagerJWT, RolAPI, Accion, ValidadorRBAC,
