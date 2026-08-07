@@ -123,4 +123,4 @@ export interface HardwareMetrics {
   ollamaModelLoaded: string;
 }
 
-export type MainTab = 'chat' | 'dashboard' | 'tools' | 'knowledge' | 'history' | 'documents' | 'settings';
+export type MainTab = 'chat' | 'dashboard' | 'tools' | 'knowledge' | 'history' | 'documents' | 'setup' | 'settings';

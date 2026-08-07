@@ -27,6 +27,10 @@ pub fn crear_router(state: AppState) -> Router {
         // Documentos y RAG
         .route("/documents/search", post(handlers::buscar_documentos))
         .route("/documents/generate-report", post(handlers::generar_reporte))
+        // === NUEVAS RUTAS FASE 3 ===
+        // Knowledge Pack Generator
+        .route("/company/setup", post(handlers::setup_empresa))
+        .route("/company/:id/status", get(handlers::obtener_status_empresa))
         .with_state(state)
         .layer(middleware::cors_layer())
         .layer(middleware::logging_layer())

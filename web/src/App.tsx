@@ -22,8 +22,9 @@ import { NewAgentModal } from './components/modals/NewAgentModal';
 import { SettingsModal } from './components/modals/SettingsModal';
 import { InstallAgentsModal } from './components/modals/InstallAgentsModal';
 import { EMPRESA_CONTEXTO, SISTEMA_PROMPT_EMPRESA } from './config/empresa_contexto';
-import { MessageSquare, BarChart2, Wrench, BookOpen, History, Sliders, FileText } from 'lucide-react';
+import { MessageSquare, BarChart2, Wrench, BookOpen, History, Sliders, FileText, Zap } from 'lucide-react';
 import DocumentsPage from './pages/DocumentsPage';
+import { KnowledgePackWizard } from './components/KnowledgePackWizard';
 
 export default function App() {
   const [agents, setAgents] = useState<Agent[]>(INITIAL_AGENTS);
@@ -450,6 +451,18 @@ export default function App() {
                 <FileText className="w-3.5 h-3.5 text-orange-600" />
                 <span>'Documentos'</span>
               </button>
+
+              <button
+                onClick={() => setActiveTab('setup')}
+                className={`px-3 py-1 rounded-t-lg text-xs font-semibold flex items-center gap-1.5 transition-all border-t border-x ${
+                  activeTab === 'setup'
+                    ? 'bg-white text-blue-600 border-slate-200 shadow-sm'
+                    : 'text-slate-700 hover:text-slate-700 border-transparent hover:bg-slate-100'
+                }`}
+              >
+                <Zap className="w-3.5 h-3.5 text-yellow-600" />
+                <span>'Fase 3'</span>
+              </button>
             </div>
 
             <div className="hidden sm:flex items-center gap-2 text-[12px] font-mono text-slate-700">
@@ -501,6 +514,12 @@ export default function App() {
 
             {activeTab === 'documents' && (
               <DocumentsPage />
+            )}
+
+            {activeTab === 'setup' && (
+              <KnowledgePackWizard
+                onSuccess={() => setActiveTab('documents')}
+              />
             )}
           </div>
         </main>
