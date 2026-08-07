@@ -1,7 +1,7 @@
 # Roadmap Técnico de ELAP
 
-**Versión**: 1.0  
-**Última actualización**: 2026-08-05  
+**Versión**: 1.1  
+**Última actualización**: 2026-08-06  
 **Duración estimada**: 17 semanas
 
 ---
@@ -25,9 +25,15 @@ Fase 16: Multi-agent Orchestrator  ██████ ✅
 Fase 17: Tauri + React Dashboard   ██████ ✅
 Fase 18: Deployment (Docker+K8s)   ██████ ✅
 Fase 19: Advanced RAG              ██████ ✅
+Fase 20: Integration Testing       ██████ ✅
+Fase 21: Role-Model Mapping        ██████ ✅
+Fase 22: gRPC Gateway              ██████ ✅
+Fase 23: Real LLM Integration      ██████ ✅
+Fase 24: Multi-agent Orchestration ██████ ✅
+Fase 25: Streaming Responses       ▓▓▓▓░░ 🔄
 ```
 
-**HITO**: v1.3.0 Production Ready 🚀
+**HITO**: v1.4.0 Production Ready (25/25 fases) 🚀
 
 ---
 
