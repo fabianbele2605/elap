@@ -21,11 +21,11 @@ impl RegistroModelos {
     /// Registrar modelo
     pub fn registrar(&self, metadata: ModelMetadata) -> ResultadoElap<()> {
         let mut modelos = self.modelos.lock().map_err(|_| {
-            crate::error::ElapError::Otro("No se pudo adquirir lock".to_string())
+            crate::error::ElapError::InternalError("No se pudo adquirir lock".to_string())
         })?;
 
         if modelos.contains_key(&metadata.nombre) {
-            return Err(crate::error::ElapError::Validacion(format!(
+            return Err(crate::error::ElapError::ValidationError(format!(
                 "Modelo {} ya existe",
                 metadata.nombre
             )));
@@ -38,13 +38,13 @@ impl RegistroModelos {
     /// Obtener modelo
     pub fn obtener(&self, nombre: &str) -> ResultadoElap<ModelMetadata> {
         let modelos = self.modelos.lock().map_err(|_| {
-            crate::error::ElapError::Otro("No se pudo adquirir lock".to_string())
+            crate::error::ElapError::InternalError("No se pudo adquirir lock".to_string())
         })?;
 
         modelos
             .get(nombre)
             .cloned()
-            .ok_or_else(|| crate::error::ElapError::Validacion(format!(
+            .ok_or_else(|| crate::error::ElapError::ValidationError(format!(
                 "Modelo {} no encontrado",
                 nombre
             )))
@@ -53,7 +53,7 @@ impl RegistroModelos {
     /// Listar todos los modelos
     pub fn listar(&self) -> ResultadoElap<Vec<ModelMetadata>> {
         let modelos = self.modelos.lock().map_err(|_| {
-            crate::error::ElapError::Otro("No se pudo adquirir lock".to_string())
+            crate::error::ElapError::InternalError("No se pudo adquirir lock".to_string())
         })?;
 
         Ok(modelos.values().cloned().collect())
@@ -62,7 +62,7 @@ impl RegistroModelos {
     /// Contar modelos
     pub fn contar(&self) -> ResultadoElap<usize> {
         let modelos = self.modelos.lock().map_err(|_| {
-            crate::error::ElapError::Otro("No se pudo adquirir lock".to_string())
+            crate::error::ElapError::InternalError("No se pudo adquirir lock".to_string())
         })?;
 
         Ok(modelos.len())
@@ -71,7 +71,7 @@ impl RegistroModelos {
     /// Listar modelos descargados
     pub fn listar_descargados(&self) -> ResultadoElap<Vec<ModelMetadata>> {
         let modelos = self.modelos.lock().map_err(|_| {
-            crate::error::ElapError::Otro("No se pudo adquirir lock".to_string())
+            crate::error::ElapError::InternalError("No se pudo adquirir lock".to_string())
         })?;
 
         Ok(modelos

@@ -21,7 +21,7 @@ impl PluginLoader {
     /// Validar que el binario existe
     pub fn validar_binario(&self, ruta: &PathBuf) -> ResultadoElap<()> {
         if !ruta.exists() {
-            return Err(crate::error::ElapError::Validacion(
+            return Err(crate::error::ElapError::ValidationError(
                 format!("Plugin no encontrado: {:?}", ruta)
             ));
         }
@@ -31,19 +31,19 @@ impl PluginLoader {
     /// Validar metadatos del plugin
     pub fn validar_metadata(&self, metadata: &PluginMetadata) -> ResultadoElap<()> {
         if metadata.nombre.is_empty() {
-            return Err(crate::error::ElapError::Validacion(
+            return Err(crate::error::ElapError::ValidationError(
                 "Nombre del plugin vacío".to_string()
             ));
         }
 
         if metadata.version.is_empty() {
-            return Err(crate::error::ElapError::Validacion(
+            return Err(crate::error::ElapError::ValidationError(
                 "Versión del plugin vacía".to_string()
             ));
         }
 
         if metadata.punto_entrada.is_empty() {
-            return Err(crate::error::ElapError::Validacion(
+            return Err(crate::error::ElapError::ValidationError(
                 "Punto de entrada vacío".to_string()
             ));
         }
@@ -98,7 +98,7 @@ impl PluginLoader {
             }
         }
 
-        Err(crate::error::ElapError::Validacion(
+        Err(crate::error::ElapError::ValidationError(
             format!("Plugin '{}' no encontrado en directorio", nombre)
         ))
     }
@@ -107,12 +107,10 @@ impl PluginLoader {
     pub fn calcular_hash(&self, ruta: &PathBuf) -> ResultadoElap<String> {
         use std::io::Read;
 
-        let mut file = fs::File::open(ruta)
-            .map_err(|e| crate::error::ElapError::Io(e))?;
+        let mut file = fs::File::open(ruta)?;
 
         let mut contenido = Vec::new();
-        file.read_to_end(&mut contenido)
-            .map_err(|e| crate::error::ElapError::Io(e))?;
+        file.read_to_end(&mut contenido)?;
 
         let digest = ring::digest::digest(&ring::digest::SHA256, &contenido);
         Ok(hex::encode(digest.as_ref()))

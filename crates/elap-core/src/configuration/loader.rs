@@ -21,21 +21,21 @@ impl CargadorConfiguracion {
         let ruta = self.ruta_base.join(archivo);
 
         if !ruta.exists() {
-            return Err(crate::error::ElapError::Config(
+            return Err(crate::error::ElapError::ConfigError(
                 format!("Archivo de configuración no encontrado: {:?}", ruta)
             ));
         }
 
         let contenido = fs::read_to_string(&ruta)
-            .map_err(|e| crate::error::ElapError::Io(e))?;
+            ?;
 
         let config: ConfiguracionAvanzada = toml::from_str(&contenido)
-            .map_err(|e| crate::error::ElapError::Config(
+            .map_err(|e| crate::error::ElapError::ConfigError(
                 format!("Error parsando TOML: {}", e)
             ))?;
 
         config.validar()
-            .map_err(|e| crate::error::ElapError::Validacion(e))?;
+            .map_err(|e| crate::error::ElapError::ValidationError(e))?;
 
         Ok(config)
     }
@@ -45,21 +45,21 @@ impl CargadorConfiguracion {
         let ruta = self.ruta_base.join(archivo);
 
         if !ruta.exists() {
-            return Err(crate::error::ElapError::Config(
+            return Err(crate::error::ElapError::ConfigError(
                 format!("Archivo de configuración no encontrado: {:?}", ruta)
             ));
         }
 
         let contenido = fs::read_to_string(&ruta)
-            .map_err(|e| crate::error::ElapError::Io(e))?;
+            ?;
 
         let config: ConfiguracionAvanzada = serde_yaml::from_str(&contenido)
-            .map_err(|e| crate::error::ElapError::Config(
+            .map_err(|e| crate::error::ElapError::ConfigError(
                 format!("Error parsando YAML: {}", e)
             ))?;
 
         config.validar()
-            .map_err(|e| crate::error::ElapError::Validacion(e))?;
+            .map_err(|e| crate::error::ElapError::ValidationError(e))?;
 
         Ok(config)
     }
@@ -69,21 +69,21 @@ impl CargadorConfiguracion {
         let ruta = self.ruta_base.join(archivo);
 
         if !ruta.exists() {
-            return Err(crate::error::ElapError::Config(
+            return Err(crate::error::ElapError::ConfigError(
                 format!("Archivo de configuración no encontrado: {:?}", ruta)
             ));
         }
 
         let contenido = fs::read_to_string(&ruta)
-            .map_err(|e| crate::error::ElapError::Io(e))?;
+            ?;
 
         let config: ConfiguracionAvanzada = serde_json::from_str(&contenido)
-            .map_err(|e| crate::error::ElapError::Config(
+            .map_err(|e| crate::error::ElapError::ConfigError(
                 format!("Error parsando JSON: {}", e)
             ))?;
 
         config.validar()
-            .map_err(|e| crate::error::ElapError::Validacion(e))?;
+            .map_err(|e| crate::error::ElapError::ValidationError(e))?;
 
         Ok(config)
     }
@@ -101,12 +101,12 @@ impl CargadorConfiguracion {
         let ruta = self.ruta_base.join(archivo);
 
         let contenido = toml::to_string_pretty(config)
-            .map_err(|e| crate::error::ElapError::Config(
+            .map_err(|e| crate::error::ElapError::ConfigError(
                 format!("Error serializando TOML: {}", e)
             ))?;
 
         fs::write(&ruta, contenido)
-            .map_err(|e| crate::error::ElapError::Io(e))?;
+            ?;
 
         Ok(())
     }
@@ -175,7 +175,7 @@ impl CargadorConfiguracion {
     pub fn crear_directorio(&self) -> ResultadoElap<()> {
         if !self.ruta_base.exists() {
             fs::create_dir_all(&self.ruta_base)
-                .map_err(|e| crate::error::ElapError::Io(e))?;
+                ?;
         }
         Ok(())
     }

@@ -27,11 +27,11 @@ impl OllamaClient {
         temperatura: f32,
     ) -> ResultadoElap<String> {
         if prompt.is_empty() {
-            return Err(ElapError::Validacion("Prompt vacío".to_string()));
+            return Err(ElapError::ValidationError("Prompt vacío".to_string()));
         }
 
         if temperatura < 0.0 || temperatura > 1.0 {
-            return Err(ElapError::Validacion(
+            return Err(ElapError::ValidationError(
                 "Temperatura debe estar entre 0.0 y 1.0".to_string(),
             ));
         }
@@ -45,7 +45,7 @@ impl OllamaClient {
     /// Generar embeddings para un texto
     pub fn embeddings(&self, modelo: &str, texto: &str) -> ResultadoElap<Vec<f32>> {
         if texto.is_empty() {
-            return Err(ElapError::Validacion("Texto vacío".to_string()));
+            return Err(ElapError::ValidationError("Texto vacío".to_string()));
         }
 
         // Simular embeddings: vector de 384 dimensiones (basado en longitud del texto)
@@ -63,7 +63,7 @@ impl OllamaClient {
     /// Chat con un modelo
     pub fn chat(&self, modelo: &str, historial: &[(&str, &str)]) -> ResultadoElap<String> {
         if historial.is_empty() {
-            return Err(ElapError::Validacion("Historial vacío".to_string()));
+            return Err(ElapError::ValidationError("Historial vacío".to_string()));
         }
 
         let (ultimo_usuario, _) = historial[historial.len() - 1];
@@ -92,7 +92,7 @@ impl OllamaClient {
     /// Descargar un modelo
     pub fn descargar_modelo(&self, modelo: &str) -> ResultadoElap<()> {
         if modelo.is_empty() {
-            return Err(ElapError::Validacion("Nombre de modelo vacío".to_string()));
+            return Err(ElapError::ValidationError("Nombre de modelo vacío".to_string()));
         }
 
         Ok(())

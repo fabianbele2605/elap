@@ -17,14 +17,14 @@ impl ArchivoMonitoreado {
     /// Obtener timestamp de última modificación
     fn obtener_timestamp(ruta: &PathBuf) -> ResultadoElap<u64> {
         let metadata = fs::metadata(ruta)
-            .map_err(|e| crate::error::ElapError::Io(e))?;
+            ?;
 
         let modified = metadata.modified()
-            .map_err(|e| crate::error::ElapError::Io(e))?;
+            ?;
 
         let duration = modified
             .duration_since(UNIX_EPOCH)
-            .map_err(|e| crate::error::ElapError::Otro(e.to_string()))?;
+            .map_err(|e| crate::error::ElapError::InternalError(e.to_string()))?;
 
         Ok(duration.as_secs())
     }

@@ -56,7 +56,7 @@ impl ModelManager {
     /// Generar texto
     pub fn generar(&self, prompt: &str, temperatura: f32) -> ResultadoElap<String> {
         let modelo = self.modelo_activo.as_ref()
-            .ok_or(ElapError::Validacion("No hay modelo activo".to_string()))?;
+            .ok_or(ElapError::ValidationError("No hay modelo activo".to_string()))?;
 
         self.cliente.generar(modelo, prompt, temperatura)
     }
@@ -64,7 +64,7 @@ impl ModelManager {
     /// Generar embeddings con cache
     pub fn embeddings(&self, texto: &str) -> ResultadoElap<Vec<f32>> {
         let modelo = self.modelo_activo.as_ref()
-            .ok_or(ElapError::Validacion("No hay modelo activo".to_string()))?;
+            .ok_or(ElapError::ValidationError("No hay modelo activo".to_string()))?;
 
         // Intentar obtener del cache
         if let Ok(Some(cached)) = self.cache.obtener(modelo, texto) {
@@ -83,7 +83,7 @@ impl ModelManager {
     /// Chat con memoria
     pub fn chat(&mut self, usuario: &str) -> ResultadoElap<String> {
         let modelo = self.modelo_activo.as_ref()
-            .ok_or(ElapError::Validacion("No hay modelo activo".to_string()))?;
+            .ok_or(ElapError::ValidationError("No hay modelo activo".to_string()))?;
 
         // Agregar a memoria corta
         self.memoria_corta.push_back(MemoriaCorta {

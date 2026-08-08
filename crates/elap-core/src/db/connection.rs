@@ -10,7 +10,7 @@ pub type Database = SqlitePool;
 /// Obtener directorio de datos de la aplicación
 fn obtener_directorio_datos() -> ResultadoElap<PathBuf> {
     let dirs = directories::ProjectDirs::from("io", "bblabs", "elap")
-        .ok_or_else(|| crate::error::ElapError::Otro(
+        .ok_or_else(|| crate::error::ElapError::InternalError(
             "No se pudo determinar directorio de datos".to_string()
         ))?;
 

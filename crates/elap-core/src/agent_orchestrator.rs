@@ -81,7 +81,7 @@ impl AgentOrchestrator {
     /// Registrar un agente en el orquestador
     pub fn registrar_agente(&mut self, agente: InfoAgente) -> ResultadoElap<()> {
         if self.agentes.contains_key(&agente.id) {
-            return Err(crate::error::ElapError::Config(
+            return Err(crate::error::ElapError::Conflict(
                 format!("Agente {} ya está registrado", agente.id),
             ));
         }
@@ -173,7 +173,7 @@ impl AgentOrchestrator {
                 agente.disponible = disponible;
                 Ok(())
             }
-            None => Err(crate::error::ElapError::Config(
+            None => Err(crate::error::ElapError::AgentNotFound(
                 format!("Agente {} no encontrado", agente_id),
             )),
         }

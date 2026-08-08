@@ -36,7 +36,7 @@ impl CacheEmbeddings {
     /// Obtener embedding del cache
     pub fn obtener(&self, modelo: &str, texto: &str) -> ResultadoElap<Option<Vec<f32>>> {
         let cache = self.cache.lock().map_err(|_| {
-            crate::error::ElapError::Otro("No se pudo adquirir lock".to_string())
+            crate::error::ElapError::InternalError("No se pudo adquirir lock".to_string())
         })?;
 
         let clave = Self::generar_clave(modelo, texto);
@@ -51,7 +51,7 @@ impl CacheEmbeddings {
         embedding: Vec<f32>,
     ) -> ResultadoElap<()> {
         let mut cache = self.cache.lock().map_err(|_| {
-            crate::error::ElapError::Otro("No se pudo adquirir lock".to_string())
+            crate::error::ElapError::InternalError("No se pudo adquirir lock".to_string())
         })?;
 
         // Limpiar si alcanzamos max
@@ -74,7 +74,7 @@ impl CacheEmbeddings {
     /// Vaciar cache
     pub fn limpiar(&self) -> ResultadoElap<()> {
         let mut cache = self.cache.lock().map_err(|_| {
-            crate::error::ElapError::Otro("No se pudo adquirir lock".to_string())
+            crate::error::ElapError::InternalError("No se pudo adquirir lock".to_string())
         })?;
 
         cache.clear();
@@ -84,7 +84,7 @@ impl CacheEmbeddings {
     /// Contar entradas
     pub fn contar(&self) -> ResultadoElap<usize> {
         let cache = self.cache.lock().map_err(|_| {
-            crate::error::ElapError::Otro("No se pudo adquirir lock".to_string())
+            crate::error::ElapError::InternalError("No se pudo adquirir lock".to_string())
         })?;
 
         Ok(cache.len())
