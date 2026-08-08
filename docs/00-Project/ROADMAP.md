@@ -1,8 +1,9 @@
 # Roadmap Técnico de ELAP
 
-**Versión**: 1.2  
-**Última actualización**: 2026-08-07  
+**Versión**: 1.3  
+**Última actualización**: 2026-08-08  
 **Duración estimada**: 17 semanas + 4 fases de Document Engine
+**Status**: Fase 4 ✅ Completada | Fase 5 en progreso
 
 ---
 
@@ -608,13 +609,24 @@ Al final del proyecto, tendremos **18 libros** completos para estudio:
 - Descarga desde chat (botones azules)
 - **Status:** Producción-ready
 
-### 4d - Documents Tab (Próxima)
+### 4d - Documents Tab ✅ (2026-08-08)
 - Listar documentos generados
 - Filtrar por tipo/empleado
 - Metadatos (fecha, tamaño)
 - Regenerar/eliminar/descargar
-- **Estimado:** 2-3 horas
+- Vista móvil (tarjetas)
+- **Status:** ✅ Completada
+
+### 4e - API Real + Responsive ✅ (2026-08-08)
+- Dashboard con métricas en tiempo real
+- HistoryTab desde API
+- KnowledgeTab desde API
+- ToolsTab desde API
+- StatusBar dinámico
+- Menú desde API
+- 57 clases responsive
+- **Status:** ✅ Completada | 21 commits
 
 ---
 
-**Próximo**: Fase 4d - Documents Tab Management
+**Próximo**: Fase 5 - Error Handling
