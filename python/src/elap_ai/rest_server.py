@@ -393,6 +393,23 @@ async def obtener_dashboard_info(request: web.Request) -> web.Response:
         memory = psutil.virtual_memory()
         disk = psutil.disk_usage('/')
 
+        # Obtener estado de batería
+        try:
+            battery = psutil.sensors_battery()
+            if battery:
+                battery_percent = int(battery.percent)
+                battery_charging = battery.power_plugged
+                battery_status = 'Charging' if battery_charging else 'Discharging'
+            else:
+                # Si no hay batería, asumir que es AC
+                battery_percent = 100
+                battery_charging = True
+                battery_status = 'AC Power'
+        except (AttributeError, TypeError):
+            battery_percent = 100
+            battery_charging = True
+            battery_status = 'AC Power'
+
         dashboard_info = {
             'user': {
                 'username': 'fabian',
@@ -408,9 +425,9 @@ async def obtener_dashboard_info(request: web.Request) -> web.Response:
                 ]
             },
             'battery': {
-                'percent': 92,
-                'charging': False,
-                'status': 'Good'
+                'percent': battery_percent,
+                'charging': battery_charging,
+                'status': battery_status
             },
             'agents': [
                 {
