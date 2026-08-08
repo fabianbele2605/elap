@@ -86,7 +86,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   });
 
   return (
-    <aside className="w-[220px] shrink-0 bg-white border-r border-slate-200 flex flex-col h-full text-slate-700 select-none">
+    <aside className="hidden sm:flex sm:w-56 lg:w-72 shrink-0 bg-white border-r border-slate-200 flex-col h-full text-slate-700 select-none">
       {/* Header & Logo */}
       <div className="p-3 border-b border-slate-200/80 space-y-2.5">
         <div className="flex items-center justify-between">

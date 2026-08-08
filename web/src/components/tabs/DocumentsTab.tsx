@@ -195,13 +195,13 @@ export default function DocumentsTab({ isLoading = false }: DocumentsTabProps) {
   };
 
   return (
-    <div className="flex flex-col h-full gap-4 p-4">
+    <div className="flex flex-col h-full gap-4 p-3 sm:p-4 lg:p-6">
       {/* HEADER */}
       <div>
-        <h2 className="text-xl font-bold text-slate-900 mb-4">📁 Documentos Generados</h2>
+        <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-4">📁 Documentos Generados</h2>
 
         {/* BÚSQUEDA Y FILTROS */}
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-col sm:flex-row sm:flex-wrap">
           {/* Buscador */}
           <div className="flex-1 min-w-[200px] relative">
             <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
@@ -255,70 +255,125 @@ export default function DocumentsTab({ isLoading = false }: DocumentsTabProps) {
           </div>
         ) : (
           <div className="space-y-2">
-            {/* HEADER DE TABLA */}
-            <div className="grid grid-cols-12 gap-2 px-3 py-2 bg-slate-100 rounded-lg font-semibold text-xs text-slate-700">
-              <div className="col-span-5">Nombre</div>
-              <div className="col-span-2">Tipo</div>
-              <div className="col-span-2">Tamaño</div>
-              <div className="col-span-3">Acciones</div>
-            </div>
+            {/* VISTA DESKTOP: TABLA */}
+            <div className="hidden md:block space-y-2">
+              {/* HEADER DE TABLA */}
+              <div className="grid grid-cols-12 gap-2 px-3 py-2 bg-slate-100 rounded-lg font-semibold text-xs text-slate-700">
+                <div className="col-span-5">Nombre</div>
+                <div className="col-span-2">Tipo</div>
+                <div className="col-span-2">Tamaño</div>
+                <div className="col-span-3">Acciones</div>
+              </div>
 
-            {/* FILAS */}
-            {filteredDocs.map((doc, idx) => (
-              <div
-                key={idx}
-                className="grid grid-cols-12 gap-2 items-center px-3 py-2 bg-white border border-slate-200 rounded-lg hover:shadow-sm transition-shadow"
-              >
-                {/* Nombre */}
-                <div className="col-span-5 flex items-start">
-                  <span className="text-lg mr-2">{getTypeIcon(doc.type)}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-slate-900 truncate">{doc.filename}</p>
-                    {doc.employee && (
-                      <p className="text-xs text-slate-500 truncate">{doc.employee}</p>
-                    )}
+              {/* FILAS */}
+              {filteredDocs.map((doc, idx) => (
+                <div
+                  key={idx}
+                  className="grid grid-cols-12 gap-2 items-center px-3 py-2 bg-white border border-slate-200 rounded-lg hover:shadow-sm transition-shadow"
+                >
+                  {/* Nombre */}
+                  <div className="col-span-5 flex items-start">
+                    <span className="text-lg mr-2">{getTypeIcon(doc.type)}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-slate-900 truncate">{doc.filename}</p>
+                      {doc.employee && (
+                        <p className="text-xs text-slate-500 truncate">{doc.employee}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Tipo */}
+                  <div className="col-span-2">
+                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                      {getTypeLabel(doc.type)}
+                    </span>
+                  </div>
+
+                  {/* Tamaño */}
+                  <div className="col-span-2">
+                    <p className="text-xs text-slate-500">{formatFileSize(doc.size)}</p>
+                    <p className="text-xs text-slate-400">{formatDate(doc.createdAt)}</p>
+                  </div>
+
+                  {/* Acciones */}
+                  <div className="col-span-3 flex gap-1">
+                    <button
+                      onClick={() => handleDownload(doc.filename)}
+                      title="Descargar"
+                      className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                    >
+                      <Download className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleRegenerate(doc.filename)}
+                      title="Regenerar"
+                      className="p-1.5 text-green-600 hover:bg-green-50 rounded transition-colors"
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(doc.filename)}
+                      title="Eliminar"
+                      className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
+              ))}
+            </div>
 
-                {/* Tipo */}
-                <div className="col-span-2">
-                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                    {getTypeLabel(doc.type)}
-                  </span>
+            {/* VISTA MÓVIL: TARJETAS */}
+            <div className="md:hidden space-y-3">
+              {filteredDocs.map((doc, idx) => (
+                <div
+                  key={idx}
+                  className="p-4 bg-white border border-slate-200 rounded-lg hover:shadow-sm transition-shadow"
+                >
+                  <div className="flex items-start gap-3 mb-3">
+                    <span className="text-2xl">{getTypeIcon(doc.type)}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-slate-900 truncate">{doc.filename}</p>
+                      {doc.employee && (
+                        <p className="text-xs text-slate-500 truncate">{doc.employee}</p>
+                      )}
+                      <span className="inline-block text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded mt-1">
+                        {getTypeLabel(doc.type)}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-slate-500 mb-3 pb-3 border-b border-slate-100">
+                    <div>
+                      <p>{formatFileSize(doc.size)}</p>
+                      <p>{formatDate(doc.createdAt)}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleDownload(doc.filename)}
+                      title="Descargar"
+                      className="flex-1 p-2 text-blue-600 hover:bg-blue-50 rounded transition-colors text-xs font-medium"
+                    >
+                      <Download className="w-4 h-4 mx-auto" />
+                    </button>
+                    <button
+                      onClick={() => handleRegenerate(doc.filename)}
+                      title="Regenerar"
+                      className="flex-1 p-2 text-green-600 hover:bg-green-50 rounded transition-colors text-xs font-medium"
+                    >
+                      <RefreshCw className="w-4 h-4 mx-auto" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(doc.filename)}
+                      title="Eliminar"
+                      className="flex-1 p-2 text-red-600 hover:bg-red-50 rounded transition-colors text-xs font-medium"
+                    >
+                      <Trash2 className="w-4 h-4 mx-auto" />
+                    </button>
+                  </div>
                 </div>
-
-                {/* Tamaño */}
-                <div className="col-span-2">
-                  <p className="text-xs text-slate-500">{formatFileSize(doc.size)}</p>
-                  <p className="text-xs text-slate-400">{formatDate(doc.createdAt)}</p>
-                </div>
-
-                {/* Acciones */}
-                <div className="col-span-3 flex gap-1">
-                  <button
-                    onClick={() => handleDownload(doc.filename)}
-                    title="Descargar"
-                    className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                  >
-                    <Download className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleRegenerate(doc.filename)}
-                    title="Regenerar"
-                    className="p-1.5 text-green-600 hover:bg-green-50 rounded transition-colors"
-                  >
-                    <RefreshCw className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(doc.filename)}
-                    title="Eliminar"
-                    className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         )}
       </div>

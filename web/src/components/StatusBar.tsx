@@ -72,7 +72,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
       </div>
 
       {/* Center: Hardware Resource Monitor */}
-      <div className="hidden lg:flex items-center gap-4 text-slate-700">
+      <div className="hidden sm:flex items-center gap-2 sm:gap-3 lg:gap-4 text-slate-700 text-[11px] sm:text-[13px] flex-wrap">
         <div className="flex items-center gap-1.5" title="CPU Load">
           <Cpu className="w-3 h-3 text-amber-700" />
           <span>CPU:</span>
