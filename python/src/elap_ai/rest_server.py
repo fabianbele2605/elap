@@ -394,6 +394,24 @@ async def obtener_dashboard_info(request: web.Request) -> web.Response:
         disk = psutil.disk_usage('/')
 
         dashboard_info = {
+            'user': {
+                'username': 'fabian',
+                'role': 'Admin',
+                'display_name': 'Fabian Robles'
+            },
+            'notifications': {
+                'count': 3,
+                'items': [
+                    {'id': '1', 'title': 'HRAgent completó contrato', 'timestamp': '5 min ago'},
+                    {'id': '2', 'title': 'FinanceAgent procesó factura', 'timestamp': '12 min ago'},
+                    {'id': '3', 'title': 'Ollama modelo cargado', 'timestamp': '1 hora ago'}
+                ]
+            },
+            'battery': {
+                'percent': 92,
+                'charging': False,
+                'status': 'Good'
+            },
             'agents': [
                 {
                     'id': 'hr',

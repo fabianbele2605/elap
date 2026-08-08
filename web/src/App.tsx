@@ -38,6 +38,9 @@ export default function App() {
   const [knowledgeSources, setKnowledgeSources] = useState<KnowledgeSource[]>(INITIAL_KNOWLEDGE_SOURCES);
   const [historyItems, setHistoryItems] = useState<ConversationHistoryItem[]>(INITIAL_HISTORY);
   const [hardware, setHardware] = useState<HardwareMetrics>(INITIAL_HARDWARE);
+  const [user, setUser] = useState<any>(null);
+  const [notifications, setNotifications] = useState<any>(null);
+  const [battery, setBattery] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<MainTab>('chat');
   const [isStreaming, setIsStreaming] = useState(false);
 
@@ -87,14 +90,15 @@ export default function App() {
     loadAgents();
   }, []);
 
-  // Load hardware metrics from API every 2 seconds
+  // Load hardware metrics and other data from API every 2 seconds
   useEffect(() => {
-    const loadHardwareMetrics = async () => {
+    const loadDashboardData = async () => {
       try {
         const response = await fetch('http://localhost:5000/api/dashboard');
         if (response.ok) {
           const data = await response.json();
           const hwData = data.hardware;
+
           setHardware({
             cpuUsagePct: Math.round(hwData.cpu_percent),
             ramUsedGb: Math.round(hwData.memory_used_gb * 10) / 10,
@@ -105,6 +109,11 @@ export default function App() {
             vramTotalGb: 16,
             gpuUsagePct: 24
           });
+
+          // Cargar datos adicionales
+          if (data.user) setUser(data.user);
+          if (data.notifications) setNotifications(data.notifications);
+          if (data.battery) setBattery(data.battery);
         }
       } catch (err) {
         // API no disponible, mantener datos por defecto
@@ -112,10 +121,10 @@ export default function App() {
     };
 
     // Cargar inmediatamente
-    loadHardwareMetrics();
+    loadDashboardData();
 
     // Actualizar cada 2 segundos
-    const interval = setInterval(loadHardwareMetrics, 2000);
+    const interval = setInterval(loadDashboardData, 2000);
     return () => clearInterval(interval);
   }, []);
 
@@ -570,7 +579,7 @@ export default function App() {
       </div>
 
       {/* 3. BOTTOM STATUS BAR */}
-      <StatusBar hardware={hardware} />
+      <StatusBar hardware={hardware} user={user} notifications={notifications} battery={battery} />
 
       {/* MODALS */}
       <NewAgentModal

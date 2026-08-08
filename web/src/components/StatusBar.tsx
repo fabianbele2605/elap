@@ -17,9 +17,28 @@ import { HardwareMetrics } from '../types';
 interface StatusBarProps {
   hardware: HardwareMetrics;
   onOpenNotifications?: () => void;
+  user?: {
+    username: string;
+    role: string;
+    display_name: string;
+  };
+  notifications?: {
+    count: number;
+    items: Array<{ id: string; title: string; timestamp: string }>;
+  };
+  battery?: {
+    percent: number;
+    charging: boolean;
+    status: string;
+  };
 }
 
-export const StatusBar: React.FC<StatusBarProps> = ({ hardware }) => {
+export const StatusBar: React.FC<StatusBarProps> = ({
+  hardware,
+  user,
+  notifications,
+  battery
+}) => {
   const [timeStr, setTimeStr] = useState<string>('');
 
   useEffect(() => {
@@ -83,12 +102,12 @@ export const StatusBar: React.FC<StatusBarProps> = ({ hardware }) => {
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-1 text-slate-700">
           <UserCheck className="w-3 h-3 text-blue-600" />
-          <span>Admin User</span>
+          <span>{user?.display_name || 'Admin User'}</span>
         </div>
         <span className="text-slate-700">|</span>
         <div className="flex items-center gap-1 text-amber-700 cursor-pointer hover:text-amber-700">
           <Bell className="w-3 h-3 text-amber-700" />
-          <span>2 notifications</span>
+          <span>{notifications?.count || 2} notifications</span>
         </div>
         <span className="text-slate-700">|</span>
         <div className="flex items-center gap-1 text-slate-700 font-semibold">
@@ -96,9 +115,12 @@ export const StatusBar: React.FC<StatusBarProps> = ({ hardware }) => {
           <span>{timeStr || '09:45 AM'}</span>
         </div>
         <span className="text-slate-700">|</span>
-        <div className="flex items-center gap-1 text-green-600" title="Battery Status">
+        <div
+          className="flex items-center gap-1 text-green-600"
+          title={`Battery: ${battery?.percent}% ${battery?.charging ? '(Charging)' : ''}`}
+        >
           <Battery className="w-3.5 h-3.5 text-green-600 fill-emerald-400/20" />
-          <span>92%</span>
+          <span>{battery?.percent || 92}%</span>
         </div>
       </div>
     </footer>
