@@ -87,6 +87,38 @@ export default function App() {
     loadAgents();
   }, []);
 
+  // Load hardware metrics from API every 2 seconds
+  useEffect(() => {
+    const loadHardwareMetrics = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/dashboard');
+        if (response.ok) {
+          const data = await response.json();
+          const hwData = data.hardware;
+          setHardware({
+            cpuUsagePct: Math.round(hwData.cpu_percent),
+            ramUsedGb: Math.round(hwData.memory_used_gb * 10) / 10,
+            ramTotalGb: Math.round(hwData.memory_total_gb * 10) / 10,
+            diskUsedGb: Math.round(hwData.disk_used_gb),
+            diskTotalGb: Math.round(hwData.disk_total_gb),
+            vramUsedGb: 4.8,
+            vramTotalGb: 16,
+            gpuUsagePct: 24
+          });
+        }
+      } catch (err) {
+        // API no disponible, mantener datos por defecto
+      }
+    };
+
+    // Cargar inmediatamente
+    loadHardwareMetrics();
+
+    // Actualizar cada 2 segundos
+    const interval = setInterval(loadHardwareMetrics, 2000);
+    return () => clearInterval(interval);
+  }, []);
+
   const selectedAgent = agents.find(a => a.id === selectedAgentId) || agents[0];
   const currentMessages = selectedAgent ? messagesMap[selectedAgentId] || [
     {
