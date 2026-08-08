@@ -577,9 +577,44 @@ Al final del proyecto, tendremos **18 libros** completos para estudio:
 | 1 | ✅ Completada | ARCHITECTURE.md | Libro 02 |
 | 2 | ✅ Completada | DESKTOP.md | Libro 03 |
 | 3 | ✅ Completada | PLUGIN.md | Libro 04 |
-| 4 | ⏳ Por hacer | CONFIG.md | Libro 05 |
+| 4a | ✅ Completada | DOCUMENT_ENGINE.md | - |
+| 4b | ✅ Completada | KNOWLEDGE_PACK.md | - |
+| 4c | ✅ Completada | FASE_4C_COMPLETADA.md | - |
+| 4d | ⏳ Próxima | DOCUMENTS_TAB.md | - |
 | 5+ | ⏳ Por hacer | - | Libro 06+ |
 
 ---
 
-**Próximo**: Fase 4 - Configuration Manager
+## 📌 Fase 4: Document Engine Suite
+
+**Objetivo General:** Automatizar generación de documentos profesionales con IA
+
+### 4a - Document Engine Core ✅
+- DocumentEngine base
+- Generators (Word, PDF, Excel, PowerPoint, HTML)
+- Andina Foods theme + professional theme
+- Templates (contract, invoice, report)
+
+### 4b - Knowledge Pack Generator ✅
+- Company setup wizard
+- Auto-generate 15 template documents
+- RAG indexing
+- Ready for agents
+
+### 4c - Document Engine Agent Integration ✅ (2026-08-08)
+- HRAgent para contratos laborales
+- FinanceAgent para facturas/reportes
+- REST API (Python ↔ Rust)
+- Descarga desde chat (botones azules)
+- **Status:** Producción-ready
+
+### 4d - Documents Tab (Próxima)
+- Listar documentos generados
+- Filtrar por tipo/empleado
+- Metadatos (fecha, tamaño)
+- Regenerar/eliminar/descargar
+- **Estimado:** 2-3 horas
+
+---
+
+**Próximo**: Fase 4d - Documents Tab Management
