@@ -18,6 +18,7 @@ import { DashboardTab } from './components/tabs/DashboardTab';
 import { ToolsTab } from './components/tabs/ToolsTab';
 import { KnowledgeTab } from './components/tabs/KnowledgeTab';
 import { HistoryTab } from './components/tabs/HistoryTab';
+import DocumentsTab from './components/tabs/DocumentsTab';
 import { NewAgentModal } from './components/modals/NewAgentModal';
 import { SettingsModal } from './components/modals/SettingsModal';
 import { InstallAgentsModal } from './components/modals/InstallAgentsModal';
@@ -513,7 +514,7 @@ export default function App() {
             )}
 
             {activeTab === 'documents' && (
-              <DocumentsPage />
+              <DocumentsTab isLoading={false} />
             )}
 
             {activeTab === 'setup' && (
