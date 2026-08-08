@@ -201,6 +201,71 @@ async def eliminar_documento(request: web.Request) -> web.Response:
         return web.json_response({'error': str(e)}, status=500)
 
 
+async def obtener_configuracion_menu(request: web.Request) -> web.Response:
+    """GET /api/menu-config - Obtener configuración dinámica del menú"""
+    try:
+        menu_config = {
+            'file': {
+                'label': 'File',
+                'items': [
+                    {'label': 'Nuevo Agente...', 'action': 'openNewAgent', 'shortcut': '⌘N'},
+                    {'label': 'Abrir Registros', 'action': 'setActiveTab:history', 'shortcut': '⌘H'},
+                    {'divider': True},
+                    {'label': 'Preferencias / Settings', 'action': 'openSettings', 'shortcut': '⌘,'}
+                ]
+            },
+            'edit': {
+                'label': 'Editar',
+                'items': [
+                    {'label': 'Limpiar Sesión Activa', 'action': 'clearSession'},
+                    {'label': 'Reset Model Context', 'action': 'resetContext'},
+                    {'label': 'Exportar Conversación', 'action': 'exportConversation'}
+                ]
+            },
+            'view': {
+                'label': 'Ver',
+                'items': [
+                    {'label': 'Chat', 'action': 'setActiveTab:chat', 'icon': 'MessageSquare'},
+                    {'label': 'Panél', 'action': 'setActiveTab:dashboard', 'icon': 'BarChart2'},
+                    {'label': 'Herramientas', 'action': 'setActiveTab:tools', 'icon': 'Wrench'},
+                    {'label': 'Base de Conocimiento', 'action': 'setActiveTab:knowledge', 'icon': 'BookOpen'},
+                    {'label': 'Documentos', 'action': 'setActiveTab:documents', 'icon': 'FileText'},
+                    {'label': 'Historial', 'action': 'setActiveTab:history', 'icon': 'History'}
+                ]
+            },
+            'agents': {
+                'label': 'Agentes',
+                'items': [
+                    {'label': 'Crear Agente', 'action': 'openNewAgent'},
+                    {'label': 'Reload Profiles', 'action': 'reloadProfiles'},
+                    {'label': 'Model Manager', 'action': 'openModelManager'}
+                ]
+            },
+            'tools': {
+                'label': 'Tools',
+                'items': [
+                    {'label': 'Mercado de Herramientas', 'action': 'setActiveTab:tools'},
+                    {'label': 'Visual Chain Builder', 'action': 'openChainBuilder'}
+                ]
+            },
+            'help': {
+                'label': 'Ayuda',
+                'items': [
+                    {'label': 'Documentación ELAP', 'action': 'openDocs'},
+                    {'label': 'Test Ollama', 'action': 'testOllama'},
+                    {'label': 'Acerca de ELAP v1.5.0', 'action': 'aboutDialog'}
+                ]
+            }
+        }
+
+        logger.info("📋 Configuración del menú obtenida")
+        return web.json_response(menu_config)
+
+    except Exception as e:
+        logger.error(f"Error getting menu config: {e}")
+        return web.json_response({'error': str(e)}, status=500)
+
+
 async def obtener_fuentes_conocimiento(request: web.Request) -> web.Response:
     """GET /api/knowledge-sources - Obtener fuentes de conocimiento RAG"""
     try:
@@ -521,6 +586,7 @@ async def start_rest_server(host: str = '0.0.0.0', port: int = 5000):
     app.router.add_get('/api/dashboard', obtener_dashboard_info)
     app.router.add_get('/api/history', obtener_historial)
     app.router.add_get('/api/knowledge-sources', obtener_fuentes_conocimiento)
+    app.router.add_get('/api/menu-config', obtener_configuracion_menu)
 
     runner = web.AppRunner(app)
     await runner.setup()
@@ -538,6 +604,7 @@ async def start_rest_server(host: str = '0.0.0.0', port: int = 5000):
     logger.info(f"   GET /api/tools - Listar herramientas")
     logger.info(f"   GET /api/history - Historial de conversaciones")
     logger.info(f"   GET /api/knowledge-sources - Fuentes de conocimiento")
+    logger.info(f"   GET /api/menu-config - Configuración del menú")
 
     # Mantener el servidor corriendo
     try:

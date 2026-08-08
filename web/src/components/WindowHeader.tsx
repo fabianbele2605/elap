@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Zap,
   Minus,
@@ -16,6 +16,23 @@ import {
   Bell
 } from 'lucide-react';
 
+interface MenuItem {
+  label: string;
+  action?: string;
+  shortcut?: string;
+  icon?: string;
+  divider?: boolean;
+}
+
+interface MenuCategory {
+  label: string;
+  items: MenuItem[];
+}
+
+interface MenuConfig {
+  [key: string]: MenuCategory;
+}
+
 interface WindowHeaderProps {
   projectName: string;
   onOpenSettings: () => void;
@@ -32,9 +49,52 @@ export const WindowHeader: React.FC<WindowHeaderProps> = ({
   setActiveTab
 }) => {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [menuConfig, setMenuConfig] = useState<MenuConfig | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Cargar configuración del menú desde API
+  useEffect(() => {
+    const loadMenuConfig = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('http://localhost:5000/api/menu-config');
+        if (response.ok) {
+          const config = await response.json();
+          setMenuConfig(config);
+          console.log('✅ Configuración del menú cargada desde API');
+        } else {
+          console.log('⚠️ API no disponible, usando menú por defecto');
+          setMenuConfig(null);
+        }
+      } catch (error) {
+        console.log('⚠️ No se pudo conectar a API:', error);
+        setMenuConfig(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadMenuConfig();
+  }, []);
 
   const toggleMenu = (menuName: string) => {
     setOpenMenu(openMenu === menuName ? null : menuName);
+  };
+
+  const handleMenuAction = (action?: string) => {
+    if (!action) return;
+
+    if (action.startsWith('setActiveTab:')) {
+      const tab = action.split(':')[1];
+      setActiveTab(tab);
+      setOpenMenu(null);
+    } else if (action === 'openNewAgent') {
+      onOpenNewAgent();
+      setOpenMenu(null);
+    } else if (action === 'openSettings') {
+      onOpenSettings();
+      setOpenMenu(null);
+    }
   };
 
   return (
@@ -143,20 +203,33 @@ export const WindowHeader: React.FC<WindowHeaderProps> = ({
           )}
         </div>
 
-        {/* Menu Dropdown: Ver */}
+        {/* Menu Dropdown: Ver (Dinámico desde API) */}
         <div className="relative">
-          <button 
+          <button
             onClick={() => toggleMenu('view')}
             className={`px-2 py-0.5 rounded hover:bg-slate-100 transition-colors flex items-center gap-1 ${openMenu === 'view' ? 'bg-slate-100 text-white' : ''}`}
           >
-            Ver <ChevronDown className="w-3 h-3 text-slate-700" />
+            {menuConfig?.view?.label || 'Ver'} <ChevronDown className="w-3 h-3 text-slate-700" />
           </button>
           {openMenu === 'view' && (
             <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-slate-200 rounded-md shadow-lg z-50 py-1 text-slate-700 text-xs">
-              <button onClick={() => { setActiveTab('chat'); setOpenMenu(null); }} className="w-full text-left px-3 py-1.5 hover:bg-blue-50 hover:text-blue-700">'Chat'</button>
-              <button onClick={() => { setActiveTab('dashboard'); setOpenMenu(null); }} className="w-full text-left px-3 py-1.5 hover:bg-blue-50 hover:text-blue-700">'Panél'</button>
-              <button onClick={() => { setActiveTab('tools'); setOpenMenu(null); }} className="w-full text-left px-3 py-1.5 hover:bg-blue-50 hover:text-blue-700">'Wrench'</button>
-              <button onClick={() => { setActiveTab('knowledge'); setOpenMenu(null); }} className="w-full text-left px-3 py-1.5 hover:bg-blue-50 hover:text-blue-700">Base de BookOpen</button>
+              {menuConfig?.view?.items ? (
+                menuConfig.view.items.map((item, idx) =>
+                  item.divider ? (
+                    <div key={idx} className="my-1 border-t border-slate-200"></div>
+                  ) : (
+                    <button
+                      key={idx}
+                      onClick={() => handleMenuAction(item.action)}
+                      className="w-full text-left px-3 py-1.5 hover:bg-blue-50 hover:text-blue-700"
+                    >
+                      {item.label}
+                    </button>
+                  )
+                )
+              ) : (
+                <div className="px-3 py-2 text-slate-500">Cargando...</div>
+              )}
             </div>
           )}
         </div>
