@@ -100,7 +100,7 @@ export const WindowHeader: React.FC<WindowHeaderProps> = ({
   return (
     <header className="bg-white border-b border-slate-200 select-none z-30 flex flex-col shrink-0">
       {/* Top Title Bar & Window Chrome */}
-      <div className="h-8 px-3 flex items-center justify-between text-xs text-slate-600 border-b border-slate-100 bg-white">
+      <div className="h-auto sm:h-8 px-3 py-2 sm:py-0 flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs text-slate-600 border-b border-slate-100 bg-white gap-2 sm:gap-0">
         {/* Left: MacOS Traffic Light Controls */}
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5 group pr-2 border-r border-slate-300">
@@ -158,7 +158,7 @@ export const WindowHeader: React.FC<WindowHeaderProps> = ({
       </div>
 
       {/* Menu Bar (File | Editar | Ver | Agentes | Tools | Ayuda) */}
-      <div className="h-7 px-3 flex items-center gap-1 text-[12px] bg-white text-slate-700 font-sans border-b border-slate-200">
+      <div className="h-auto sm:h-7 px-2 sm:px-3 py-1.5 sm:py-0 flex flex-wrap sm:flex-nowrap items-center gap-0.5 sm:gap-1 text-[11px] sm:text-[12px] bg-white text-slate-700 font-sans border-b border-slate-200">
         {/* Menu Dropdown: File */}
         <div className="relative">
           <button
