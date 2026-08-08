@@ -580,7 +580,7 @@ Al final del proyecto, tendremos **18 libros** completos para estudio:
 | 4a | ✅ Completada | DOCUMENT_ENGINE.md | - |
 | 4b | ✅ Completada | KNOWLEDGE_PACK.md | - |
 | 4c | ✅ Completada | FASE_4C_COMPLETADA.md | - |
-| 4d | ⏳ Próxima | DOCUMENTS_TAB.md | - |
+| 4d | ✅ Completada | FASE_4D_COMPLETADA.md | - |
 | 5+ | ⏳ Por hacer | - | Libro 06+ |
 
 ---
