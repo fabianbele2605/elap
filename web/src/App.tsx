@@ -145,7 +145,7 @@ export default function App() {
         .replace(/##\s/g, '')             // ## → (quita heading)
         .replace(/#\s/g, '')              // # → (quita heading)
         .replace(/\[\[(.+?)\]\]/g, '$1')  // [[link]] → link
-        .replace(/\[(.*?)\]\((.*?)\)/g, '$1') // [text](url) → text
+        // .replace(/\[(.*?)\]\((.*?)\)/g, '$1') // [text](url) → text // DESHABILITADO: preservar markdown links para botones de descarga
         .trim();
 
       const assistantMsg: Message = {

@@ -31,7 +31,7 @@ async fn serve_static(req: axum::extract::Request) -> impl IntoResponse {
         path.to_string()
     };
 
-    let file_path = PathBuf::from("../../web/dist").join(&path);
+    let file_path = PathBuf::from("web/dist").join(&path);
 
     match tokio::fs::read(&file_path).await {
         Ok(content) => {
@@ -48,7 +48,7 @@ async fn serve_static(req: axum::extract::Request) -> impl IntoResponse {
             ([(axum::http::header::CONTENT_TYPE, content_type)], content).into_response()
         }
         Err(_) => {
-            match tokio::fs::read("../../web/dist/index.html").await {
+            match tokio::fs::read("web/dist/index.html").await {
                 Ok(content) => (
                     [(axum::http::header::CONTENT_TYPE, "text/html")],
                     content

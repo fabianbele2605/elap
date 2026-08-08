@@ -87,15 +87,21 @@ async def main() -> None:
     runtime = AIRuntime()
     await runtime.start()
 
-    # Iniciar servidor gRPC
-    from .grpc_server import serve
+    # Iniciar servidor REST para exponer agentes
+    from .rest_server import start_rest_server
 
+    # Crear tarea asincrónica para el servidor REST
+    rest_server_task = asyncio.create_task(start_rest_server(host='0.0.0.0', port=5000))
+
+    logger.info("AI Runtime ready (gRPC server disabled - use REST API instead)")
+
+    # Mantener el proceso corriendo
     try:
-        # Ejecutar servidor gRPC
-        logger.info("Starting gRPC server...")
-        await serve(runtime, port=50051)
+        while True:
+            await asyncio.sleep(1)
     except KeyboardInterrupt:
         logger.info("Received interrupt signal")
+        rest_server_task.cancel()
     finally:
         await runtime.stop()
 

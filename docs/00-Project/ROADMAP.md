@@ -1,8 +1,8 @@
 # Roadmap Técnico de ELAP
 
-**Versión**: 1.1  
-**Última actualización**: 2026-08-06  
-**Duración estimada**: 17 semanas
+**Versión**: 1.2  
+**Última actualización**: 2026-08-07  
+**Duración estimada**: 17 semanas + 4 fases de Document Engine
 
 ---
 

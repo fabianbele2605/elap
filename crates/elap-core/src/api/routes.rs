@@ -31,6 +31,10 @@ pub fn crear_router(state: AppState) -> Router {
         // Knowledge Pack Generator
         .route("/company/setup", post(handlers::setup_empresa))
         .route("/company/:id/status", get(handlers::obtener_status_empresa))
+        // === NUEVAS RUTAS FASE 4 ===
+        // Document Engine - Generación de documentos profesionales
+        .route("/documents/generate", post(handlers::generar_documento_profesional))
+        .route("/documents/download/:filename", get(handlers::descargar_documento))
         .with_state(state)
         .layer(middleware::cors_layer())
         .layer(middleware::logging_layer())

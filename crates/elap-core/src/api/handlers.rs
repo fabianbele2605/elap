@@ -40,7 +40,7 @@ pub struct AgregarPasoRequest {
 }
 
 /// Respuesta de ejecución
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct EjecucionResponse {
     pub agente_id: String,
     pub estado: String,
@@ -208,28 +208,52 @@ pub async fn ejecutar_agente(
         format!("{}\n\nUsuario: {}", system_prompt, query)
     };
 
-    // Conectar a Python AI Runtime vía gRPC
-    let mut client = match AIRuntimeClient::conectar("http://127.0.0.1:50051").await {
-        Ok(c) => c,
-        Err(_) => {
-            return Err(StatusCode::SERVICE_UNAVAILABLE);
-        }
-    };
+    // Conectar a Python AI Runtime vía REST API (gRPC deshabilitado temporalmente)
+    let client = reqwest::Client::new();
+    let python_api_url = format!("http://127.0.0.1:5000/api/agents/{}/execute", id);
 
-    // Ejecutar agente en Python con contexto
-    match client.ejecutar_agente(&id, &prompt_con_contexto).await {
-        Ok(resultado) => {
+    // Preparar payload para Python
+    let payload = serde_json::json!({
+        "prompt": prompt_con_contexto,
+        "agent_id": id,
+        "model": "glm4:9b",
+        "history": []
+    });
+
+    // Ejecutar agente en Python vía REST API
+    match client.post(&python_api_url)
+        .json(&payload)
+        .send()
+        .await {
+        Ok(response) => {
+            match response.json::<EjecucionResponse>().await {
+                Ok(api_response) => {
+                    Ok(Json(api_response))
+                }
+                Err(_) => {
+                    // Si no se puede parsear, retornar error genérico
+                    let respuesta = EjecucionResponse {
+                        agente_id: id.clone(),
+                        estado: "error".to_string(),
+                        pasos_completados: 0,
+                        progreso: 0.0,
+                        respuesta: "Error: No se pudo procesar la respuesta del agente".to_string(),
+                    };
+                    Ok(Json(respuesta))
+                }
+            }
+        }
+        Err(_) => {
+            // Si no se puede conectar al servidor Python
             let respuesta = EjecucionResponse {
                 agente_id: id.clone(),
-                estado: "completed".to_string(),
-                pasos_completados: 1,
-                progreso: 1.0,
-                respuesta: resultado, // ✅ Ahora usa la respuesta real del gRPC
+                estado: "error".to_string(),
+                pasos_completados: 0,
+                progreso: 0.0,
+                respuesta: "Error: No se pudo conectar al servicio de agentes Python".to_string(),
             };
-
             Ok(Json(respuesta))
         }
-        Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
     }
 }
 
@@ -515,6 +539,57 @@ pub async fn listar_herramientas_agente(
     }))
 }
 
+/// Solicitud para generar documento profesional
+#[derive(Deserialize)]
+pub struct GenerarDocumentoRequest {
+    pub document_type: String,  // contract, report, invoice
+    pub format: String,  // word, pdf, excel, powerpoint, html
+    pub theme: String,  // andina_foods, default, professional
+    pub data: serde_json::Value,
+}
+
+/// Respuesta de documento generado
+#[derive(Serialize)]
+pub struct GenerarDocumentoResponse {
+    pub status: String,
+    pub document_id: String,
+    pub filename: String,
+    pub format: String,
+    pub download_url: String,
+    pub size_kb: f32,
+}
+
+/// POST /documents/generate - Generar documento profesional con Document Engine
+pub async fn generar_documento_profesional(
+    Json(payload): Json<GenerarDocumentoRequest>,
+) -> Result<Json<GenerarDocumentoResponse>, StatusCode> {
+    // En producción, llamaría a Python para que genere el documento
+    // Aquí simulo la respuesta
+
+    let document_id = Uuid::new_v4().to_string();
+    let filename = format!(
+        "{}_{}.{}",
+        payload.document_type,
+        chrono::Local::now().format("%Y%m%d_%H%M%S"),
+        match payload.format.as_str() {
+            "word" => "docx",
+            "pdf" => "pdf",
+            "excel" => "xlsx",
+            "powerpoint" => "pptx",
+            _ => "txt",
+        }
+    );
+
+    Ok(Json(GenerarDocumentoResponse {
+        status: "completed".to_string(),
+        document_id,
+        filename: filename.clone(),
+        format: payload.format,
+        download_url: format!("/documents/download/{}", filename),
+        size_kb: 2450.5,
+    }))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -544,4 +619,55 @@ mod tests {
 
         assert_eq!(resp.progreso, 0.0);
     }
+}
+
+/// GET /documents/download/:filename - Descargar documento generado
+pub async fn descargar_documento(
+    Path(filename): Path<String>,
+) -> Result<impl IntoResponse, StatusCode> {
+    use std::path::Path;
+    use tokio::fs;
+    use axum::http::header::{HeaderMap, HeaderValue};
+
+    // Validar que el filename no contiene path traversal
+    if filename.contains("..") || filename.contains("/") {
+        return Err(StatusCode::BAD_REQUEST);
+    }
+
+    // Rutas permitidas
+    let doc_path = format!("/tmp/elap_documents/{}", filename);
+    let path = Path::new(&doc_path);
+
+    // Verificar que el archivo existe
+    if !path.exists() {
+        return Err(StatusCode::NOT_FOUND);
+    }
+
+    // Leer archivo
+    let file_data = fs::read(path)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    // Determinar content type por extensión
+    let content_type = if filename.ends_with(".docx") {
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    } else if filename.ends_with(".pdf") {
+        "application/pdf"
+    } else if filename.ends_with(".xlsx") {
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    } else if filename.ends_with(".pptx") {
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    } else {
+        "application/octet-stream"
+    };
+
+    let mut headers = HeaderMap::new();
+    headers.insert("Content-Type", HeaderValue::from_static(content_type));
+    headers.insert(
+        "Content-Disposition",
+        HeaderValue::from_str(&format!("attachment; filename=\"{}\"", filename))
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
+    );
+
+    Ok((headers, file_data))
 }

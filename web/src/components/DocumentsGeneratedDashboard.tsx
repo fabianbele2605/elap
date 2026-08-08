@@ -230,20 +230,20 @@ export const DocumentsGeneratedDashboard: React.FC<DocumentsGeneratedDashboardPr
     .toFixed(1);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8">
-      <div className="max-w-6xl mx-auto">
+    <div className="h-screen overflow-y-auto bg-gradient-to-br from-slate-50 to-slate-100 p-4 md:p-8">
+      <div className="max-w-6xl mx-auto pb-20">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">
+        <div className="mb-6 md:mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">
             📚 Knowledge Pack Generado
           </h1>
-          <p className="text-slate-600">
+          <p className="text-slate-600 text-sm md:text-base">
             {companyName} — {documents.length} documentos listos para usar
           </p>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
           <div className="bg-white rounded-lg shadow p-6">
             <div className="text-4xl font-bold text-blue-600">{documents.length}</div>
             <p className="text-slate-600 text-sm mt-2">Documentos Generados</p>
@@ -265,8 +265,8 @@ export const DocumentsGeneratedDashboard: React.FC<DocumentsGeneratedDashboardPr
         </div>
 
         {/* Search and Filter */}
-        <div className="bg-white rounded-lg shadow p-6 mb-8">
-          <div className="flex flex-col md:flex-row gap-4">
+        <div className="bg-white rounded-lg shadow p-4 md:p-6 mb-6 md:mb-8">
+          <div className="flex flex-col gap-3 md:gap-4">
             <div className="flex-grow relative">
               <Search className="absolute left-3 top-3 h-5 w-5 text-slate-400" />
               <input
@@ -274,7 +274,7 @@ export const DocumentsGeneratedDashboard: React.FC<DocumentsGeneratedDashboardPr
                 placeholder="Buscar documentos..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
               />
             </div>
 
@@ -282,7 +282,7 @@ export const DocumentsGeneratedDashboard: React.FC<DocumentsGeneratedDashboardPr
             <div className="flex gap-2 flex-wrap">
               <button
                 onClick={() => setSelectedCategory(null)}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                className={`px-3 md:px-4 py-2 rounded-lg font-medium transition-colors text-sm ${
                   selectedCategory === null
                     ? 'bg-blue-600 text-white'
                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
@@ -296,7 +296,7 @@ export const DocumentsGeneratedDashboard: React.FC<DocumentsGeneratedDashboardPr
                   onClick={() =>
                     setSelectedCategory(selectedCategory === cat.name ? null : cat.name)
                   }
-                  className={`px-4 py-2 rounded-lg font-medium transition-colors text-sm ${
+                  className={`px-3 md:px-4 py-2 rounded-lg font-medium transition-colors text-xs md:text-sm ${
                     selectedCategory === cat.name
                       ? 'bg-blue-600 text-white'
                       : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
@@ -330,16 +330,16 @@ export const DocumentsGeneratedDashboard: React.FC<DocumentsGeneratedDashboardPr
                 </div>
 
                 {/* Documents Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 p-4 md:p-6">
                   {category.docs.map((doc) => (
                     <div
                       key={doc.id}
-                      className="border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                      className="border border-slate-200 rounded-lg p-3 md:p-4 hover:shadow-md transition-shadow flex flex-col"
                     >
                       {/* Status Badge */}
-                      <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-start justify-between mb-3 gap-2 flex-wrap">
                         <span
-                          className={`text-xs font-medium px-2 py-1 rounded ${
+                          className={`text-xs font-medium px-2 py-1 rounded whitespace-nowrap ${
                             doc.status === 'ready'
                               ? 'bg-green-100 text-green-800'
                               : doc.status === 'generating'
@@ -350,40 +350,40 @@ export const DocumentsGeneratedDashboard: React.FC<DocumentsGeneratedDashboardPr
                           {doc.status === 'ready' ? '✓ Listo' : 'Generando'}
                         </span>
                         {doc.indexed && (
-                          <span className="text-xs font-medium px-2 py-1 rounded bg-purple-100 text-purple-800">
+                          <span className="text-xs font-medium px-2 py-1 rounded bg-purple-100 text-purple-800 whitespace-nowrap">
                             🧠 Indexado
                           </span>
                         )}
                       </div>
 
                       {/* Title */}
-                      <h3 className="font-bold text-slate-900 mb-2 text-sm">{doc.title}</h3>
+                      <h3 className="font-bold text-slate-900 mb-2 text-sm line-clamp-2">{doc.title}</h3>
 
                       {/* Metadata */}
-                      <div className="text-xs text-slate-600 mb-4 space-y-1">
+                      <div className="text-xs text-slate-600 mb-4 space-y-1 flex-grow">
                         <p>📦 {doc.size}</p>
-                        <p>📅 {doc.generatedAt}</p>
+                        <p className="line-clamp-1">📅 {doc.generatedAt}</p>
                       </div>
 
                       {/* Action Buttons */}
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 mt-auto flex-wrap">
                         <button
                           onClick={() => onPreview && onPreview(doc.id)}
-                          className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded text-sm font-medium transition-colors"
+                          className="flex-1 min-w-[70px] flex items-center justify-center gap-1 px-2 md:px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded text-xs md:text-sm font-medium transition-colors"
                         >
-                          <Eye className="h-4 w-4" />
-                          Ver
+                          <Eye className="h-4 w-4 flex-shrink-0" />
+                          <span className="hidden md:inline">Ver</span>
                         </button>
                         <button
                           onClick={() => onDownload && onDownload(doc.id)}
-                          className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-green-50 hover:bg-green-100 text-green-700 rounded text-sm font-medium transition-colors"
+                          className="flex-1 min-w-[70px] flex items-center justify-center gap-1 px-2 md:px-3 py-2 bg-green-50 hover:bg-green-100 text-green-700 rounded text-xs md:text-sm font-medium transition-colors"
                         >
-                          <Download className="h-4 w-4" />
-                          Descargar
+                          <Download className="h-4 w-4 flex-shrink-0" />
+                          <span className="hidden md:inline">Descargar</span>
                         </button>
                         <button
                           onClick={() => onRegenerate && onRegenerate(doc.id)}
-                          className="flex items-center justify-center gap-1 px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded text-sm font-medium transition-colors"
+                          className="flex items-center justify-center gap-1 px-2 md:px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded text-sm font-medium transition-colors"
                           title="Regenerar documento"
                         >
                           <RotateCcw className="h-4 w-4" />
@@ -408,8 +408,8 @@ export const DocumentsGeneratedDashboard: React.FC<DocumentsGeneratedDashboardPr
         )}
 
         {/* Footer Actions */}
-        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="font-bold text-slate-900 mb-3">🎯 Próximos pasos</h3>
+        <div className="mt-6 md:mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4 md:p-6">
+          <h3 className="font-bold text-slate-900 mb-3 text-base md:text-lg">🎯 Próximos pasos</h3>
           <ul className="text-sm text-slate-700 space-y-2 list-disc list-inside">
             <li>Descarga los documentos y personaliza según necesidades</li>
             <li>Comparte con tu equipo (los documentos están indexados en RAG)</li>

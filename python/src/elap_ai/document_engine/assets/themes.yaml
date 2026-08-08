@@ -1,0 +1,63 @@
+themes:
+  andina_foods:
+    name: "Andina Foods"
+    primary_color: "#2D5016"  # Verde oscuro
+    secondary_color: "#8BC34A"  # Verde claro
+    accent_color: "#FF6B35"  # Naranja
+    text_color: "#333333"
+    background_color: "#FFFFFF"
+    footer_text: "Andina Foods - Empresa de Alimentos"
+    logo_path: "assets/logos/andina_foods.png"
+    font_family: "Calibri"
+    font_size_body: 11
+    font_size_heading: 14
+    font_size_title: 18
+    margins:
+      top: 2.54  # cm
+      bottom: 2.54
+      left: 2.54
+      right: 2.54
+    header_height: 1.5
+    footer_height: 1.0
+
+  default:
+    name: "Default Corporate"
+    primary_color: "#003366"  # Azul corporativo
+    secondary_color: "#0099FF"  # Azul claro
+    accent_color: "#FF6600"  # Naranja
+    text_color: "#333333"
+    background_color: "#FFFFFF"
+    footer_text: "Documento Corporativo"
+    logo_path: "assets/logos/default.png"
+    font_family: "Calibri"
+    font_size_body: 11
+    font_size_heading: 14
+    font_size_title: 18
+    margins:
+      top: 2.54
+      bottom: 2.54
+      left: 2.54
+      right: 2.54
+    header_height: 1.5
+    footer_height: 1.0
+
+  professional:
+    name: "Professional"
+    primary_color: "#1A1A1A"  # Negro
+    secondary_color: "#666666"  # Gris
+    accent_color: "#0066CC"  # Azul
+    text_color: "#1A1A1A"
+    background_color: "#FFFFFF"
+    footer_text: "© 2026 - Documento Profesional"
+    logo_path: "assets/logos/professional.png"
+    font_family: "Times New Roman"
+    font_size_body: 12
+    font_size_heading: 14
+    font_size_title: 20
+    margins:
+      top: 2.54
+      bottom: 2.54
+      left: 2.54
+      right: 2.54
+    header_height: 1.5
+    footer_height: 1.0

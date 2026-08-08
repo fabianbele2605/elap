@@ -41,16 +41,16 @@ export const HistoryTab: React.FC<HistoryTabProps> = ({ historyItems, onSelectSe
       <div className="flex items-center justify-between border-b border-slate-200 pb-4">
         <div>
           <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <History className="w-5 h-5 text-blue-600" /> Session History & Query Logs
+            <History className="w-5 h-5 text-blue-600" /> Historial de Conversaciones ({historyItems.length})
           </h2>
           <p className="text-xs text-slate-700">
-            Audit trail of multi-agent conversations, token consumed per session, and exported logs.
+            Registro de todas las conversaciones con agentes, tokens consumidos y opciones de exportación.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <button className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-100 text-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-700 transition-colors">
-            <Download className="w-4 h-4 text-blue-600" /> Export All History (JSON)
+          <button className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-lg border border-slate-300 transition-colors">
+            <Download className="w-4 h-4 text-blue-600" /> Exportar Historial
           </button>
         </div>
       </div>
@@ -59,33 +59,33 @@ export const HistoryTab: React.FC<HistoryTabProps> = ({ historyItems, onSelectSe
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50 p-3 rounded-xl border border-slate-300">
         <div className="relative flex-1 w-full">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-700" />
-          <input 
-            type="text" 
+          <input
+            type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search past conversations by title, agent name, or message keywords..."
+            placeholder="Busca por título, agente, o palabras clave..."
             className="w-full bg-white border border-slate-700 rounded-lg pl-9 pr-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-blue-600"
           />
         </div>
 
         <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-300 text-xs shrink-0">
-          <button 
+          <button
             onClick={() => setFilterType('all')}
             className={`px-3 py-1 rounded-md transition-colors ${filterType === 'all' ? 'bg-blue-600 text-white font-medium' : 'text-slate-700 hover:text-slate-700'}`}
           >
-            All Logs
+            Todos
           </button>
-          <button 
+          <button
             onClick={() => setFilterType('pinned')}
             className={`px-3 py-1 rounded-md transition-colors ${filterType === 'pinned' ? 'bg-blue-600 text-white font-medium' : 'text-slate-700 hover:text-slate-700'}`}
           >
-            Pinned
+            Fijados
           </button>
-          <button 
+          <button
             onClick={() => setFilterType('favorites')}
             className={`px-3 py-1 rounded-md transition-colors ${filterType === 'favorites' ? 'bg-blue-600 text-white font-medium' : 'text-slate-700 hover:text-slate-700'}`}
           >
-            Favorites
+            Favoritos
           </button>
         </div>
       </div>

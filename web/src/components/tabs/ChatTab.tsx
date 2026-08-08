@@ -267,10 +267,36 @@ export const ChatTab: React.FC<ChatTabProps> = ({
                     if (paragraph.startsWith('* ') || paragraph.startsWith('• ') || paragraph.startsWith('1. ')) {
                       return (
                         <ul key={pIdx} className="list-disc pl-5 space-y-1 text-slate-700">
-                          {paragraph.split('\n').map((li, lIdx) => (
-                            <li key={lIdx}>{li.replace(/^(\*|•|\d+\.)\s*/, '')}</li>
-                          ))}
+                          {paragraph.split('\n').map((li, lIdx) => {
+                            const text = li.replace(/^(\*|•|\d+\.)\s*/, '');
+                            // Procesar markdown links en items
+                            const linkMatch = text.match(/\[(.*?)\]\((.*?)\)/);
+                            if (linkMatch) {
+                              const [, linkText, linkUrl] = linkMatch;
+                              return (
+                                <li key={lIdx}>
+                                  {text.split(linkMatch[0])[0]}
+                                  <a href={linkUrl} download className="text-blue-600 hover:text-blue-800 underline font-semibold">{linkText}</a>
+                                  {text.split(linkMatch[0])[1]}
+                                </li>
+                              );
+                            }
+                            return <li key={lIdx}>{text}</li>;
+                          })}
                         </ul>
+                      );
+                    }
+                    // Procesar markdown links [texto](url)
+                    const linkMatch = paragraph.match(/\[(.*?)\]\((.*?)\)/);
+                    if (linkMatch) {
+                      const [, linkText, linkUrl] = linkMatch;
+                      const parts = paragraph.split(linkMatch[0]);
+                      return (
+                        <p key={pIdx}>
+                          {parts[0]}
+                          <a href={linkUrl} download className="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold transition-colors">{linkText}</a>
+                          {parts[1]}
+                        </p>
                       );
                     }
                     return <p key={pIdx}>{paragraph}</p>;

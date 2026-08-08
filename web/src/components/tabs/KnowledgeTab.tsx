@@ -52,15 +52,15 @@ export const KnowledgeTab: React.FC<KnowledgeTabProps> = ({ knowledgeSources }) 
       <div className="flex items-center justify-between border-b border-slate-200 pb-4">
         <div>
           <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <BookOpen className="w-5 h-5 text-purple-700" /> Local BookOpen RAG Base & Vector Index
+            <BookOpen className="w-5 h-5 text-purple-700" /> Base de Conocimiento RAG ({knowledgeSources.length} fuentes)
           </h2>
           <p className="text-xs text-slate-700">
-            Enterprise document embeddings and live database vector indexes for local AI agent grounding.
+            Embeddings de documentos e índices vectoriales para la búsqueda semántica de agentes IA.
           </p>
         </div>
 
-        <button className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-600 text-white font-medium text-xs px-3 py-1.5 rounded-lg shadow transition-colors">
-          <FileUp className="w-4 h-4" /> Upload Document / Connect DB
+        <button className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs px-3 py-1.5 rounded-lg shadow transition-colors">
+          <FileUp className="w-4 h-4" /> Agregar Fuente
         </button>
       </div>
 
@@ -100,24 +100,24 @@ export const KnowledgeTab: React.FC<KnowledgeTabProps> = ({ knowledgeSources }) 
       {/* RAG VECTOR SEARCH TESTER CONSOLE */}
       <div className="bg-slate-50 p-5 rounded-xl border border-slate-300 space-y-4">
         <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2">
-          <Search className="w-4 h-4 text-blue-600" /> Test RAG Semantic Vector Retrieval
+          <Search className="w-4 h-4 text-blue-600" /> Búsqueda Semántica en Base de Conocimiento
         </h3>
 
         <form onSubmit={handleSearchKnowledge} className="flex gap-2">
           <div className="relative flex-1">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-700" />
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Type natural language query to test top-k vector chunk retrieval..."
+              placeholder="Ingresa una consulta en lenguaje natural para buscar en la base de conocimiento..."
               className="w-full bg-white border border-slate-700 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-blue-600 font-mono"
             />
           </div>
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={isSearching}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-600 text-white font-medium text-xs rounded-lg shadow flex items-center gap-1.5 transition-colors"
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs rounded-lg shadow flex items-center gap-1.5 transition-colors"
           >
             <Sparkles className="w-3.5 h-3.5" />
             <span>{isSearching ? 'Querying...' : 'Query Vectors'}</span>

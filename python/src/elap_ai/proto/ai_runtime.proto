@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package elap_ai;
+
+// Servicio de AI Runtime
+service AIRuntime {
+  rpc ExecuteAgent(ExecuteAgentRequest) returns (ExecuteAgentResponse) {}
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse) {}
+}
+
+// Solicitud para ejecutar un agente
+message ExecuteAgentRequest {
+  string agent_id = 1;      // "hr" o "finance"
+  string prompt = 2;        // Query del usuario
+  string model = 3;         // Modelo a usar
+  repeated Message history = 4;  // Historial de chat
+}
+
+// Mensaje en el historial
+message Message {
+  string sender = 1;    // "user" o "assistant"
+  string text = 2;      // Contenido del mensaje
+  string timestamp = 3; // Timestamp
+}
+
+// Respuesta de ejecución
+message ExecuteAgentResponse {
+  string agent_id = 1;
+  string estado = 2;              // "completado" o "error"
+  int32 pasos_completados = 3;
+  float progreso = 4;             // 0.0 a 1.0
+  string respuesta = 5;           // Respuesta del agente
+  string intent = 6;              // Intención detectada
+  repeated string required_fields = 7;  // Campos requeridos
+  TokenInfo tokens = 8;           // Info de tokens
+}
+
+// Info de tokens
+message TokenInfo {
+  int32 prompt = 1;
+  int32 completion = 2;
+  int32 total = 3;
+}
+
+// Health check request
+message HealthCheckRequest {
+  string service = 1;
+}
+
+// Health check response
+message HealthCheckResponse {
+  string status = 1;
+  string message = 2;
+  int64 uptime_seconds = 3;
+}
