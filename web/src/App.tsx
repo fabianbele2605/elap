@@ -389,7 +389,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen w-screen flex flex-col bg-white text-slate-900 font-sans overflow-auto select-none">
+    <div className="h-screen w-screen flex flex-col bg-white text-slate-900 font-sans overflow-hidden select-none">
       {/* 1. TOP WINDOW HEADER & MENU CHROME */}
       <WindowHeader 
         projectName="Project Alpha"
