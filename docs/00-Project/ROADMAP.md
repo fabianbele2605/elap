@@ -212,10 +212,11 @@ Sistema de logging unificado, local-only, sin salida a internet.
 
 ---
 
-## ❌ Fase 5: Error Handling
+## 🚀 Fase 5: Error Handling
 
-**Estado**: ⏳ Por hacer  
+**Estado**: 🟡 En progreso (Día 2/7)  
 **Semana**: 6  
+**Inicio**: 2026-08-08  
 
 ### Objetivos
 
@@ -223,17 +224,24 @@ Framework de error handling robusto y consistente.
 
 ### Entregables
 
-- Custom error types (Rust + Python)
-- Error propagation
-- Error recovery
-- Error logging
+✅ **Completados (Días 1-2)**:
+- Custom error types (Rust) — 28 tipos, 18 tests ✅
+- Exception hierarchy (Python) — 27 tipos, test file ✅
+- Documentación de Fase 5 (PLAN.md + README.md) ✅
+- TREE.md (árbol del proyecto) ✅
+
+📋 **Pendientes (Días 3-7)**:
+- Error propagation (ambos lenguajes)
+- Error recovery (retry, fallback)
+- Error logging mejorado
 - User-facing error messages
-- Tests
+- Integración en handlers existentes
+- Tests completos (>85%)
 
 ### Documentación
 
-- Error Handling Guide
-- Libro 06 para NotebookLM
+- Error Handling Guide (en progreso)
+- Libro 07 para NotebookLM (en progreso)
 
 ---
 
