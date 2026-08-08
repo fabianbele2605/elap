@@ -48,17 +48,26 @@ export default function DocumentsTab({ isLoading = false }: DocumentsTabProps) {
   const loadDocuments = async () => {
     try {
       setLoading(true);
-      // Simulamos carga de backend - en producción vendría de API
-      const response = await fetch('/api/documents');
+      // Llamar a la API real en puerto 5000 (Python)
+      const response = await fetch('http://localhost:5000/api/documents');
       if (response.ok) {
         const data = await response.json();
-        setDocuments(data);
+        // Transformar datos si es necesario
+        const formattedData = data.map((doc: any) => ({
+          filename: doc.filename,
+          size: doc.size || 0,
+          createdAt: doc.createdAt || new Date().toISOString(),
+          type: doc.type || 'other',
+          employee: doc.employee
+        }));
+        setDocuments(formattedData);
+        console.log(`✅ Cargados ${formattedData.length} documentos desde API`);
       } else {
-        // Fallback: documentos simulados
+        console.log('API respondió con error, usando mock data');
         setDocuments(getMockDocuments());
       }
     } catch (error) {
-      console.log('Usando documentos mock');
+      console.log('⚠️ No se pudo conectar a API, usando mock data:', error);
       setDocuments(getMockDocuments());
     } finally {
       setLoading(false);
@@ -115,10 +124,19 @@ export default function DocumentsTab({ isLoading = false }: DocumentsTabProps) {
   const handleDelete = async (filename: string) => {
     if (confirm(`¿Eliminar ${filename}?`)) {
       try {
-        await fetch(`/api/documents/${filename}`, { method: 'DELETE' });
-        setDocuments(documents.filter(doc => doc.filename !== filename));
+        // Llamar a API real en puerto 5000
+        const response = await fetch(`http://localhost:5000/api/documents/${filename}`, {
+          method: 'DELETE'
+        });
+        if (response.ok) {
+          setDocuments(documents.filter(doc => doc.filename !== filename));
+          console.log(`✅ Eliminado: ${filename}`);
+        } else {
+          alert('Error: No se pudo eliminar el documento');
+        }
       } catch (error) {
-        alert('Error eliminando documento');
+        alert('Error eliminando documento (¿API no disponible?)');
+        console.error(error);
       }
     }
   };
