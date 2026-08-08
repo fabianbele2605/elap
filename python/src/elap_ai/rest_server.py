@@ -201,6 +201,122 @@ async def eliminar_documento(request: web.Request) -> web.Response:
         return web.json_response({'error': str(e)}, status=500)
 
 
+async def obtener_fuentes_conocimiento(request: web.Request) -> web.Response:
+    """GET /api/knowledge-sources - Obtener fuentes de conocimiento RAG"""
+    try:
+        sources = [
+            {
+                'id': '1',
+                'name': 'Política de Recursos Humanos',
+                'type': 'Document',
+                'status': 'Active',
+                'vector_count': 2850,
+                'file_size': '4.2 MB',
+                'last_updated': '2026-08-06T14:30:00Z',
+                'description': 'Manual de políticas HR con 50+ documentos'
+            },
+            {
+                'id': '2',
+                'name': 'Base Histórica de Contratos',
+                'type': 'Database',
+                'status': 'Active',
+                'vector_count': 1560,
+                'file_size': '8.7 MB',
+                'last_updated': '2026-08-07T10:15:00Z',
+                'description': 'Histórico de 200+ contratos anteriores'
+            },
+            {
+                'id': '3',
+                'name': 'Qdrant Vector Store',
+                'type': 'Vector DB',
+                'status': 'Active',
+                'vector_count': 4200,
+                'file_size': '22.5 MB',
+                'last_updated': '2026-08-08T09:00:00Z',
+                'description': 'Vector embeddings de todos los documentos'
+            }
+        ]
+
+        logger.info(f"📚 Fuentes de conocimiento obtenidas: {len(sources)}")
+        return web.json_response(sources)
+
+    except Exception as e:
+        logger.error(f"Error getting knowledge sources: {e}")
+        return web.json_response({'error': str(e)}, status=500)
+
+
+async def obtener_historial(request: web.Request) -> web.Response:
+    """GET /api/history - Obtener historial de conversaciones"""
+    try:
+        from datetime import datetime, timedelta
+
+        # Generar historial simulado basado en agentes reales
+        history = [
+            {
+                'id': '1',
+                'agent_id': 'hr',
+                'agent_name': 'HR Agent',
+                'timestamp': (datetime.now() - timedelta(minutes=5)).isoformat(),
+                'type': 'contract',
+                'user_message': 'Empresa: Andina Foods / Empleado: Juan Pérez / Cargo: Gerente de Ventas / Salario: 5.000.000',
+                'agent_response': '✅ Contrato generado para Juan Pérez',
+                'status': 'completed',
+                'icon': '📄'
+            },
+            {
+                'id': '2',
+                'agent_id': 'finance',
+                'agent_name': 'Finance Agent',
+                'timestamp': (datetime.now() - timedelta(minutes=15)).isoformat(),
+                'type': 'query',
+                'user_message': '¿Cuál es el estado de las facturas pendientes?',
+                'agent_response': 'Se encontraron 3 facturas pendientes por valor total de $15.000.000',
+                'status': 'completed',
+                'icon': '💬'
+            },
+            {
+                'id': '3',
+                'agent_id': 'hr',
+                'agent_name': 'HR Agent',
+                'timestamp': (datetime.now() - timedelta(minutes=30)).isoformat(),
+                'type': 'contract',
+                'user_message': 'Empresa: Andina Foods / Empleado: María García / Cargo: Analista / Salario: 3.500.000',
+                'agent_response': '✅ Contrato generado para María García',
+                'status': 'completed',
+                'icon': '📄'
+            },
+            {
+                'id': '4',
+                'agent_id': 'finance',
+                'agent_name': 'Finance Agent',
+                'timestamp': (datetime.now() - timedelta(hours=1)).isoformat(),
+                'type': 'report',
+                'user_message': 'Genera un reporte mensual de ventas',
+                'agent_response': '📊 Reporte generado: Q3 2026 Sales Summary',
+                'status': 'completed',
+                'icon': '📊'
+            },
+            {
+                'id': '5',
+                'agent_id': 'hr',
+                'agent_name': 'HR Agent',
+                'timestamp': (datetime.now() - timedelta(hours=2)).isoformat(),
+                'type': 'contract',
+                'user_message': 'Empresa: Andina Foods / Empleado: Carlos López / Cargo: Ingeniero / Salario: 4.000.000',
+                'agent_response': '✅ Contrato generado para Carlos López',
+                'status': 'completed',
+                'icon': '📄'
+            }
+        ]
+
+        logger.info(f"📜 Historial obtenido: {len(history)} items")
+        return web.json_response(history)
+
+    except Exception as e:
+        logger.error(f"Error getting history: {e}")
+        return web.json_response({'error': str(e)}, status=500)
+
+
 async def obtener_dashboard_info(request: web.Request) -> web.Response:
     """GET /api/dashboard - Obtener información del dashboard"""
     try:
@@ -403,6 +519,8 @@ async def start_rest_server(host: str = '0.0.0.0', port: int = 5000):
     app.router.add_delete('/api/documents/{filename}', eliminar_documento)
     app.router.add_get('/api/tools', listar_herramientas)
     app.router.add_get('/api/dashboard', obtener_dashboard_info)
+    app.router.add_get('/api/history', obtener_historial)
+    app.router.add_get('/api/knowledge-sources', obtener_fuentes_conocimiento)
 
     runner = web.AppRunner(app)
     await runner.setup()
@@ -418,6 +536,8 @@ async def start_rest_server(host: str = '0.0.0.0', port: int = 5000):
     logger.info(f"   GET /api/documents/{{filename}} - Obtener documento")
     logger.info(f"   DELETE /api/documents/{{filename}} - Eliminar documento")
     logger.info(f"   GET /api/tools - Listar herramientas")
+    logger.info(f"   GET /api/history - Historial de conversaciones")
+    logger.info(f"   GET /api/knowledge-sources - Fuentes de conocimiento")
 
     # Mantener el servidor corriendo
     try:

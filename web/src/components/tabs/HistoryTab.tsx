@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   History, 
   Search, 
@@ -21,17 +21,68 @@ interface HistoryTabProps {
   onSelectSession: (id: string) => void;
 }
 
+interface HistoryItem {
+  id: string;
+  agent_id: string;
+  agent_name: string;
+  timestamp: string;
+  type: string;
+  user_message: string;
+  agent_response: string;
+  status: string;
+  icon: string;
+}
+
 export const HistoryTab: React.FC<HistoryTabProps> = ({ historyItems, onSelectSession }) => {
+  const [apiHistory, setApiHistory] = useState<HistoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'pinned' | 'favorites'>('all');
 
-  const filteredHistory = historyItems.filter(item => {
-    const matchesQuery = item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         item.agentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         item.preview.toLowerCase().includes(searchQuery.toLowerCase());
+  // Cargar historial desde API al iniciar
+  useEffect(() => {
+    const loadHistory = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('http://localhost:5000/api/history');
+        if (response.ok) {
+          const data = await response.json();
+          setApiHistory(data);
+          console.log(`✅ Cargado historial: ${data.length} items`);
+        } else {
+          console.log('⚠️ API no disponible, usando historial por defecto');
+          setApiHistory([]);
+        }
+      } catch (error) {
+        console.log('⚠️ No se pudo conectar a API:', error);
+        setApiHistory([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadHistory();
+  }, []);
+
+  // Usar historial del API si está disponible, sino usar props
+  const displayHistory = apiHistory.length > 0 ? apiHistory : historyItems;
+
+  const filteredHistory = displayHistory.filter(item => {
+    const title = 'title' in item ? item.title : item.agent_name;
+    const agentName = 'agentName' in item ? item.agentName : item.agent_name;
+    const preview = 'preview' in item ? item.preview : item.user_message;
+
+    const matchesQuery = title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         agentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         preview.toLowerCase().includes(searchQuery.toLowerCase());
     if (!matchesQuery) return false;
-    if (filterType === 'pinned') return item.isPinned;
-    if (filterType === 'favorites') return item.isFavorite;
+
+    // Si hay datos del API, no filtrar por pinned/favorites (no están en el API)
+    if (apiHistory.length > 0) return true;
+
+    // Filtrar por propiedades solo si usamos historyItems
+    if ('isPinned' in item && filterType === 'pinned') return item.isPinned;
+    if ('isFavorite' in item && filterType === 'favorites') return item.isFavorite;
     return true;
   });
 
@@ -92,52 +143,70 @@ export const HistoryTab: React.FC<HistoryTabProps> = ({ historyItems, onSelectSe
 
       {/* HISTORY TIMELINE LIST */}
       <div className="space-y-3">
-        {filteredHistory.map(item => (
-          <div 
-            key={item.id}
-            onClick={() => onSelectSession(item.id)}
-            className="p-4 bg-slate-50 hover:bg-slate-50 rounded-xl border border-slate-300 hover:border-blue-600/60 transition-all cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow"
-          >
-            <div className="space-y-1.5 min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <h3 className="font-bold text-sm text-slate-900 truncate">{item.title}</h3>
-                {item.isPinned && <Pin className="w-3.5 h-3.5 fill-blue-600 text-blue-600 shrink-0" />}
-                {item.isFavorite && <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-700 shrink-0" />}
-              </div>
-
-              <p className="text-xs text-slate-700 line-clamp-1 italic">"{item.preview}"</p>
-
-              <div className="flex items-center gap-4 text-[13px] font-mono text-slate-700 pt-1">
-                <span className="flex items-center gap-1 text-slate-700">
-                  <Bot className="w-3.5 h-3.5 text-blue-600" /> {item.agentName}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5" /> {item.timestamp}
-                </span>
-                <span className="flex items-center gap-1">
-                  <MessageSquare className="w-3.5 h-3.5" /> {item.messageCount} msgs
-                </span>
-                <span className="flex items-center gap-1 text-blue-600">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-700" /> {item.tokensUsed} tokens
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 shrink-0 border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-300">
-              <button className="p-2 hover:bg-slate-100 rounded-lg text-slate-700 hover:text-blue-600 transition-colors" title="Export session">
-                <Download className="w-4 h-4" />
-              </button>
-              <button className="p-2 hover:bg-slate-100 rounded-lg text-slate-700 hover:text-slate-900 transition-colors">
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
+        {loading ? (
+          <div className="text-center py-12 text-slate-500">
+            ⏳ Cargando historial...
           </div>
-        ))}
-
-        {filteredHistory.length === 0 && (
+        ) : filteredHistory.length === 0 ? (
           <div className="text-center py-12 text-slate-700 text-sm">
-            No history logs found matching criteria.
+            No se encontraron elementos en el historial.
           </div>
+        ) : (
+          filteredHistory.map(item => {
+            const itemId = item.id;
+            const itemTitle = 'title' in item ? item.title : `${item.agent_name} - ${item.type}`;
+            const itemAgent = 'agentName' in item ? item.agentName : item.agent_name;
+            const itemPreview = 'preview' in item ? item.preview : item.user_message.substring(0, 100);
+            const itemTimestamp = 'timestamp' in item ? item.timestamp : item.timestamp;
+            const isPinned = 'isPinned' in item ? item.isPinned : false;
+            const isFavorite = 'isFavorite' in item ? item.isFavorite : false;
+            const messageCount = 'messageCount' in item ? item.messageCount : 1;
+            const tokensUsed = 'tokensUsed' in item ? item.tokensUsed : '~150';
+            const icon = 'icon' in item ? item.icon : '💬';
+
+            return (
+              <div
+                key={itemId}
+                onClick={() => onSelectSession(itemId)}
+                className="p-4 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-300 hover:border-blue-600/60 transition-all cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow"
+              >
+                <div className="space-y-1.5 min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{icon}</span>
+                    <h3 className="font-bold text-sm text-slate-900 truncate">{itemTitle}</h3>
+                    {isPinned && <Pin className="w-3.5 h-3.5 fill-blue-600 text-blue-600 shrink-0" />}
+                    {isFavorite && <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-700 shrink-0" />}
+                    <span className="text-[11px] font-mono bg-green-100 text-green-700 px-2 py-0.5 rounded ml-auto">
+                      {item.status || 'completed'}
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-slate-700 line-clamp-1 italic">"{itemPreview}"</p>
+
+                  <div className="flex items-center gap-4 text-[13px] font-mono text-slate-700 pt-1 flex-wrap">
+                    <span className="flex items-center gap-1 text-slate-700">
+                      <Bot className="w-3.5 h-3.5 text-blue-600" /> {itemAgent}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5" /> {new Date(itemTimestamp).toLocaleTimeString('es-ES')}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <MessageSquare className="w-3.5 h-3.5" /> {messageCount} msgs
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0 border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-300">
+                  <button className="p-2 hover:bg-slate-100 rounded-lg text-slate-700 hover:text-blue-600 transition-colors" title="Export session">
+                    <Download className="w-4 h-4" />
+                  </button>
+                  <button className="p-2 hover:bg-slate-100 rounded-lg text-slate-700 hover:text-slate-900 transition-colors">
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            );
+          })
         )}
       </div>
     </div>

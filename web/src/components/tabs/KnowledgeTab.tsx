@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   BookOpen, 
   Database, 
@@ -19,10 +19,48 @@ interface KnowledgeTabProps {
   knowledgeSources: KnowledgeSource[];
 }
 
+interface ApiKnowledgeSource {
+  id: string;
+  name: string;
+  type: string;
+  status: string;
+  vector_count: number;
+  file_size: string;
+  last_updated: string;
+  description: string;
+}
+
 export const KnowledgeTab: React.FC<KnowledgeTabProps> = ({ knowledgeSources }) => {
+  const [apiSources, setApiSources] = useState<ApiKnowledgeSource[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('Q3 West Coast sales revenue');
   const [searchResults, setSearchResults] = useState<any[] | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+
+  // Cargar fuentes de conocimiento desde API
+  useEffect(() => {
+    const loadKnowledgeSources = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('http://localhost:5000/api/knowledge-sources');
+        if (response.ok) {
+          const data = await response.json();
+          setApiSources(data);
+          console.log(`✅ Cargadas ${data.length} fuentes de conocimiento`);
+        } else {
+          console.log('⚠️ API no disponible, usando fuentes por defecto');
+          setApiSources([]);
+        }
+      } catch (error) {
+        console.log('⚠️ No se pudo conectar a API:', error);
+        setApiSources([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadKnowledgeSources();
+  }, []);
 
   const handleSearchKnowledge = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +82,11 @@ export const KnowledgeTab: React.FC<KnowledgeTabProps> = ({ knowledgeSources }) 
     }
   };
 
-  const totalVectors = knowledgeSources.reduce((acc, curr) => acc + curr.vectorCount, 0);
+  // Usar fuentes del API si están disponibles, sino usar props
+  const sources = apiSources.length > 0 ? apiSources : knowledgeSources;
+  const totalVectors = apiSources.length > 0
+    ? apiSources.reduce((acc, curr) => acc + curr.vector_count, 0)
+    : knowledgeSources.reduce((acc, curr) => acc + (curr.vectorCount || 0), 0);
 
   return (
     <div className="flex-1 bg-white text-slate-700 p-4 lg:p-6 overflow-y-auto custom-scrollbar space-y-6">
@@ -52,7 +94,7 @@ export const KnowledgeTab: React.FC<KnowledgeTabProps> = ({ knowledgeSources }) 
       <div className="flex items-center justify-between border-b border-slate-200 pb-4">
         <div>
           <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <BookOpen className="w-5 h-5 text-purple-700" /> Base de Conocimiento RAG ({knowledgeSources.length} fuentes)
+            <BookOpen className="w-5 h-5 text-purple-700" /> Base de Conocimiento RAG ({sources.length} fuentes)
           </h2>
           <p className="text-xs text-slate-700">
             Embeddings de documentos e índices vectoriales para la búsqueda semántica de agentes IA.
@@ -81,7 +123,7 @@ export const KnowledgeTab: React.FC<KnowledgeTabProps> = ({ knowledgeSources }) 
             <Database className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-2xl font-bold text-slate-900">{knowledgeSources.length} Sources</div>
+            <div className="text-2xl font-bold text-slate-900">{sources.length} Sources</div>
             <div className="text-xs text-slate-700">Active Knowledge Repositories</div>
           </div>
         </div>
@@ -161,28 +203,53 @@ export const KnowledgeTab: React.FC<KnowledgeTabProps> = ({ knowledgeSources }) 
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/80">
-              {knowledgeSources.map(source => (
-                <tr key={source.id} className="hover:bg-slate-100/40 transition-colors">
-                  <td className="py-2.5 px-3 font-medium text-slate-900 flex items-center gap-2">
-                    {source.type === 'Database' && <Database className="w-4 h-4 text-blue-400" />}
-                    {source.type === 'Document' && <FileText className="w-4 h-4 text-green-600" />}
-                    {source.type === 'Vector DB' && <Layers className="w-4 h-4 text-purple-700" />}
-                    <span>{source.name}</span>
-                  </td>
-                  <td className="py-2.5 px-3 text-slate-700 font-mono text-[13px]">{source.type}</td>
-                  <td className="py-2.5 px-3">
-                    <span className="inline-flex items-center gap-1 text-[12px] font-mono bg-green-600950/80 text-green-600 px-2 py-0.5 rounded border border-green-600">
-                      <span className="w-1.5 h-1.5 rounded-full bg-green-600400"></span> {source.status}
-                    </span>
-                  </td>
-                  <td className="py-2.5 px-3 font-mono text-slate-700">{source.vectorCount.toLocaleString()}</td>
-                  <td className="py-2.5 px-3 font-mono text-slate-700">{source.fileSize}</td>
-                  <td className="py-2.5 px-3 text-slate-700 text-[13px]">{source.lastUpdated}</td>
-                  <td className="py-2.5 px-3 text-right">
-                    <button className="text-xs text-blue-600 hover:text-blue-600 font-medium">Re-index</button>
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="py-4 text-center text-slate-500">
+                    ⏳ Cargando fuentes de conocimiento...
                   </td>
                 </tr>
-              ))}
+              ) : sources.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-4 text-center text-slate-500">
+                    No hay fuentes de conocimiento disponibles.
+                  </td>
+                </tr>
+              ) : (
+                sources.map(source => {
+                  const sourceType = apiSources.length > 0 ? source.type : (source as any).type;
+                  const sourceName = apiSources.length > 0 ? source.name : (source as any).name;
+                  const sourceStatus = apiSources.length > 0 ? source.status : (source as any).status;
+                  const vectorCount = apiSources.length > 0 ? source.vector_count : (source as any).vectorCount;
+                  const fileSize = apiSources.length > 0 ? source.file_size : (source as any).fileSize;
+                  const lastUpdated = apiSources.length > 0
+                    ? new Date(source.last_updated).toLocaleDateString('es-ES')
+                    : (source as any).lastUpdated;
+
+                  return (
+                    <tr key={source.id} className="hover:bg-slate-100/40 transition-colors">
+                      <td className="py-2.5 px-3 font-medium text-slate-900 flex items-center gap-2">
+                        {sourceType === 'Database' && <Database className="w-4 h-4 text-blue-400" />}
+                        {sourceType === 'Document' && <FileText className="w-4 h-4 text-green-600" />}
+                        {sourceType === 'Vector DB' && <Layers className="w-4 h-4 text-purple-700" />}
+                        <span>{sourceName}</span>
+                      </td>
+                      <td className="py-2.5 px-3 text-slate-700 font-mono text-[13px]">{sourceType}</td>
+                      <td className="py-2.5 px-3">
+                        <span className="inline-flex items-center gap-1 text-[12px] font-mono bg-green-600/10 text-green-600 px-2 py-0.5 rounded border border-green-600">
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-600"></span> {sourceStatus}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3 font-mono text-slate-700">{vectorCount.toLocaleString()}</td>
+                      <td className="py-2.5 px-3 font-mono text-slate-700">{fileSize}</td>
+                      <td className="py-2.5 px-3 text-slate-700 text-[13px]">{lastUpdated}</td>
+                      <td className="py-2.5 px-3 text-right">
+                        <button className="text-xs text-blue-600 hover:text-blue-600 font-medium">Re-index</button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
