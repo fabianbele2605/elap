@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Wrench,
   Play,
@@ -22,14 +22,68 @@ interface ToolsTabProps {
   onToggleTool: (toolId: string) => void;
 }
 
+interface ApiTool {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  enabled: boolean;
+  icon: string;
+}
+
 export const ToolsTab: React.FC<ToolsTabProps> = ({ tools, onToggleTool }) => {
+  const [apiTools, setApiTools] = useState<ApiTool[]>([]);
+  const [loading, setLoading] = useState(false);
   const [selectedToolId, setSelectedToolId] = useState<string>(tools[0]?.id || '');
   const [testInput, setTestInput] = useState<string>('');
   const [executionOutput, setExecutionOutput] = useState<string | null>(null);
   const [isExecuting, setIsExecuting] = useState(false);
   const [executionTime, setExecutionTime] = useState<number | null>(null);
 
-  const selectedTool = tools.find(t => t.id === selectedToolId) || tools[0];
+  // Cargar herramientas desde API al iniciar
+  useEffect(() => {
+    loadTools();
+  }, []);
+
+  // Cuando apiTools cambia, seleccionar la primera si no hay seleccionada
+  useEffect(() => {
+    if (apiTools.length > 0 && !selectedToolId) {
+      setSelectedToolId(apiTools[0].id);
+    }
+  }, [apiTools, selectedToolId]);
+
+  const loadTools = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('http://localhost:5000/api/tools');
+      if (response.ok) {
+        const data = await response.json();
+        setApiTools(data);
+        console.log(`✅ Cargadas ${data.length} herramientas desde API`);
+      } else {
+        console.log('⚠️ API no disponible, usando herramientas propias');
+        setApiTools(tools || []);
+      }
+    } catch (error) {
+      console.log('⚠️ No se pudo conectar a API, usando herramientas propias');
+      setApiTools(tools || []);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Usar herramientas de API si están disponibles, sino las props
+  const toolsToDisplay = apiTools.length > 0 ? apiTools : (tools || []);
+  const selectedTool = toolsToDisplay.find(t => t.id === selectedToolId) || toolsToDisplay[0] || null;
+
+  // Si no hay herramientas, mostrar mensaje de carga
+  if (loading || toolsToDisplay.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-slate-500">{loading ? '⏳ Cargando herramientas...' : '📭 No hay herramientas disponibles'}</div>
+      </div>
+    );
+  }
 
   const handleTestExecute = async () => {
     if (!testInput.trim()) {
@@ -77,7 +131,7 @@ export const ToolsTab: React.FC<ToolsTabProps> = ({ tools, onToggleTool }) => {
       <div className="flex items-center justify-between border-b border-slate-200 pb-4">
         <div>
           <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <Wrench className="w-5 h-5 text-amber-700" /> Gestor de Herramientas ({tools.length} disponibles)
+            <Wrench className="w-5 h-5 text-amber-700" /> Gestor de Herramientas ({toolsToDisplay.length} disponibles)
           </h2>
           <p className="text-xs text-slate-700">
             Microservicios locales y bindings Python disponibles para agentes IA. Toggle para habilitar/deshabilitar.
@@ -133,11 +187,11 @@ export const ToolsTab: React.FC<ToolsTabProps> = ({ tools, onToggleTool }) => {
         {/* Left Column: Tool List (5 cols) */}
         <div className="lg:col-span-5 bg-slate-50 p-4 rounded-xl border border-slate-300 space-y-3">
           <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wider text-xs">
-            Registered Enterprise Tools ({tools.length})
+            Registered Enterprise Tools ({toolsToDisplay.length})
           </h3>
 
           <div className="space-y-2">
-            {tools.map(tool => {
+            {toolsToDisplay.map(tool => {
               const isSelected = tool.id === selectedTool.id;
               return (
                 <div
@@ -205,10 +259,10 @@ export const ToolsTab: React.FC<ToolsTabProps> = ({ tools, onToggleTool }) => {
           <div className="space-y-2">
             <span className="text-xs font-semibold text-slate-700 uppercase tracking-wider block">Accepted Parameters:</span>
             <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-              {selectedTool.parameters.map((param, pIdx) => (
+              {selectedTool && selectedTool.parameters && selectedTool.parameters.map((param, pIdx) => (
                 <div key={pIdx} className="p-2 bg-slate-50 rounded border border-slate-300">
                   <div className="text-blue-600 font-bold">{param.name} ({param.type})</div>
-                  <div className="text-[12px] text-slate-700 mt-0.5">{param.description}</div>
+                  <div className="text-[12px] text-slate-700 mt-0.5">{param.description || ''}</div>
                 </div>
               ))}
             </div>

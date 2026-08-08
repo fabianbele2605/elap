@@ -201,6 +201,79 @@ async def eliminar_documento(request: web.Request) -> web.Response:
         return web.json_response({'error': str(e)}, status=500)
 
 
+async def listar_herramientas(request: web.Request) -> web.Response:
+    """GET /api/tools - Listar herramientas disponibles"""
+    try:
+        herramientas = [
+            {
+                'id': 'generate_contract',
+                'name': 'Generar Contrato',
+                'description': 'Generar contratos laborales con IA',
+                'category': 'Recursos Humanos',
+                'enabled': True,
+                'icon': '📄',
+                'parameters': [
+                    {'name': 'Nombre del empleado', 'type': 'string', 'required': True},
+                    {'name': 'Cargo', 'type': 'string', 'required': True},
+                    {'name': 'Salario', 'type': 'number', 'required': True}
+                ]
+            },
+            {
+                'id': 'generate_report',
+                'name': 'Generar Reporte',
+                'description': 'Generar reportes financieros profesionales',
+                'category': 'Finanzas',
+                'enabled': True,
+                'icon': '📊',
+                'parameters': [
+                    {'name': 'Período', 'type': 'string', 'required': True},
+                    {'name': 'Tipo de reporte', 'type': 'string', 'required': True}
+                ]
+            },
+            {
+                'id': 'generate_invoice',
+                'name': 'Generar Factura',
+                'description': 'Generar facturas profesionales',
+                'category': 'Finanzas',
+                'enabled': True,
+                'icon': '🧾',
+                'parameters': [
+                    {'name': 'Número de factura', 'type': 'string', 'required': True},
+                    {'name': 'Cliente', 'type': 'string', 'required': True}
+                ]
+            },
+            {
+                'id': 'search_documents',
+                'name': 'Buscar Documentos',
+                'description': 'Buscar en el repositorio de documentos',
+                'category': 'Búsqueda',
+                'enabled': True,
+                'icon': '🔍',
+                'parameters': [
+                    {'name': 'Términos de búsqueda', 'type': 'string', 'required': True}
+                ]
+            },
+            {
+                'id': 'rag_query',
+                'name': 'Consultar Base de Conocimiento',
+                'description': 'Consultar la base de conocimiento empresarial',
+                'category': 'Conocimiento',
+                'enabled': True,
+                'icon': '🧠',
+                'parameters': [
+                    {'name': 'Pregunta', 'type': 'string', 'required': True}
+                ]
+            }
+        ]
+
+        logger.info(f"🛠️ Listadas {len(herramientas)} herramientas")
+        return web.json_response(herramientas)
+
+    except Exception as e:
+        logger.error(f"Error listing tools: {e}")
+        return web.json_response({'error': str(e)}, status=500)
+
+
 async def obtener_documento(request: web.Request) -> web.Response:
     """GET /api/documents/{filename} - Obtener metadatos de documento"""
     try:
@@ -269,6 +342,7 @@ async def start_rest_server(host: str = '0.0.0.0', port: int = 5000):
     app.router.add_get('/api/documents', listar_documentos)
     app.router.add_get('/api/documents/{filename}', obtener_documento)
     app.router.add_delete('/api/documents/{filename}', eliminar_documento)
+    app.router.add_get('/api/tools', listar_herramientas)
 
     runner = web.AppRunner(app)
     await runner.setup()
@@ -282,6 +356,7 @@ async def start_rest_server(host: str = '0.0.0.0', port: int = 5000):
     logger.info(f"   GET /api/documents - Listar documentos")
     logger.info(f"   GET /api/documents/{{filename}} - Obtener documento")
     logger.info(f"   DELETE /api/documents/{{filename}} - Eliminar documento")
+    logger.info(f"   GET /api/tools - Listar herramientas")
 
     # Mantener el servidor corriendo
     try:
