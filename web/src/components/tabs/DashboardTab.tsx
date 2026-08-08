@@ -20,7 +20,38 @@ interface DashboardTabProps {
   hardware: HardwareMetrics;
 }
 
+interface DashboardData {
+  agents: Array<{
+    id: string;
+    name: string;
+    role: string;
+    status: 'online' | 'offline' | 'busy';
+    icon: string;
+    tasks_completed: number;
+    documents_generated: number;
+  }>;
+  hardware: {
+    cpu_percent: number;
+    memory_percent: number;
+    memory_used_gb: number;
+    memory_total_gb: number;
+    disk_percent: number;
+    disk_used_gb: number;
+    disk_total_gb: number;
+    platform: string;
+    processor: string;
+  };
+  runtime: {
+    version: string;
+    uptime_seconds: number;
+    documents_directory: string;
+    api_port: number;
+  };
+}
+
 export const DashboardTab: React.FC<DashboardTabProps> = ({ agents, hardware }) => {
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     activeAgents: 0,
     totalAgents: agents.length,
@@ -29,17 +60,54 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ agents, hardware }) 
     errorRate: 0
   });
 
+  // Cargar datos del dashboard desde API
   useEffect(() => {
-    const activeCount = agents.filter(a => a.status === 'online' || a.status === 'busy').length;
+    const loadDashboardData = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('http://localhost:5000/api/dashboard');
+        if (response.ok) {
+          const data = await response.json();
+          setDashboardData(data);
 
-    setStats({
-      activeAgents: activeCount,
-      totalAgents: agents.length,
-      conversations: agents.reduce((sum, a) => sum + (a.totalTokensUsed ? Math.floor(Math.random() * 100) : 0), 0),
-      toolExecutions: agents.reduce((sum, a) => sum + (a.skillsCount || 0), 0) * 50,
-      errorRate: Math.random() * 0.05
-    });
-  }, [agents]);
+          const activeAgents = data.agents.filter((a: any) => a.status === 'online').length;
+          setStats({
+            activeAgents: activeAgents,
+            totalAgents: data.agents.length,
+            conversations: data.agents.reduce((sum: number, a: any) => sum + a.tasks_completed, 0),
+            toolExecutions: data.agents.reduce((sum: number, a: any) => sum + a.documents_generated, 0),
+            errorRate: 0.02
+          });
+
+          console.log(`✅ Dashboard data cargado desde API`);
+        } else {
+          console.log('⚠️ API no disponible, usando datos por defecto');
+          setDashboardData(null);
+        }
+      } catch (error) {
+        console.log('⚠️ No se pudo conectar a API:', error);
+        setDashboardData(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDashboardData();
+  }, []);
+
+  // Fallback: usar datos de props si no hay API
+  useEffect(() => {
+    if (!dashboardData) {
+      const activeCount = agents.filter(a => a.status === 'online' || a.status === 'busy').length;
+      setStats({
+        activeAgents: activeCount,
+        totalAgents: agents.length,
+        conversations: agents.reduce((sum, a) => sum + (a.totalTokensUsed ? Math.floor(Math.random() * 100) : 0), 0),
+        toolExecutions: agents.reduce((sum, a) => sum + (a.skillsCount || 0) * 50, 0),
+        errorRate: Math.random() * 0.05
+      });
+    }
+  }, [dashboardData, agents]);
 
   return (
     <div className="flex-1 bg-white text-slate-700 p-4 lg:p-6 overflow-y-auto custom-scrollbar space-y-6">
@@ -169,58 +237,38 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ agents, hardware }) 
 
         {/* Agent Activity Distribution */}
         <div className="bg-slate-50 p-5 rounded-xl border border-slate-300 space-y-4">
-          <h3 className="font-bold text-sm text-slate-900">Agent Activity Breakdown</h3>
+          <h3 className="font-bold text-sm text-slate-900">Agent Status & Activity</h3>
 
           <div className="space-y-3 font-mono text-xs">
-            <div>
-              <div className="flex justify-between text-slate-700 mb-1">
-                <span className="text-blue-600">🔵 Sales Agent</span>
-                <span>38%</span>
-              </div>
-              <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                <div className="bg-blue-600 h-full w-[38%]"></div>
-              </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between text-slate-700 mb-1">
-                <span className="text-green-600">🟢 IT Support Agent</span>
-                <span>26%</span>
-              </div>
-              <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                <div className="bg-green-600500 h-full w-[26%]"></div>
-              </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between text-slate-700 mb-1">
-                <span className="text-amber-700">🟠 Analytics Agent</span>
-                <span>18%</span>
-              </div>
-              <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                <div className="bg-amber-500 h-full w-[18%]"></div>
-              </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between text-slate-700 mb-1">
-                <span className="text-purple-700">🟣 Research Agent</span>
-                <span>12%</span>
-              </div>
-              <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                <div className="bg-purple-500 h-full w-[12%]"></div>
-              </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between text-slate-700 mb-1">
-                <span className="text-rose-700">🔴 Financial Agent</span>
-                <span>6%</span>
-              </div>
-              <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                <div className="bg-rose-500 h-full w-[6%]"></div>
-              </div>
-            </div>
+            {dashboardData?.agents && dashboardData.agents.length > 0 ? (
+              dashboardData.agents.map((agent, idx) => {
+                const totalTasks = dashboardData.agents.reduce((sum, a) => sum + a.tasks_completed, 0) || 1;
+                const percentage = Math.round((agent.tasks_completed / totalTasks) * 100);
+                return (
+                  <div key={idx}>
+                    <div className="flex justify-between text-slate-700 mb-1">
+                      <span>
+                        {agent.status === 'online' ? '🟢' : '🔴'} {agent.icon} {agent.name}
+                      </span>
+                      <span className="text-slate-600">{percentage}%</span>
+                    </div>
+                    <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full ${
+                          idx === 0 ? 'bg-blue-600' : 'bg-green-600'
+                        }`}
+                        style={{width: `${Math.max(5, percentage)}%`}}
+                      ></div>
+                    </div>
+                    <div className="text-[11px] text-slate-600 mt-0.5">
+                      {agent.tasks_completed} tareas • {agent.documents_generated} documentos
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="text-slate-500 text-center py-2">⏳ Cargando agentes...</div>
+            )}
           </div>
         </div>
       </div>
@@ -230,25 +278,30 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ agents, hardware }) 
         <div className="bg-slate-50 p-5 rounded-xl border border-slate-300 space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2">
-              <Brain className="w-4 h-4 text-blue-600" /> Local Ollama Model Memory Allocation
+              <Brain className="w-4 h-4 text-blue-600" /> System Memory & Resources
             </h3>
-            <span className="text-xs font-mono text-green-600 bg-green-600950 px-2 py-0.5 rounded border border-green-600">
-              Loaded: glm4:9b
+            <span className="text-xs font-mono text-green-600 bg-green-600/10 px-2 py-0.5 rounded border border-green-600">
+              {dashboardData?.runtime?.version || 'v0.1.0'}
             </span>
           </div>
 
           <div className="p-3 bg-white rounded-lg border border-slate-300 space-y-2 font-mono text-xs">
             <div className="flex justify-between text-slate-700">
-              <span>VRAM Used:</span>
-              <span className="text-blue-600 font-bold">{hardware.vramUsedGb} GB / {hardware.vramTotalGb} GB</span>
+              <span>Memory Used:</span>
+              <span className="text-blue-600 font-bold">
+                {dashboardData?.hardware?.memory_used_gb || hardware.vramUsedGb || '0'} GB / {dashboardData?.hardware?.memory_total_gb || hardware.vramTotalGb || '0'} GB
+              </span>
             </div>
             <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden p-0.5">
-              <div className="bg-gradient-to-r from-indigo-500 to-purple-500 h-full rounded-full w-[30%]"></div>
+              <div
+                className="bg-gradient-to-r from-indigo-500 to-purple-500 h-full rounded-full"
+                style={{width: `${dashboardData?.hardware?.memory_percent || 30}%`}}
+              ></div>
             </div>
 
             <div className="grid grid-cols-2 gap-2 text-[13px] pt-2 border-t border-slate-300 text-slate-700">
-              <div>Layers in VRAM: <strong className="text-slate-700">32/32 (100% GPU)</strong></div>
-              <div>Context Buffer: <strong className="text-slate-700">4,096 tokens</strong></div>
+              <div>CPU Usage: <strong className="text-slate-700">{dashboardData?.hardware?.cpu_percent || 0}%</strong></div>
+              <div>Platform: <strong className="text-slate-700">{dashboardData?.hardware?.platform || 'Linux'}</strong></div>
             </div>
           </div>
         </div>

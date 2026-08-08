@@ -201,6 +201,65 @@ async def eliminar_documento(request: web.Request) -> web.Response:
         return web.json_response({'error': str(e)}, status=500)
 
 
+async def obtener_dashboard_info(request: web.Request) -> web.Response:
+    """GET /api/dashboard - Obtener información del dashboard"""
+    try:
+        import psutil
+        import platform
+
+        # Info del sistema
+        cpu_percent = psutil.cpu_percent(interval=1)
+        memory = psutil.virtual_memory()
+        disk = psutil.disk_usage('/')
+
+        dashboard_info = {
+            'agents': [
+                {
+                    'id': 'hr',
+                    'name': 'HR Agent',
+                    'role': 'Recursos Humanos',
+                    'status': 'online',
+                    'icon': '👨‍💼',
+                    'tasks_completed': 24,
+                    'documents_generated': 6
+                },
+                {
+                    'id': 'finance',
+                    'name': 'Finance Agent',
+                    'role': 'Finanzas',
+                    'status': 'online',
+                    'icon': '💰',
+                    'tasks_completed': 12,
+                    'documents_generated': 0
+                }
+            ],
+            'hardware': {
+                'cpu_percent': round(cpu_percent, 1),
+                'memory_percent': round(memory.percent, 1),
+                'memory_used_gb': round(memory.used / (1024**3), 2),
+                'memory_total_gb': round(memory.total / (1024**3), 2),
+                'disk_percent': round(disk.percent, 1),
+                'disk_used_gb': round(disk.used / (1024**3), 2),
+                'disk_total_gb': round(disk.total / (1024**3), 2),
+                'platform': platform.system(),
+                'processor': platform.processor()
+            },
+            'runtime': {
+                'version': 'v0.1.0',
+                'uptime_seconds': 3600,
+                'documents_directory': '/tmp/elap_documents',
+                'api_port': 5000
+            }
+        }
+
+        logger.info("📊 Dashboard info obtenida")
+        return web.json_response(dashboard_info)
+
+    except Exception as e:
+        logger.error(f"Error getting dashboard info: {e}")
+        return web.json_response({'error': str(e)}, status=500)
+
+
 async def listar_herramientas(request: web.Request) -> web.Response:
     """GET /api/tools - Listar herramientas disponibles"""
     try:
@@ -343,6 +402,7 @@ async def start_rest_server(host: str = '0.0.0.0', port: int = 5000):
     app.router.add_get('/api/documents/{filename}', obtener_documento)
     app.router.add_delete('/api/documents/{filename}', eliminar_documento)
     app.router.add_get('/api/tools', listar_herramientas)
+    app.router.add_get('/api/dashboard', obtener_dashboard_info)
 
     runner = web.AppRunner(app)
     await runner.setup()
@@ -353,6 +413,7 @@ async def start_rest_server(host: str = '0.0.0.0', port: int = 5000):
     logger.info(f"🚀 REST API server iniciado en http://{host}:{port}")
     logger.info(f"   POST /api/agents/{{agent_id}}/execute - Ejecutar agente")
     logger.info(f"   GET /api/health - Health check")
+    logger.info(f"   GET /api/dashboard - Info del dashboard")
     logger.info(f"   GET /api/documents - Listar documentos")
     logger.info(f"   GET /api/documents/{{filename}} - Obtener documento")
     logger.info(f"   DELETE /api/documents/{{filename}} - Eliminar documento")
