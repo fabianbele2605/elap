@@ -1,11 +1,14 @@
-"""Motor de búsqueda legal inteligente - Qdrant + Web + APIs Oficiales"""
+"""Motor de búsqueda legal inteligente - SQLite + Web + APIs Oficiales
+
+NOTA: Usando SQLite para desarrollo. En producción cambiar a Qdrant.
+"""
 
 import logging
+import sqlite3
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
-from qdrant_client import QdrantClient
-from qdrant_client.models import PointStruct
 import aiohttp
+from pathlib import Path
 
 from .official_apis import OfficialAPIs
 
@@ -15,28 +18,47 @@ logger = logging.getLogger(__name__)
 class LegalSearchEngine:
     """Búsqueda inteligente de leyes colombianas con múltiples fuentes"""
 
-    def __init__(self, qdrant_url: str = "http://localhost:6333"):
-        self.qdrant = QdrantClient(qdrant_url)
+    def __init__(self, db_path: str = "leyes_colombianas.db"):
+        self.db_path = Path(db_path)
         self.official_apis = OfficialAPIs()
-        self.collection_name = "leyes_colombianas"
-        self._init_collection()
+        self._init_database()
 
-    def _init_collection(self):
-        """Inicializar colección en Qdrant si no existe"""
+    def _init_database(self):
+        """Inicializar base de datos SQLite"""
         try:
-            self.qdrant.get_collection(self.collection_name)
-            logger.info("✅ Colección 'leyes_colombianas' existe en Qdrant")
-        except:
-            logger.info("📝 Creando colección 'leyes_colombianas' en Qdrant...")
-            # Crear con espacios vectoriales (768 dims para embeddings típicos)
-            self.qdrant.recreate_collection(
-                collection_name=self.collection_name,
-                vectors_config={
-                    "size": 768,
-                    "distance": "Cosine"
-                }
-            )
-            logger.info("✅ Colección creada")
+            conn = sqlite3.connect(str(self.db_path))
+            cursor = conn.cursor()
+
+            # Crear tabla de leyes si no existe
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS leyes (
+                    id TEXT PRIMARY KEY,
+                    texto TEXT NOT NULL,
+                    fuente TEXT NOT NULL,
+                    tema TEXT NOT NULL,
+                    fecha_actualizacion TEXT NOT NULL,
+                    url TEXT,
+                    numero_resolucion TEXT,
+                    edad_dias INTEGER DEFAULT 0
+                )
+            """)
+
+            # Crear índices para búsqueda rápida
+            cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_tema ON leyes(tema)
+            """)
+            cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_fecha ON leyes(fecha_actualizacion)
+            """)
+
+            conn.commit()
+            conn.close()
+
+            logger.info(f"✅ Base de datos SQLite inicializada: {self.db_path}")
+
+        except Exception as e:
+            logger.error(f"Error inicializando base de datos: {e}")
+            raise
 
     async def buscar_ley(
         self,
@@ -59,13 +81,13 @@ class LegalSearchEngine:
             logger.info(f"✅ Encontrado en APIs oficiales: {resultado_oficial['fuente']}")
             return resultado_oficial
 
-        # 2️⃣ Buscar en Qdrant local
-        resultado_local = self._buscar_en_qdrant(query)
+        # 2️⃣ Buscar en SQLite local
+        resultado_local = self._buscar_en_sqlite(query)
         if resultado_local:
             dias_antiguo = resultado_local.get("edad_dias", 0)
 
             if dias_antiguo < 30 and not verificar_actualizacion:
-                logger.info(f"✅ Encontrado en Qdrant (hace {dias_antiguo} días)")
+                logger.info(f"✅ Encontrado en SQLite (hace {dias_antiguo} días)")
                 return resultado_local
 
             if dias_antiguo >= 30:
@@ -78,8 +100,8 @@ class LegalSearchEngine:
         resultado_web = await self._buscar_en_web(query)
         if resultado_web:
             logger.info(f"✅ Encontrado en web: {resultado_web['fuente']}")
-            # Guardar en Qdrant para próximas búsquedas
-            await self._guardar_en_qdrant(resultado_web)
+            # Guardar en SQLite para próximas búsquedas
+            await self._guardar_en_sqlite(resultado_web)
             return resultado_web
 
         # 4️⃣ Fallback
@@ -119,35 +141,40 @@ class LegalSearchEngine:
             logger.error(f"Error en APIs oficiales: {e}")
         return None
 
-    def _buscar_en_qdrant(self, query: str) -> Optional[Dict]:
-        """Buscar en base vectorial local Qdrant"""
+    def _buscar_en_sqlite(self, query: str) -> Optional[Dict]:
+        """Buscar en base de datos SQLite local"""
         try:
-            # Aquí buscaríamos con embeddings, por ahora texto directo
-            # En producción usarías: embedding = self.get_embedding(query)
-            points = self.qdrant.scroll(self.collection_name, limit=100)
+            conn = sqlite3.connect(str(self.db_path))
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
 
-            if points[0]:  # Si hay documentos
-                # Búsqueda simple por coincidencia (en producción: búsqueda vectorial)
-                query_lower = query.lower()
-                for point in points[0]:
-                    payload = point.payload
-                    if query_lower in payload.get("texto", "").lower():
-                        dias_antiguo = (
-                            datetime.now() - datetime.fromisoformat(
-                                payload.get("fecha_actualizacion", datetime.now().isoformat())
-                            )
-                        ).days
+            query_lower = query.lower()
 
-                        return {
-                            "texto": payload["texto"],
-                            "fuente": payload.get("fuente", "Qdrant Local"),
-                            "fecha": payload.get("fecha_actualizacion"),
-                            "edad_dias": dias_antiguo,
-                            "confianza": 0.95,
-                            "oficial": True
-                        }
+            # Búsqueda por coincidencia en texto o fuente
+            cursor.execute("""
+                SELECT * FROM leyes
+                WHERE texto LIKE ? OR fuente LIKE ? OR tema LIKE ?
+                ORDER BY fecha_actualizacion DESC
+                LIMIT 1
+            """, (f"%{query_lower}%", f"%{query_lower}%", f"%{query_lower}%"))
+
+            row = cursor.fetchone()
+            conn.close()
+
+            if row:
+                fecha_actual = datetime.fromisoformat(row["fecha_actualizacion"])
+                dias_antiguo = (datetime.now() - fecha_actual).days
+
+                return {
+                    "texto": row["texto"],
+                    "fuente": row["fuente"],
+                    "fecha": row["fecha_actualizacion"],
+                    "edad_dias": dias_antiguo,
+                    "confianza": 0.95,
+                    "oficial": True
+                }
         except Exception as e:
-            logger.error(f"Error buscando en Qdrant: {e}")
+            logger.error(f"Error buscando en SQLite: {e}")
         return None
 
     async def _buscar_en_web(self, query: str) -> Optional[Dict]:
@@ -173,25 +200,35 @@ class LegalSearchEngine:
             logger.error(f"Error en web search: {e}")
         return None
 
-    async def _guardar_en_qdrant(self, ley: Dict[str, Any]):
-        """Guardar ley en Qdrant para búsquedas futuras"""
+    async def _guardar_en_sqlite(self, ley: Dict[str, Any]):
+        """Guardar ley en SQLite para búsquedas futuras"""
         try:
-            point = PointStruct(
-                id=hash(ley.get("fuente", "")),
-                vector=[0.0] * 768,  # Vector dummy (en producción: embedding real)
-                payload={
-                    "texto": ley.get("texto", ""),
-                    "fuente": ley.get("fuente", ""),
-                    "tema": ley.get("tema", "general"),
-                    "fecha_actualizacion": datetime.now().isoformat(),
-                    "url": ley.get("url", ""),
-                    "numero_resolucion": ley.get("numero_resolucion")
-                }
-            )
-            self.qdrant.upsert(self.collection_name, [point])
-            logger.info(f"💾 Ley guardada en Qdrant: {ley.get('fuente')}")
+            conn = sqlite3.connect(str(self.db_path))
+            cursor = conn.cursor()
+
+            ley_id = str(hash(ley.get("fuente", "")))
+            ahora = datetime.now().isoformat()
+
+            cursor.execute("""
+                INSERT OR REPLACE INTO leyes
+                (id, texto, fuente, tema, fecha_actualizacion, url, numero_resolucion)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (
+                ley_id,
+                ley.get("texto", ""),
+                ley.get("fuente", ""),
+                ley.get("tema", "general"),
+                ahora,
+                ley.get("url", ""),
+                ley.get("numero_resolucion")
+            ))
+
+            conn.commit()
+            conn.close()
+
+            logger.info(f"💾 Ley guardada en SQLite: {ley.get('fuente')}")
         except Exception as e:
-            logger.error(f"Error guardando en Qdrant: {e}")
+            logger.error(f"Error guardando en SQLite: {e}")
 
     def _detectar_tema(self, query: str) -> str:
         """Detectar tema legal de la consulta"""

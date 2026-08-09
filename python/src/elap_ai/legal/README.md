@@ -2,6 +2,8 @@
 
 Sistema inteligente para obtener **leyes colombianas actualizadas** en tiempo real. Integrado con todos los agentes ELAP para respuestas basadas en legislación vigente.
 
+> **NOTA:** Usando **SQLite** para desarrollo ágil. En producción cambiaremos a **Qdrant** para búsqueda semántica avanzada.
+
 ## 🎯 Arquitectura
 
 ```
@@ -10,12 +12,12 @@ Sistema inteligente para obtener **leyes colombianas actualizadas** en tiempo re
 ├─────────────────────────────────────────────────┤
 │  LegalSearchEngine (Búsqueda Inteligente)       │
 ├─────────────────────────────────────────────────┤
-│  1. APIs Oficiales   2. Qdrant Local   3. Web   │
-│  (MinTrabajo, DIAN)  (Cache 30 días)  (Backup) │
+│  1. APIs Oficiales  2. SQLite Local   3. Web    │
+│  (MinTrabajo, DIAN) (Cache 30 días)  (Backup)  │
 └─────────────────────────────────────────────────┘
      ↓                    ↓                ↓
-  .gov.co APIs      [Vector DB]    [Web Search]
-  High Trust        Medium Trust     Low Trust
+  .gov.co APIs      [SQLite DB]      [Web Search]
+  High Trust        Medium Trust      Low Trust
 ```
 
 ## 📁 Archivos del Módulo
@@ -125,23 +127,24 @@ status = leyes_scheduler.get_status()
 - **Contenido:** UVR, datos económicos
 - **Actualización:** Diaria
 
-## 🗄️ Almacenamiento en Qdrant
+## 🗄️ Almacenamiento en SQLite
 
 ```python
-# Estructura de documento en Qdrant
-{
-  "id": hash(fuente),
-  "vector": [768 dims],  # Embedding (en producción)
-  "payload": {
-    "texto": "Artículo 240...",
-    "fuente": "Código Sustantivo del Trabajo",
-    "tema": "laboral",
-    "fecha_actualizacion": "2026-08-09T02:00:00",
-    "url": "https://...",
-    "numero_resolucion": "CST-240"
-  }
-}
+# Estructura de tabla en SQLite
+CREATE TABLE leyes (
+  id TEXT PRIMARY KEY,              -- Hash de la fuente
+  texto TEXT,                       -- Contenido completo de la ley
+  fuente TEXT,                      -- Ministerio o fuente oficial
+  tema TEXT,                        -- laboral, salud, pension, fiscal
+  fecha_actualizacion TEXT,         -- ISO datetime
+  url TEXT,                         -- Link a fuente oficial
+  numero_resolucion TEXT            -- Ej: CST-240
+)
 ```
+
+**Base de datos:** `leyes_colombianas.db` (SQLite)  
+**Tamaño:** < 50 MB para todas las leyes colombianas  
+**Índices:** fecha_actualizacion, tema (búsqueda rápida)
 
 ## 📈 Flujo de Búsqueda
 
@@ -154,14 +157,14 @@ HRAgent: legal_search.buscar_ley(query, "laboral")
    - Consulta MinTrabajo API
    - Si obtiene respuesta → Retorna con confianza 99%
          ↓
-2️⃣ Qdrant Local (<30 días)?
-   - Busca en cache local
+2️⃣ SQLite Local (<30 días)?
+   - Busca en leyes_colombianas.db
    - Si encontrada y reciente → Retorna con confianza 95%
          ↓
 3️⃣ Web Search?
    - Busca en google/bing filtrado .gov.co
    - Valida dominio oficial
-   - Guarda en Qdrant para futuro
+   - Guarda en SQLite para futuro
    - Retorna con confianza 90%
          ↓
 4️⃣ Fallback
@@ -192,20 +195,21 @@ Limpiar Qdrant → Eliminar docs > 90 días → Optimizar base
 ## 🛠️ Troubleshooting
 
 ### ❌ "No se encontró información"
-- Verificar que Qdrant esté corriendo: `docker ps | grep qdrant`
-- Revisar logs de sincronización: `tail -f /var/log/leyes_sync.log`
+- Verificar que SQLite esté disponible: `ls -la leyes_colombianas.db`
+- Revisar permisos de archivo: `chmod 644 leyes_colombianas.db`
 - Ejecutar sincronización manual:
   ```python
-  await leyes_scheduler.sincronizar_leyes()
+  legal_search = LegalSearchEngine()
+  await legal_search.sincronizar_todas_leyes()
   ```
 
-### ❌ "Qdrant no responde"
+### ❌ "Database locked"
 ```bash
-# Iniciar Qdrant (con Docker)
-docker run -d -p 6333:6333 qdrant/qdrant
+# Eliminar base de datos y recriarla (pierde datos)
+rm leyes_colombianas.db
 
-# O instalar localmente
-pip install qdrant-client[grpc]
+# O esperar a que se libere
+# (Verifica que no haya procesos escribiendo)
 ```
 
 ### ⚠️ "Información vieja"
@@ -214,6 +218,15 @@ pip install qdrant-client[grpc]
   legal_search = LegalSearchEngine()
   await legal_search.sincronizar_todas_leyes()
   ```
+
+### 📦 "Migrar a Qdrant en producción"
+```python
+# Cuando estés listo para producción:
+# 1. Iniciar Qdrant
+# 2. Cambiar LegalSearchEngine para usar Qdrant
+# 3. Importar datos de SQLite a Qdrant
+# Ver sección "Próximos Pasos"
+```
 
 ## 📚 Ejemplos de Uso
 
@@ -269,12 +282,24 @@ status = leyes_scheduler.get_status()
 
 ## 🚀 Próximos Pasos
 
+### Fase Actual (SQLite)
+- [x] Búsqueda en APIs oficiales
+- [x] Cache local en SQLite
+- [x] Actualización automática
+- [x] Integración en HRAgent/BenefitsAgent
+
+### Fase 2 (Qdrant - Cuando todo funcione)
+- [ ] Migrar SQLite → Qdrant
+- [ ] Agregar embeddings reales (búsqueda semántica)
 - [ ] Integrar Web Search API (Google Custom Search)
-- [ ] Agregar jurisprudencia (sentencias constitucionales)
-- [ ] Embeddings reales con modelos locales
 - [ ] Dashboard de auditoría de cambios legales
 - [ ] Notificaciones por Slack/Email de cambios
 - [ ] Versionado de leyes por fecha
+
+### Fase 3 (Jurisprudencia)
+- [ ] Agregar sentencias constitucionales
+- [ ] Crear grafo de jurisprudencia
+- [ ] Integrar referencias cruzadas
 
 ## 📝 Notas
 
