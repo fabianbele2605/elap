@@ -14,6 +14,7 @@ pub mod benefits;
 pub mod recruitment;
 pub mod discovery;
 pub mod health;
+pub mod ollama_client;
 
 pub use plugin_trait::Plugin;
 pub use metadata::PluginMetadata;
@@ -26,3 +27,4 @@ pub use benefits::{BenefitsPlugin, BenefitsProvider, ProviderType, BenefitsPlan,
 pub use recruitment::{RecruitmentPlugin, JobPosting, Candidate, ScreeningResult, OnboardingPlan};
 pub use discovery::{PluginDiscoveryService, DiscoveredPlugin, DiscoveryStats};
 pub use health::{PluginHealthMonitor, HealthStatus, ExecutionMetrics};
+pub use ollama_client::{OllamaClient, OllamaRequest, OllamaResponse, ollama_available};

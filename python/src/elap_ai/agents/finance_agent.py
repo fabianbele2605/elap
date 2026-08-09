@@ -320,27 +320,38 @@ Para generarlo necesito:
             }
 
         else:
-            return {
-                "intent": "general_query",
-                "message": """💰 *Asistente de Finanzas* a tu servicio.
+            # GENÉRICO: Usar Ollama con system prompt de Finanza
+            try:
+                from ..ollama_client import OllamaClient
+                from ..system_prompts import get_system_prompt
+
+                ollama = OllamaClient()
+                system_prompt = get_system_prompt("finance_agent")
+
+                prompt_ollama = f"""{system_prompt}
+
+Pregunta del usuario: {query}
+
+Responde de manera profesional, analítica y con datos cuando sea posible."""
+
+                logger.info("💰 Llamando a Ollama para respuesta general de Finanzas...")
+                respuesta = await ollama.generar("glm4:9b", prompt_ollama)
+
+                return {
+                    "intent": "general_query",
+                    "message": f"💰 *Asistente de Finanzas*\n\n{respuesta}"
+                }
+            except Exception as e:
+                logger.error(f"Ollama error en Finance: {e}")
+                return {
+                    "intent": "general_query",
+                    "message": """💰 *Asistente de Finanzas* a tu servicio.
 
 Soy especialista en documentación financiera. Puedo ayudarte con:
 
-🧾 **Facturas**
-   - Facturas de venta
-   - Notas crédito/débito
-   - Recibos de pago
+🧾 **Facturas** - Facturas, notas crédito/débito
+📊 **Reportes** - Ingresos, flujo de caja, análisis
+💡 **Análisis** - Presupuestos, proyecciones, rentabilidad
 
-📊 **Reportes**
-   - Reportes de ingresos
-   - Análisis de flujo de caja
-   - Estados financieros
-   - Reportes por período
-
-💡 **Análisis**
-   - Presupuestos
-   - Proyecciones
-   - Análisis de rentabilidad
-
-¿Qué documento financiero necesitas? Cuéntame los detalles."""
-            }
+¿Qué necesitas? Cuéntame los detalles."""
+                }

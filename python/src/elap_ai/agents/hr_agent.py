@@ -347,25 +347,40 @@ Veo que necesitas una **política corporativa**.
             }
 
         else:
-            return {
-                "intent": "general_query",
-                "message": """🧑‍💼 *Asistente de Recursos Humanos* a tu servicio.
+            # GENÉRICO: Usar Ollama con system prompt de RRHH
+            try:
+                from ..ollama_client import OllamaClient
+                from ..system_prompts import get_system_prompt
+
+                ollama = OllamaClient()
+                system_prompt = get_system_prompt("rrhh_agent")
+
+                prompt_ollama = f"""{system_prompt}
+
+Pregunta del usuario: {query}
+
+Responde de manera profesional, concisa y útil."""
+
+                logger.info("📞 Llamando a Ollama para respuesta general de RRHH...")
+                respuesta = await ollama.generar("glm4:9b", prompt_ollama)
+
+                return {
+                    "intent": "general_query",
+                    "message": f"🧑‍💼 *Asistente de Recursos Humanos*\n\n{respuesta}"
+                }
+            except Exception as e:
+                logger.error(f"Ollama error en HR: {e}")
+                return {
+                    "intent": "general_query",
+                    "message": """🧑‍💼 *Asistente de Recursos Humanos* a tu servicio.
 
 Soy especialista en documentación laboral. Puedo ayudarte con:
 
-📋 **Contratos**
-   - Contratos de empleados
-   - Acuerdos de confidencialidad
-   - Cartas de oferta
+📋 **Contratos** - Contratos de empleados, acuerdos, cartas de oferta
+📜 **Políticas** - Ausencias, vacaciones, código de conducta
 
-📜 **Políticas**
-   - Política de ausencias
-   - Política de vacaciones
-   - Código de conducta
-   - Políticas de confidencialidad
-
-¿Qué documento necesitas generar? Cuéntame más detalles."""
-            }
+¿Qué necesitas? Cuéntame más detalles."""
+                }
 
     def get_available_themes(self) -> list:
         """Obtiene temas corporativos disponibles"""

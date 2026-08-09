@@ -15,20 +15,168 @@ from datetime import datetime
 
 from .agents.hr_agent import HRAgent
 from .agents.finance_agent import FinanceAgent
+from .agents.payroll_agent import PayrollAgent
+from .agents.benefits_agent import BenefitsAgent
+from .agents.recruitment_agent import RecruitmentAgent
+from .agents.ceo_assistant import CEOAssistant
+from .agents.cfo_assistant import CFOAssistant
+from .agents.cmo_assistant import CMOAssistant
+from .agents.compras_agent import ComprasAgent
+from .agents.ventas_agent import VentasAgent
+from .agents.crm_agent import CRMAgent
+from .agents.customer_service_agent import CustomerServiceAgent
+from .agents.document_manager_agent import DocumentManagerAgent
+from .agents.pdf_assistant_agent import PDFAssistantAgent
+from .agents.system_supervisor import SystemSupervisor
+from .agents.task_router import TaskRouter
+from .agents.memory_manager import MemoryManager
+from .orchestrator import get_orchestrator
 
 logger = logging.getLogger(__name__)
 
-# Inicializar agentes globales
+# Inicializar agentes globales - 15 agentes ELAP
+# === Sistema (3) ===
+system_supervisor = None
+task_router = None
+memory_manager = None
+
+# === Administrativo (5) ===
 hr_agent = None
 finance_agent = None
+payroll_agent = None
+benefits_agent = None
+recruitment_agent = None
+
+# === Dirección (3) ===
+ceo_assistant = None
+cfo_assistant = None
+cmo_assistant = None
+
+# === Comercial (3) ===
+compras_agent = None
+ventas_agent = None
+crm_agent = None
+customer_service_agent = None
+
+# === Documentación (2) ===
+document_manager_agent = None
+pdf_assistant_agent = None
+
+orchestrator = None
+
+
+def _detect_agent_type_from_prompt(prompt: str) -> str:
+    """Detectar tipo de agente del system prompt - soporta 15 agentes ELAP"""
+    prompt_lower = prompt.lower()
+
+    # === CEO/Estrategia (Director Ejecutivo) ===
+    if any(word in prompt_lower for word in ["director ejecutivo", "ceo", "estratég", "visión", "mercado", "expansión"]):
+        return "ceo_assistant"
+
+    # === CFO (Director Financiero) ===
+    if any(word in prompt_lower for word in ["director financiero", "cfo", "presupuesto", "flujo de caja", "auditoría financiera"]):
+        return "cfo_assistant"
+
+    # === CMO (Director Marketing) ===
+    if any(word in prompt_lower for word in ["director marketing", "cmo", "marketing", "campañas", "marca", "posicionamiento"]):
+        return "cmo_assistant"
+
+    # === RRHH (HR) ===
+    if any(word in prompt_lower for word in ["rrhh", "recursos humanos", "contrat", "empleado", "selección"]):
+        return "hr"
+
+    # === Finanzas (Análista Financiero) ===
+    if any(word in prompt_lower for word in ["analista financiero", "finanz", "utilidad", "margen", "reportes financiero", "ingresos"]):
+        return "finance"
+
+    # === Contabilidad ===
+    if any(word in prompt_lower for word in ["contabilidad", "contable", "normativo", "niif", "asiento"]):
+        return "finance"
+
+    # === Nómina/Payroll ===
+    if any(word in prompt_lower for word in ["nómina", "payroll", "salario", "deducciones", "provisión"]):
+        return "payroll"
+
+    # === Prestaciones/Benefits ===
+    if any(word in prompt_lower for word in ["prestación", "cesantía", "benefit", "pensión", "afiliación"]):
+        return "benefits"
+
+    # === Recruitment/Selección ===
+    if any(word in prompt_lower for word in ["candidat", "reclutamiento", "hiring", "recruitment", "evaluación"]):
+        return "recruitment"
+
+    # === Compras/Procuramiento ===
+    if any(word in prompt_lower for word in ["compra", "procuramiento", "proveedor", "compras", "cotización"]):
+        return "compras_agent"
+
+    # === Ventas ===
+    if any(word in prompt_lower for word in ["venta", "prospecto", "pipeline", "propuesta comercial", "cierre"]):
+        return "ventas_agent"
+
+    # === CRM ===
+    if any(word in prompt_lower for word in ["cliente", "crm", "relación cliente", "segmentación", "retención"]):
+        return "crm_agent"
+
+    # === Atención al Cliente ===
+    if any(word in prompt_lower for word in ["consulta", "soporte", "atención", "problema", "queja", "escalamiento"]):
+        return "customer_service_agent"
+
+    # === Documentación ===
+    if any(word in prompt_lower for word in ["documento", "clasificación", "retención", "archivo", "gestor documental"]):
+        return "document_manager_agent"
+
+    # === PDF Analysis ===
+    if any(word in prompt_lower for word in ["pdf", "análisis pdf", "extracción", "resumen ejecutivo"]):
+        return "pdf_assistant_agent"
+
+    # Default
+    return "asistente"
 
 
 async def init_agents():
-    """Inicializar agentes"""
-    global hr_agent, finance_agent
+    """Inicializar todos los 15 agentes ELAP"""
+    global system_supervisor, task_router, memory_manager
+    global hr_agent, finance_agent, payroll_agent, benefits_agent, recruitment_agent
+    global ceo_assistant, cfo_assistant, cmo_assistant
+    global compras_agent, ventas_agent, crm_agent, customer_service_agent
+    global document_manager_agent, pdf_assistant_agent, orchestrator
+
+    # === Sistema (3) ===
+    system_supervisor = SystemSupervisor(theme="andina_foods")
+    task_router = TaskRouter(theme="andina_foods")
+    memory_manager = MemoryManager(theme="andina_foods")
+
+    # === Administrativo (5) ===
     hr_agent = HRAgent(theme="andina_foods")
     finance_agent = FinanceAgent(theme="andina_foods")
-    logger.info("✅ Agents initialized: HRAgent, FinanceAgent")
+    payroll_agent = PayrollAgent(theme="andina_foods")
+    benefits_agent = BenefitsAgent(theme="andina_foods")
+    recruitment_agent = RecruitmentAgent(theme="andina_foods")
+
+    # === Dirección (3) ===
+    ceo_assistant = CEOAssistant(theme="andina_foods")
+    cfo_assistant = CFOAssistant(theme="andina_foods")
+    cmo_assistant = CMOAssistant(theme="andina_foods")
+
+    # === Comercial (4) ===
+    compras_agent = ComprasAgent(theme="andina_foods")
+    ventas_agent = VentasAgent(theme="andina_foods")
+    crm_agent = CRMAgent(theme="andina_foods")
+    customer_service_agent = CustomerServiceAgent(theme="andina_foods")
+
+    # === Documentación (2) ===
+    document_manager_agent = DocumentManagerAgent(theme="andina_foods")
+    pdf_assistant_agent = PDFAssistantAgent(theme="andina_foods")
+
+    orchestrator = get_orchestrator()
+
+    logger.info("✅ Sistema Agents (3): Supervisor, TaskRouter, Memory")
+    logger.info("✅ Administrativo Agents (5): HR, Finance, Payroll, Benefits, Recruitment")
+    logger.info("✅ Dirección Agents (3): CEO, CFO, CMO")
+    logger.info("✅ Comercial Agents (4): Compras, Ventas, CRM, CustomerService")
+    logger.info("✅ Documentación Agents (2): DocumentManager, PDFAssistant")
+    logger.info("✅ Agent Orchestrator initialized (Fase 6)")
+    logger.info("🚀 TOTAL: 15 agentes listos")
 
 
 async def ejecutar_agente(request: web.Request) -> web.Response:
@@ -47,29 +195,107 @@ async def ejecutar_agente(request: web.Request) -> web.Response:
     """
     try:
         data = await request.json()
-        agent_id = request.match_info.get('agent_id', 'hr')
-        prompt = data.get('prompt', 'Hola')
+        agent_id = request.match_info.get('agent_id', 'asistente')
+        prompt = data.get('prompt', data.get('query', 'Hola'))
 
-        logger.info(f"Ejecutando agente {agent_id} con prompt: {prompt[:50]}...")
+        logger.info(f"Solicitud: {prompt[:50]}... [Agent: {agent_id}]")
 
-        # Mapear agent_id - si es UUID o desconocido, usar detección por contexto
-        # Si contiene UUID, asumir HR (default)
-        if agent_id == 'hr' or len(agent_id) > 20:  # UUID típicamente es más largo
-            agent = hr_agent
-            agent_id = 'hr'
-        elif agent_id == 'finance':
-            agent = finance_agent
+        # 🧠 AGENT ORCHESTRATOR - Intent detection automático
+        # Lógica: si viene agent_id específico, respetarlo; sino, detectar por intent
+        if agent_id in ['hr', 'finance', 'payroll', 'benefits', 'recruitment']:
+            # Agent específico por nombre - respetarlo
+            intent_val = "specific_agent"
+            logger.info(f"Agent específico por nombre: {agent_id}")
+        elif agent_id != 'asistente' and len(agent_id) > 8:
+            # Es probablemente un UUID del dashboard - detectar tipo de agente del prompt
+            detected_agent_type = _detect_agent_type_from_prompt(prompt)
+            agent_id = detected_agent_type
+            intent_val = "dashboard_agent"
+            logger.info(f"Agent detectado del dashboard: {agent_id}")
         else:
-            # Intentar detectar por contenido del prompt
-            prompt_lower = prompt.lower()
-            if any(word in prompt_lower for word in ['factura', 'invoice', 'reporte', 'report', 'finanza', 'finance']):
-                agent = finance_agent
-                agent_id = 'finance'
-            else:
-                agent = hr_agent
-                agent_id = 'hr'
+            # "asistente" o desconocido - usar Orchestrator para detectar
+            detected_agent, intent = orchestrator.process_query(prompt)
+            agent_id = detected_agent
+            intent_val = intent.value
+            logger.info(f"Intent detectado: {intent_val} → Agent: {agent_id}")
 
-            logger.info(f"Detectado agente por contenido: {agent_id}")
+        # Mapear a agente Python especializado - 15 agentes
+        agent_mapping = {
+            # === Sistema ===
+            'system_supervisor': system_supervisor,
+            'task_router': task_router,
+            'memory_manager': memory_manager,
+
+            # === Administrativo ===
+            'hr': hr_agent,
+            'hr_agent': hr_agent,
+            'rrhh': hr_agent,
+            'finance': finance_agent,
+            'finance_agent': finance_agent,
+            'finanza': finance_agent,
+            'payroll': payroll_agent,
+            'payroll_agent': payroll_agent,
+            'payroll_plugin': payroll_agent,
+            'nómina': payroll_agent,
+            'benefits': benefits_agent,
+            'benefits_agent': benefits_agent,
+            'benefits_plugin': benefits_agent,
+            'prestaciones': benefits_agent,
+            'recruitment': recruitment_agent,
+            'recruitment_agent': recruitment_agent,
+            'recruitment_plugin': recruitment_agent,
+            'reclutamiento': recruitment_agent,
+
+            # === Dirección ===
+            'ceo_assistant': ceo_assistant,
+            'ceo': ceo_assistant,
+            'director_ejecutivo': ceo_assistant,
+            'cfo_assistant': cfo_assistant,
+            'cfo': cfo_assistant,
+            'director_financiero': cfo_assistant,
+            'cmo_assistant': cmo_assistant,
+            'cmo': cmo_assistant,
+            'director_marketing': cmo_assistant,
+
+            # === Comercial ===
+            'compras_agent': compras_agent,
+            'compras': compras_agent,
+            'procuramiento': compras_agent,
+            'ventas_agent': ventas_agent,
+            'ventas': ventas_agent,
+            'crm_agent': crm_agent,
+            'crm': crm_agent,
+            'gestión_clientes': crm_agent,
+            'customer_service_agent': customer_service_agent,
+            'atención_cliente': customer_service_agent,
+            'servicio_cliente': customer_service_agent,
+
+            # === Documentación ===
+            'document_manager_agent': document_manager_agent,
+            'gestor_documental': document_manager_agent,
+            'documentos': document_manager_agent,
+            'pdf_assistant_agent': pdf_assistant_agent,
+            'asistente_pdf': pdf_assistant_agent,
+            'análisis_pdf': pdf_assistant_agent,
+
+            # === Default ===
+            'asistente': hr_agent,
+            'asistente_general': hr_agent,
+        }
+
+        # Intentar mapear el agent_id
+        agent = agent_mapping.get(agent_id.lower())
+
+        if agent is None:
+            # Si no se encuentra, intentar detectar del prompt
+            detected_type = _detect_agent_type_from_prompt(prompt)
+            agent = agent_mapping.get(detected_type.lower(), hr_agent)
+            logger.info(f"Agent no encontrado '{agent_id}', detectado: {detected_type}")
+
+        # Validar que agent no sea None
+        if agent is None:
+            agent = hr_agent
+            logger.warning(f"Fallback a HR Agent para agent_id: {agent_id}")
 
         # Procesar query con el agente
         result = await agent.process_query(prompt)

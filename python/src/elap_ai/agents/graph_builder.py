@@ -11,6 +11,7 @@ from langchain_core.messages import AIMessage, HumanMessage
 from langgraph.graph import StateGraph, END
 
 from .agent_state import AgentState
+from ..system_prompts import get_system_prompt
 
 
 def build_agent_graph(config: dict[str, Any]):
@@ -91,9 +92,12 @@ def build_agent_graph(config: dict[str, Any]):
         empresa_nombre = empresa.get("nombre", "Empresa")
         contexto_docs = state.get("retrieved_context", [])
 
-        # Construct prompt
+        # Construct prompt - usar system prompt específico por rol
+        agent_id = state.get("agent_id", config.get("id", "asistente_general"))
+        system_prompt = get_system_prompt(agent_id)
+
         prompt_parts = [
-            state.get("system_prompt", "You are a helpful assistant."),
+            system_prompt,
             f"\n\nCompañía: {empresa_nombre}",
         ]
 
