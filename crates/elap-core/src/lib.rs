@@ -13,6 +13,7 @@ pub mod elap {
 }
 
 pub mod error;
+pub mod error_recovery;
 pub mod logging;
 pub mod logging_v2;
 pub mod config;
@@ -33,6 +34,7 @@ pub mod grpc_client;
 
 pub use core::MotorCentral;
 pub use error::ElapError;
+pub use error_recovery::{RetryConfig, CircuitBreakerConfig, RecoveryConfig, execute_with_retry, execute_with_fallback, HealthCheck};
 pub use config::Configuracion;
 pub use configuration::{ConfiguracionAvanzada, CargadorConfiguracion, ValidadorConfiguracion};
 pub use scheduler::PlanificadorTareas;

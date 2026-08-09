@@ -8,7 +8,7 @@ use std::error::Error;
 /// - Status HTTP automático para API responses
 /// - Mensaje para usuario (sin detalles técnicos)
 /// - Contexto técnico completo para debugging
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ElapError {
     // === API / HTTP ===
     /// 401 - Autenticación requerida
