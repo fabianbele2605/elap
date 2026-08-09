@@ -21,12 +21,12 @@ impl RegistroPlugins {
     /// Registrar un plugin
     pub fn registrar(&self, metadata: PluginMetadata) -> ResultadoElap<()> {
         let mut plugins = self.plugins.lock()
-            .map_err(|_| crate::error::ElapError::Otro(
+            .map_err(|_| crate::error::ElapError::InternalError(
                 "No se pudo adquirir lock del registro".to_string()
             ))?;
 
         if plugins.contains_key(&metadata.nombre) {
-            return Err(crate::error::ElapError::Validacion(
+            return Err(crate::error::ElapError::ValidationError(
                 format!("Plugin '{}' ya está registrado", metadata.nombre)
             ));
         }
@@ -38,12 +38,12 @@ impl RegistroPlugins {
     /// Desregistrar un plugin
     pub fn desregistrar(&self, nombre: &str) -> ResultadoElap<()> {
         let mut plugins = self.plugins.lock()
-            .map_err(|_| crate::error::ElapError::Otro(
+            .map_err(|_| crate::error::ElapError::InternalError(
                 "No se pudo adquirir lock del registro".to_string()
             ))?;
 
         if plugins.remove(nombre).is_none() {
-            return Err(crate::error::ElapError::Validacion(
+            return Err(crate::error::ElapError::ValidationError(
                 format!("Plugin '{}' no encontrado", nombre)
             ));
         }
@@ -54,13 +54,13 @@ impl RegistroPlugins {
     /// Obtener plugin por nombre
     pub fn obtener(&self, nombre: &str) -> ResultadoElap<PluginMetadata> {
         let plugins = self.plugins.lock()
-            .map_err(|_| crate::error::ElapError::Otro(
+            .map_err(|_| crate::error::ElapError::InternalError(
                 "No se pudo adquirir lock del registro".to_string()
             ))?;
 
         plugins.get(nombre)
             .cloned()
-            .ok_or_else(|| crate::error::ElapError::Validacion(
+            .ok_or_else(|| crate::error::ElapError::ValidationError(
                 format!("Plugin '{}' no encontrado", nombre)
             ))
     }
@@ -68,7 +68,7 @@ impl RegistroPlugins {
     /// Listar todos los plugins
     pub fn listar(&self) -> ResultadoElap<Vec<PluginMetadata>> {
         let plugins = self.plugins.lock()
-            .map_err(|_| crate::error::ElapError::Otro(
+            .map_err(|_| crate::error::ElapError::InternalError(
                 "No se pudo adquirir lock del registro".to_string()
             ))?;
 
@@ -78,7 +78,7 @@ impl RegistroPlugins {
     /// Contar plugins registrados
     pub fn contar(&self) -> ResultadoElap<usize> {
         let plugins = self.plugins.lock()
-            .map_err(|_| crate::error::ElapError::Otro(
+            .map_err(|_| crate::error::ElapError::InternalError(
                 "No se pudo adquirir lock del registro".to_string()
             ))?;
 
@@ -88,7 +88,7 @@ impl RegistroPlugins {
     /// Verificar si plugin existe
     pub fn existe(&self, nombre: &str) -> ResultadoElap<bool> {
         let plugins = self.plugins.lock()
-            .map_err(|_| crate::error::ElapError::Otro(
+            .map_err(|_| crate::error::ElapError::InternalError(
                 "No se pudo adquirir lock del registro".to_string()
             ))?;
 
@@ -98,7 +98,7 @@ impl RegistroPlugins {
     /// Buscar plugins por autor
     pub fn buscar_por_autor(&self, autor: &str) -> ResultadoElap<Vec<PluginMetadata>> {
         let plugins = self.plugins.lock()
-            .map_err(|_| crate::error::ElapError::Otro(
+            .map_err(|_| crate::error::ElapError::InternalError(
                 "No se pudo adquirir lock del registro".to_string()
             ))?;
 
@@ -113,7 +113,7 @@ impl RegistroPlugins {
     /// Buscar plugins por permiso requerido
     pub fn buscar_por_permiso(&self, permiso: &str) -> ResultadoElap<Vec<PluginMetadata>> {
         let plugins = self.plugins.lock()
-            .map_err(|_| crate::error::ElapError::Otro(
+            .map_err(|_| crate::error::ElapError::InternalError(
                 "No se pudo adquirir lock del registro".to_string()
             ))?;
 

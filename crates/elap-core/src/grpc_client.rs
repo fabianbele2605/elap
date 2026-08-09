@@ -14,10 +14,10 @@ impl AIRuntimeClient {
     /// Crear nuevo cliente gRPC
     pub async fn conectar(addr: &str) -> ResultadoElap<Self> {
         let channel = Channel::from_shared(addr.to_string())
-            .map_err(|e| crate::error::ElapError::Config(e.to_string()))?
+            .map_err(|e| crate::error::ElapError::ConfigError(e.to_string()))?
             .connect()
             .await
-            .map_err(|e| crate::error::ElapError::Config(e.to_string()))?;
+            .map_err(|e| crate::error::ElapError::ConfigError(e.to_string()))?;
 
         Ok(Self {
             client: AiRuntimeServiceClient::new(channel),
@@ -39,12 +39,12 @@ impl AIRuntimeClient {
             .client
             .execute_agent(request)
             .await
-            .map_err(|e| crate::error::ElapError::Config(e.to_string()))?;
+            .map_err(|e| crate::error::ElapError::ConfigError(e.to_string()))?;
 
         let mensaje = response.into_inner();
 
         if mensaje.status == "error" {
-            return Err(crate::error::ElapError::Config(mensaje.error));
+            return Err(crate::error::ElapError::ConfigError(mensaje.error));
         }
 
         Ok(mensaje.result)
@@ -60,7 +60,7 @@ impl AIRuntimeClient {
             .client
             .health_check(request)
             .await
-            .map_err(|e| crate::error::ElapError::Config(e.to_string()))?;
+            .map_err(|e| crate::error::ElapError::ConfigError(e.to_string()))?;
 
         let mensaje = response.into_inner();
         Ok(mensaje.status == "ok")

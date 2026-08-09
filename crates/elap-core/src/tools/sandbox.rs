@@ -68,7 +68,7 @@ impl ValidadorSeguridad {
         if permiso_existe {
             Ok(())
         } else {
-            Err(ElapError::Validacion(format!(
+            Err(ElapError::ValidationError(format!(
                 "Usuario no tiene permiso: {}",
                 permiso_requerido
             )))
@@ -90,7 +90,7 @@ impl ValidadorSeguridad {
             }
         }
 
-        Err(ElapError::Validacion(format!(
+        Err(ElapError::ValidationError(format!(
             "Ruta no permitida: {}",
             ruta
         )))
@@ -103,7 +103,7 @@ impl ValidadorSeguridad {
     ) -> ResultadoElap<()> {
         for bloqueado in comandos_bloqueados {
             if comando.contains(bloqueado) {
-                return Err(ElapError::Validacion(format!(
+                return Err(ElapError::ValidationError(format!(
                     "Comando bloqueado: {}",
                     bloqueado
                 )));
@@ -123,7 +123,7 @@ impl ValidadorSeguridad {
         let mb = bytes / (1024 * 1024);
 
         if mb > limite_mb as usize {
-            return Err(ElapError::Validacion(format!(
+            return Err(ElapError::ValidationError(format!(
                 "Parámetros exceden límite: {} MB > {} MB",
                 mb, limite_mb
             )));
@@ -139,7 +139,7 @@ impl ValidadorSeguridad {
     ) -> ResultadoElap<()> {
         match politica {
             PoliticaHerramienta::Permitir => Ok(()),
-            PoliticaHerramienta::Denegar => Err(ElapError::Validacion(
+            PoliticaHerramienta::Denegar => Err(ElapError::ValidationError(
                 "Herramienta denegada".to_string(),
             )),
             PoliticaHerramienta::RequerirPermiso(permiso) => {

@@ -28,7 +28,7 @@ impl FileTool {
 
         let path_canonical = if path.exists() {
             path.canonicalize()
-                .map_err(|e| ElapError::Validacion(format!("No se puede resolver ruta: {}", e)))?
+                .map_err(|e| ElapError::ValidationError(format!("No se puede resolver ruta: {}", e)))?
         } else {
             let parent = path.parent().unwrap_or(&self.base_path);
             let parent_canonical = if parent.exists() {
@@ -42,7 +42,7 @@ impl FileTool {
         };
 
         if !path_canonical.starts_with(&base_canonical) {
-            return Err(ElapError::Validacion("Ruta fuera de sandbox".to_string()));
+            return Err(ElapError::ValidationError("Ruta fuera de sandbox".to_string()));
         }
 
         Ok(path_canonical)
@@ -53,12 +53,12 @@ impl FileTool {
         let ruta = parametros
             .get("ruta")
             .and_then(|v| v.as_str())
-            .ok_or(ElapError::Validacion("Parámetro 'ruta' requerido".to_string()))?;
+            .ok_or(ElapError::ValidationError("Parámetro 'ruta' requerido".to_string()))?;
 
         let path = self.validar_ruta(ruta)?;
 
         let contenido = fs::read_to_string(&path)
-            .map_err(|e| ElapError::Otro(format!("Error al leer archivo: {}", e)))?;
+            .map_err(|e| ElapError::InternalError(format!("Error al leer archivo: {}", e)))?;
 
         Ok(json!({
             "ruta": ruta,
@@ -73,22 +73,22 @@ impl FileTool {
         let ruta = parametros
             .get("ruta")
             .and_then(|v| v.as_str())
-            .ok_or(ElapError::Validacion("Parámetro 'ruta' requerido".to_string()))?;
+            .ok_or(ElapError::ValidationError("Parámetro 'ruta' requerido".to_string()))?;
 
         let contenido = parametros
             .get("contenido")
             .and_then(|v| v.as_str())
-            .ok_or(ElapError::Validacion("Parámetro 'contenido' requerido".to_string()))?;
+            .ok_or(ElapError::ValidationError("Parámetro 'contenido' requerido".to_string()))?;
 
         let path = self.validar_ruta(ruta)?;
 
         if let Some(padre) = path.parent() {
             fs::create_dir_all(padre)
-                .map_err(|e| ElapError::Otro(format!("Error al crear directorio: {}", e)))?;
+                .map_err(|e| ElapError::InternalError(format!("Error al crear directorio: {}", e)))?;
         }
 
         fs::write(&path, contenido)
-            .map_err(|e| ElapError::Otro(format!("Error al escribir archivo: {}", e)))?;
+            .map_err(|e| ElapError::InternalError(format!("Error al escribir archivo: {}", e)))?;
 
         Ok(json!({
             "ruta": ruta,
@@ -108,13 +108,13 @@ impl FileTool {
 
         let mut archivos = Vec::new();
         let entries = fs::read_dir(&path)
-            .map_err(|e| ElapError::Otro(format!("Error al leer directorio: {}", e)))?;
+            .map_err(|e| ElapError::InternalError(format!("Error al leer directorio: {}", e)))?;
 
         for entry in entries {
-            let entry = entry.map_err(|e| ElapError::Otro(format!("Error en entrada: {}", e)))?;
+            let entry = entry.map_err(|e| ElapError::InternalError(format!("Error en entrada: {}", e)))?;
             let nombre = entry.file_name();
             let metadata = entry.metadata()
-                .map_err(|e| ElapError::Otro(format!("Error al obtener metadata: {}", e)))?;
+                .map_err(|e| ElapError::InternalError(format!("Error al obtener metadata: {}", e)))?;
 
             archivos.push(json!({
                 "nombre": nombre.to_string_lossy(),
@@ -144,19 +144,19 @@ impl Tool for FileTool {
         let operacion = parametros
             .get("operacion")
             .and_then(|v| v.as_str())
-            .ok_or(ElapError::Validacion("Parámetro 'operacion' requerido".to_string()))?;
+            .ok_or(ElapError::ValidationError("Parámetro 'operacion' requerido".to_string()))?;
 
         match operacion {
             "leer" => self.leer(parametros),
             "escribir" => self.escribir(parametros),
             "listar" => self.listar(parametros),
-            _ => Err(ElapError::Validacion(format!("Operación desconocida: {}", operacion))),
+            _ => Err(ElapError::ValidationError(format!("Operación desconocida: {}", operacion))),
         }
     }
 
     fn validar_parametros(&self, parametros: &Value) -> ResultadoElap<()> {
         if !parametros.is_object() {
-            return Err(ElapError::Validacion("Los parámetros deben ser un objeto JSON".to_string()));
+            return Err(ElapError::ValidationError("Los parámetros deben ser un objeto JSON".to_string()));
         }
 
         let operacion = parametros
@@ -164,7 +164,7 @@ impl Tool for FileTool {
             .and_then(|v| v.as_str());
 
         if operacion.is_none() {
-            return Err(ElapError::Validacion("Parámetro 'operacion' requerido".to_string()));
+            return Err(ElapError::ValidationError("Parámetro 'operacion' requerido".to_string()));
         }
 
         Ok(())

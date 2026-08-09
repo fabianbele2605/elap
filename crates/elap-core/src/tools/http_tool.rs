@@ -18,7 +18,7 @@ impl HttpTool {
     /// Validar URL
     fn validar_url(&self, url: &str) -> ResultadoElap<()> {
         if !url.starts_with("http://") && !url.starts_with("https://") {
-            return Err(ElapError::Validacion("URL debe comenzar con http:// o https://".to_string()));
+            return Err(ElapError::ValidationError("URL debe comenzar con http:// o https://".to_string()));
         }
         Ok(())
     }
@@ -28,7 +28,7 @@ impl HttpTool {
         let url = parametros
             .get("url")
             .and_then(|v| v.as_str())
-            .ok_or(ElapError::Validacion("Parámetro 'url' requerido".to_string()))?;
+            .ok_or(ElapError::ValidationError("Parámetro 'url' requerido".to_string()))?;
 
         self.validar_url(url)?;
 
@@ -49,11 +49,11 @@ impl HttpTool {
         let url = parametros
             .get("url")
             .and_then(|v| v.as_str())
-            .ok_or(ElapError::Validacion("Parámetro 'url' requerido".to_string()))?;
+            .ok_or(ElapError::ValidationError("Parámetro 'url' requerido".to_string()))?;
 
         let cuerpo = parametros
             .get("cuerpo")
-            .ok_or(ElapError::Validacion("Parámetro 'cuerpo' requerido".to_string()))?;
+            .ok_or(ElapError::ValidationError("Parámetro 'cuerpo' requerido".to_string()))?;
 
         self.validar_url(url)?;
 
@@ -75,11 +75,11 @@ impl HttpTool {
         let url = parametros
             .get("url")
             .and_then(|v| v.as_str())
-            .ok_or(ElapError::Validacion("Parámetro 'url' requerido".to_string()))?;
+            .ok_or(ElapError::ValidationError("Parámetro 'url' requerido".to_string()))?;
 
         let cuerpo = parametros
             .get("cuerpo")
-            .ok_or(ElapError::Validacion("Parámetro 'cuerpo' requerido".to_string()))?;
+            .ok_or(ElapError::ValidationError("Parámetro 'cuerpo' requerido".to_string()))?;
 
         self.validar_url(url)?;
 
@@ -100,7 +100,7 @@ impl HttpTool {
         let url = parametros
             .get("url")
             .and_then(|v| v.as_str())
-            .ok_or(ElapError::Validacion("Parámetro 'url' requerido".to_string()))?;
+            .ok_or(ElapError::ValidationError("Parámetro 'url' requerido".to_string()))?;
 
         self.validar_url(url)?;
 
@@ -127,28 +127,28 @@ impl Tool for HttpTool {
         let metodo = parametros
             .get("metodo")
             .and_then(|v| v.as_str())
-            .ok_or(ElapError::Validacion("Parámetro 'metodo' requerido".to_string()))?;
+            .ok_or(ElapError::ValidationError("Parámetro 'metodo' requerido".to_string()))?;
 
         match metodo {
             "GET" => self.get(parametros),
             "POST" => self.post(parametros),
             "PUT" => self.put(parametros),
             "DELETE" => self.delete(parametros),
-            _ => Err(ElapError::Validacion(format!("Método HTTP desconocido: {}", metodo))),
+            _ => Err(ElapError::ValidationError(format!("Método HTTP desconocido: {}", metodo))),
         }
     }
 
     fn validar_parametros(&self, parametros: &Value) -> ResultadoElap<()> {
         if !parametros.is_object() {
-            return Err(ElapError::Validacion("Los parámetros deben ser un objeto JSON".to_string()));
+            return Err(ElapError::ValidationError("Los parámetros deben ser un objeto JSON".to_string()));
         }
 
         if parametros.get("metodo").is_none() {
-            return Err(ElapError::Validacion("Parámetro 'metodo' requerido".to_string()));
+            return Err(ElapError::ValidationError("Parámetro 'metodo' requerido".to_string()));
         }
 
         if parametros.get("url").is_none() {
-            return Err(ElapError::Validacion("Parámetro 'url' requerido".to_string()));
+            return Err(ElapError::ValidationError("Parámetro 'url' requerido".to_string()));
         }
 
         Ok(())

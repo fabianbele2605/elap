@@ -55,13 +55,13 @@ impl SystemTool {
     /// Ejecutar comando (restringido)
     fn ejecutar_comando(&self, parametros: &Value) -> ResultadoElap<Value> {
         if !self.permitir_comandos {
-            return Err(ElapError::Validacion("Ejecución de comandos no permitida".to_string()));
+            return Err(ElapError::ValidationError("Ejecución de comandos no permitida".to_string()));
         }
 
         let comando = parametros
             .get("comando")
             .and_then(|v| v.as_str())
-            .ok_or(ElapError::Validacion("Parámetro 'comando' requerido".to_string()))?;
+            .ok_or(ElapError::ValidationError("Parámetro 'comando' requerido".to_string()))?;
 
         self.validar_comando(comando)?;
 
@@ -81,7 +81,7 @@ impl SystemTool {
 
         for bloqueado in comandos_bloqueados {
             if comando.starts_with(bloqueado) {
-                return Err(ElapError::Validacion(format!("Comando bloqueado por seguridad: {}", bloqueado)));
+                return Err(ElapError::ValidationError(format!("Comando bloqueado por seguridad: {}", bloqueado)));
             }
         }
 
@@ -102,24 +102,24 @@ impl Tool for SystemTool {
         let operacion = parametros
             .get("operacion")
             .and_then(|v| v.as_str())
-            .ok_or(ElapError::Validacion("Parámetro 'operacion' requerido".to_string()))?;
+            .ok_or(ElapError::ValidationError("Parámetro 'operacion' requerido".to_string()))?;
 
         match operacion {
             "info" => self.obtener_info(),
             "recursos" => self.obtener_recursos(),
             "variables" => self.obtener_variables_entorno(),
             "comando" => self.ejecutar_comando(parametros),
-            _ => Err(ElapError::Validacion(format!("Operación de sistema desconocida: {}", operacion))),
+            _ => Err(ElapError::ValidationError(format!("Operación de sistema desconocida: {}", operacion))),
         }
     }
 
     fn validar_parametros(&self, parametros: &Value) -> ResultadoElap<()> {
         if !parametros.is_object() {
-            return Err(ElapError::Validacion("Los parámetros deben ser un objeto JSON".to_string()));
+            return Err(ElapError::ValidationError("Los parámetros deben ser un objeto JSON".to_string()));
         }
 
         if parametros.get("operacion").is_none() {
-            return Err(ElapError::Validacion("Parámetro 'operacion' requerido".to_string()));
+            return Err(ElapError::ValidationError("Parámetro 'operacion' requerido".to_string()));
         }
 
         Ok(())

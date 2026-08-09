@@ -59,12 +59,12 @@ impl GestorRbac {
     pub fn validar_permiso(&self, rol: Rol, permiso: Permiso) -> ResultadoElap<()> {
         let permisos = self.permisos_por_rol
             .get(&rol)
-            .ok_or_else(|| ElapError::Validacion(format!("Rol no encontrado: {}", rol)))?;
+            .ok_or_else(|| ElapError::ValidationError(format!("Rol no encontrado: {}", rol)))?;
 
         if permisos.contains(&permiso) {
             Ok(())
         } else {
-            Err(ElapError::Validacion(
+            Err(ElapError::ValidationError(
                 format!("Rol {} no tiene permiso para: {}", rol, permiso)
             ))
         }
@@ -75,7 +75,7 @@ impl GestorRbac {
         self.permisos_por_rol
             .get(&rol)
             .cloned()
-            .ok_or_else(|| ElapError::Validacion(format!("Rol no encontrado: {}", rol)))
+            .ok_or_else(|| ElapError::ValidationError(format!("Rol no encontrado: {}", rol)))
     }
 }
 

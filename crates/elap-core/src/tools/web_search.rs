@@ -18,25 +18,25 @@ impl Tool for WebSearchTool {
 
     fn validar_parametros(&self, parametros: &serde_json::Value) -> ResultadoElap<()> {
         if !parametros.is_object() {
-            return Err(crate::error::ElapError::Validacion(
+            return Err(crate::error::ElapError::ValidationError(
                 "Parametros debe ser un objeto JSON".to_string(),
             ));
         }
 
         if parametros.get("query").is_none() {
-            return Err(crate::error::ElapError::Validacion(
+            return Err(crate::error::ElapError::ValidationError(
                 "Campo 'query' requerido".to_string(),
             ));
         }
 
         let query = parametros["query"]
             .as_str()
-            .ok_or(crate::error::ElapError::Validacion(
+            .ok_or(crate::error::ElapError::ValidationError(
                 "Query debe ser string".to_string(),
             ))?;
 
         if query.is_empty() {
-            return Err(crate::error::ElapError::Validacion(
+            return Err(crate::error::ElapError::ValidationError(
                 "Query no puede estar vacío".to_string(),
             ));
         }

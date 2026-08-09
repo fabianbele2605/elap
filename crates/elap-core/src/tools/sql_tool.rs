@@ -25,14 +25,14 @@ impl SqlTool {
             || query_upper.contains("DELETE")
             || query_upper.contains("TRUNCATE")
         {
-            return Err(ElapError::Validacion("Operaciones destructivas no permitidas".to_string()));
+            return Err(ElapError::ValidationError("Operaciones destructivas no permitidas".to_string()));
         }
 
         if !query_upper.starts_with("SELECT")
             && !query_upper.starts_with("INSERT")
             && !query_upper.starts_with("UPDATE")
         {
-            return Err(ElapError::Validacion("Solo SELECT, INSERT y UPDATE permitidos".to_string()));
+            return Err(ElapError::ValidationError("Solo SELECT, INSERT y UPDATE permitidos".to_string()));
         }
 
         Ok(())
@@ -43,7 +43,7 @@ impl SqlTool {
         let query = parametros
             .get("query")
             .and_then(|v| v.as_str())
-            .ok_or(ElapError::Validacion("Parámetro 'query' requerido".to_string()))?;
+            .ok_or(ElapError::ValidationError("Parámetro 'query' requerido".to_string()))?;
 
         self.validar_query(query)?;
 
@@ -65,7 +65,7 @@ impl SqlTool {
         let query = parametros
             .get("query")
             .and_then(|v| v.as_str())
-            .ok_or(ElapError::Validacion("Parámetro 'query' requerido".to_string()))?;
+            .ok_or(ElapError::ValidationError("Parámetro 'query' requerido".to_string()))?;
 
         self.validar_query(query)?;
 
@@ -84,7 +84,7 @@ impl SqlTool {
         let query = parametros
             .get("query")
             .and_then(|v| v.as_str())
-            .ok_or(ElapError::Validacion("Parámetro 'query' requerido".to_string()))?;
+            .ok_or(ElapError::ValidationError("Parámetro 'query' requerido".to_string()))?;
 
         self.validar_query(query)?;
 
@@ -129,17 +129,17 @@ impl Tool for SqlTool {
             "select" => self.select(parametros),
             "insert" => self.insert(parametros),
             "update" => self.update(parametros),
-            _ => Err(ElapError::Validacion(format!("Operación SQL desconocida: {}", operacion))),
+            _ => Err(ElapError::ValidationError(format!("Operación SQL desconocida: {}", operacion))),
         }
     }
 
     fn validar_parametros(&self, parametros: &Value) -> ResultadoElap<()> {
         if !parametros.is_object() {
-            return Err(ElapError::Validacion("Los parámetros deben ser un objeto JSON".to_string()));
+            return Err(ElapError::ValidationError("Los parámetros deben ser un objeto JSON".to_string()));
         }
 
         if parametros.get("query").is_none() {
-            return Err(ElapError::Validacion("Parámetro 'query' requerido".to_string()));
+            return Err(ElapError::ValidationError("Parámetro 'query' requerido".to_string()));
         }
 
         Ok(())

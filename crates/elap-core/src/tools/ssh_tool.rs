@@ -18,7 +18,7 @@ impl SshTool {
     /// Validar host
     fn validar_host(&self, host: &str) -> ResultadoElap<()> {
         if !self.hosts_permitidos.contains(&host.to_string()) {
-            return Err(ElapError::Validacion(format!("Host '{}' no está en whitelist", host)));
+            return Err(ElapError::ValidationError(format!("Host '{}' no está en whitelist", host)));
         }
         Ok(())
     }
@@ -29,7 +29,7 @@ impl SshTool {
 
         for bloqueado in comandos_bloqueados {
             if comando.contains(bloqueado) {
-                return Err(ElapError::Validacion(format!("Comando bloqueado: {}", bloqueado)));
+                return Err(ElapError::ValidationError(format!("Comando bloqueado: {}", bloqueado)));
             }
         }
 
@@ -41,12 +41,12 @@ impl SshTool {
         let host = parametros
             .get("host")
             .and_then(|v| v.as_str())
-            .ok_or(ElapError::Validacion("Parámetro 'host' requerido".to_string()))?;
+            .ok_or(ElapError::ValidationError("Parámetro 'host' requerido".to_string()))?;
 
         let comando = parametros
             .get("comando")
             .and_then(|v| v.as_str())
-            .ok_or(ElapError::Validacion("Parámetro 'comando' requerido".to_string()))?;
+            .ok_or(ElapError::ValidationError("Parámetro 'comando' requerido".to_string()))?;
 
         self.validar_host(host)?;
         self.validar_comando(comando)?;
@@ -65,17 +65,17 @@ impl SshTool {
         let host = parametros
             .get("host")
             .and_then(|v| v.as_str())
-            .ok_or(ElapError::Validacion("Parámetro 'host' requerido".to_string()))?;
+            .ok_or(ElapError::ValidationError("Parámetro 'host' requerido".to_string()))?;
 
         let origen = parametros
             .get("origen")
             .and_then(|v| v.as_str())
-            .ok_or(ElapError::Validacion("Parámetro 'origen' requerido".to_string()))?;
+            .ok_or(ElapError::ValidationError("Parámetro 'origen' requerido".to_string()))?;
 
         let destino = parametros
             .get("destino")
             .and_then(|v| v.as_str())
-            .ok_or(ElapError::Validacion("Parámetro 'destino' requerido".to_string()))?;
+            .ok_or(ElapError::ValidationError("Parámetro 'destino' requerido".to_string()))?;
 
         self.validar_host(host)?;
 
@@ -102,26 +102,26 @@ impl Tool for SshTool {
         let operacion = parametros
             .get("operacion")
             .and_then(|v| v.as_str())
-            .ok_or(ElapError::Validacion("Parámetro 'operacion' requerido".to_string()))?;
+            .ok_or(ElapError::ValidationError("Parámetro 'operacion' requerido".to_string()))?;
 
         match operacion {
             "ejecutar" => self.ejecutar_remoto(parametros),
             "copiar" => self.copiar_archivo(parametros),
-            _ => Err(ElapError::Validacion(format!("Operación SSH desconocida: {}", operacion))),
+            _ => Err(ElapError::ValidationError(format!("Operación SSH desconocida: {}", operacion))),
         }
     }
 
     fn validar_parametros(&self, parametros: &Value) -> ResultadoElap<()> {
         if !parametros.is_object() {
-            return Err(ElapError::Validacion("Los parámetros deben ser un objeto JSON".to_string()));
+            return Err(ElapError::ValidationError("Los parámetros deben ser un objeto JSON".to_string()));
         }
 
         if parametros.get("operacion").is_none() {
-            return Err(ElapError::Validacion("Parámetro 'operacion' requerido".to_string()));
+            return Err(ElapError::ValidationError("Parámetro 'operacion' requerido".to_string()));
         }
 
         if parametros.get("host").is_none() {
-            return Err(ElapError::Validacion("Parámetro 'host' requerido".to_string()));
+            return Err(ElapError::ValidationError("Parámetro 'host' requerido".to_string()));
         }
 
         Ok(())

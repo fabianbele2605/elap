@@ -21,12 +21,12 @@ impl RegistroHerramientas {
     /// Registrar herramienta
     pub fn registrar(&self, metadata: ToolMetadata) -> ResultadoElap<()> {
         let mut herramientas = self.herramientas.lock()
-            .map_err(|_| crate::error::ElapError::Otro(
+            .map_err(|_| crate::error::ElapError::InternalError(
                 "No se pudo adquirir lock".to_string()
             ))?;
 
         if herramientas.contains_key(&metadata.nombre) {
-            return Err(crate::error::ElapError::Validacion(
+            return Err(crate::error::ElapError::ValidationError(
                 format!("Herramienta {} ya existe", metadata.nombre)
             ));
         }
@@ -38,13 +38,13 @@ impl RegistroHerramientas {
     /// Obtener herramienta
     pub fn obtener(&self, nombre: &str) -> ResultadoElap<ToolMetadata> {
         let herramientas = self.herramientas.lock()
-            .map_err(|_| crate::error::ElapError::Otro(
+            .map_err(|_| crate::error::ElapError::InternalError(
                 "No se pudo adquirir lock".to_string()
             ))?;
 
         herramientas.get(nombre)
             .cloned()
-            .ok_or_else(|| crate::error::ElapError::Validacion(
+            .ok_or_else(|| crate::error::ElapError::ValidationError(
                 format!("Herramienta {} no encontrada", nombre)
             ))
     }
@@ -52,7 +52,7 @@ impl RegistroHerramientas {
     /// Listar todas las herramientas
     pub fn listar(&self) -> ResultadoElap<Vec<ToolMetadata>> {
         let herramientas = self.herramientas.lock()
-            .map_err(|_| crate::error::ElapError::Otro(
+            .map_err(|_| crate::error::ElapError::InternalError(
                 "No se pudo adquirir lock".to_string()
             ))?;
 
@@ -62,7 +62,7 @@ impl RegistroHerramientas {
     /// Contar herramientas
     pub fn contar(&self) -> ResultadoElap<usize> {
         let herramientas = self.herramientas.lock()
-            .map_err(|_| crate::error::ElapError::Otro(
+            .map_err(|_| crate::error::ElapError::InternalError(
                 "No se pudo adquirir lock".to_string()
             ))?;
 

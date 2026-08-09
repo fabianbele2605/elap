@@ -62,7 +62,7 @@ impl MemoryOutput {
 
     pub fn obtener_eventos(&self) -> ResultadoElap<Vec<LogEvent>> {
         let eventos = self.eventos.lock()
-            .map_err(|_| crate::error::ElapError::Otro(
+            .map_err(|_| crate::error::ElapError::InternalError(
                 "No se pudo adquirir lock de eventos".to_string()
             ))?;
         Ok(eventos.clone())
@@ -70,7 +70,7 @@ impl MemoryOutput {
 
     pub fn cantidad(&self) -> ResultadoElap<usize> {
         let eventos = self.eventos.lock()
-            .map_err(|_| crate::error::ElapError::Otro(
+            .map_err(|_| crate::error::ElapError::InternalError(
                 "No se pudo adquirir lock".to_string()
             ))?;
         Ok(eventos.len())
@@ -78,7 +78,7 @@ impl MemoryOutput {
 
     pub fn limpiar(&self) -> ResultadoElap<()> {
         let mut eventos = self.eventos.lock()
-            .map_err(|_| crate::error::ElapError::Otro(
+            .map_err(|_| crate::error::ElapError::InternalError(
                 "No se pudo adquirir lock".to_string()
             ))?;
         eventos.clear();
@@ -89,7 +89,7 @@ impl MemoryOutput {
 impl LogOutput for MemoryOutput {
     fn escribir(&self, evento: &LogEvent) -> ResultadoElap<()> {
         let mut eventos = self.eventos.lock()
-            .map_err(|_| crate::error::ElapError::Otro(
+            .map_err(|_| crate::error::ElapError::InternalError(
                 "No se pudo adquirir lock".to_string()
             ))?;
         eventos.push(evento.clone());

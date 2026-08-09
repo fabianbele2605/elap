@@ -43,7 +43,7 @@ impl MotorCentral {
     pub async fn iniciar(&self) -> ResultadoElap<()> {
         // Inicializar logging
         inicializar_logging(&self.config.ruta_logs, &self.config.nivel_logging)
-            .map_err(|e| ElapError::Config(e.to_string()))?;
+            .map_err(|e| ElapError::ConfigError(e.to_string()))?;
 
         info!("Motor Central iniciando...");
         info!("Modo: {}", self.config.modo);
@@ -52,7 +52,7 @@ impl MotorCentral {
 
         // Validar configuración
         self.config.validar()
-            .map_err(|e| ElapError::Validacion(e.to_string()))?;
+            .map_err(|e| ElapError::ValidationError(e.to_string()))?;
 
         Ok(())
     }

@@ -23,7 +23,7 @@ impl LoggerAvanzado {
     /// Agregar output
     pub fn agregar_output(&self, output: Arc<dyn LogOutput>) -> ResultadoElap<()> {
         let mut outputs = self.outputs.lock()
-            .map_err(|_| crate::error::ElapError::Otro(
+            .map_err(|_| crate::error::ElapError::InternalError(
                 "No se pudo adquirir lock de outputs".to_string()
             ))?;
         outputs.push(output);
@@ -37,7 +37,7 @@ impl LoggerAvanzado {
         }
 
         let outputs = self.outputs.lock()
-            .map_err(|_| crate::error::ElapError::Otro(
+            .map_err(|_| crate::error::ElapError::InternalError(
                 "No se pudo adquirir lock".to_string()
             ))?;
 
@@ -95,7 +95,7 @@ impl LoggerAvanzado {
     /// Cantidad de outputs
     pub fn cantidad_outputs(&self) -> ResultadoElap<usize> {
         let outputs = self.outputs.lock()
-            .map_err(|_| crate::error::ElapError::Otro(
+            .map_err(|_| crate::error::ElapError::InternalError(
                 "No se pudo adquirir lock".to_string()
             ))?;
         Ok(outputs.len())
@@ -104,7 +104,7 @@ impl LoggerAvanzado {
     /// Flush todos los outputs
     pub fn flush(&self) -> ResultadoElap<()> {
         let outputs = self.outputs.lock()
-            .map_err(|_| crate::error::ElapError::Otro(
+            .map_err(|_| crate::error::ElapError::InternalError(
                 "No se pudo adquirir lock".to_string()
             ))?;
 
