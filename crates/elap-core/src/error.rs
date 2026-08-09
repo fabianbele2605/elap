@@ -103,6 +103,9 @@ pub enum ElapError {
     /// Conexión no disponible
     ConnectionUnavailable(String),
 
+    /// Servicio no disponible (503)
+    ServiceUnavailable(String),
+
     // === Sistema ===
     /// Error interno no categorizado (debería ser raro)
     InternalError(String),
@@ -125,6 +128,7 @@ impl ElapError {
             ElapError::Conflict(_) => 409,
             ElapError::ConnectionPoolExhausted => 503,
             ElapError::ConnectionUnavailable(_) => 503,
+            ElapError::ServiceUnavailable(_) => 503,
             ElapError::GrpcTimeout(_) => 504,
             ElapError::AgentTimeout(_) => 504,
             ElapError::ToolTimeout(_) => 504,
@@ -151,6 +155,7 @@ impl ElapError {
             ElapError::ToolValidationFailed(_) => "TOOL_VALIDATION_FAILED",
             ElapError::DatabaseError(_) => "DATABASE_ERROR",
             ElapError::ConnectionPoolExhausted => "CONNECTION_POOL_EXHAUSTED",
+            ElapError::ServiceUnavailable(_) => "SERVICE_UNAVAILABLE",
             ElapError::TransactionFailed(_) => "TRANSACTION_FAILED",
             ElapError::PermissionDenied(_) => "PERMISSION_DENIED",
             ElapError::AuthenticationFailed(_) => "AUTHENTICATION_FAILED",
@@ -226,6 +231,8 @@ impl ElapError {
                 "La comunicación tardó demasiado. Intenta de nuevo.".to_string(),
             ElapError::ConnectionUnavailable(_) =>
                 "Servicio no disponible. Intenta en unos segundos.".to_string(),
+            ElapError::ServiceUnavailable(_) =>
+                "El servicio está temporalmente no disponible. Intenta más tarde.".to_string(),
             ElapError::InternalError(_) =>
                 "Error interno. El equipo técnico ha sido notificado.".to_string(),
             ElapError::NotImplemented(_) =>
@@ -291,6 +298,8 @@ impl ElapError {
                 format!("GrpcTimeout: {} (exceeded max duration)", msg),
             ElapError::ConnectionUnavailable(msg) =>
                 format!("ConnectionUnavailable: {}", msg),
+            ElapError::ServiceUnavailable(msg) =>
+                format!("ServiceUnavailable: {}", msg),
             ElapError::InternalError(msg) =>
                 format!("InternalError (unexpected): {}", msg),
             ElapError::NotImplemented(msg) =>

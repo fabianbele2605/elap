@@ -28,6 +28,7 @@ pub mod models;
 pub mod agents;
 pub mod agent_model_mapper;
 pub mod agent_orchestrator;
+pub mod plugin_orchestrator;
 pub mod api;
 pub mod db;
 pub mod grpc_client;
@@ -42,6 +43,11 @@ pub use procesos::GestorProcesos;
 pub use logging::inicializar_logging;
 pub use logging_v2::{LogLevel, LogEntry, LogEvent, LoggerAvanzado};
 pub use security::{Rol, Permiso, GestorRbac, RegistroAuditoria, AuditorRbac};
+pub use plugin_orchestrator::{
+    PluginOrchestrator, Intent, PluginHealthStatus, PluginConfig,
+    SpecializedAgent, ExecutionRequest, ExecutionResponse,
+    RAGCollection,
+};
 pub use plugin::{Plugin, PluginMetadata, PluginLoader, RegistroPlugins, PluginSandbox, ConfiguracionSandbox, PoliticaEjecucion, ResearchPlugin};
 pub use tools::{
     Tool, RegistroHerramientas, ToolMetadata, TipoHerramienta,
