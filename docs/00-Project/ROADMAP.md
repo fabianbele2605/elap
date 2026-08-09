@@ -261,21 +261,31 @@ Sistema de logging unificado, local-only, sin salida a internet.
 
 ## 🔌 Fase 6: Plugin Runtime
 
-**Estado**: ⏳ Por hacer  
+**Estado**: 🚀 En progreso (iniciada 2026-08-09)  
 **Semana**: 7  
+**Duración**: 1 semana  
+**Entrega**: 2026-08-15  
 
 ### Objetivos
 
-Framework para cargar y ejecutar plugins de terceros de forma segura.
+✅ Framework para cargar y ejecutar plugins de terceros de forma segura.
 
 ### Entregables
 
-- Plugin loader (dynamic library loading)
-- Plugin manifest format
-- Permission model
-- Sandbox (basic isolation)
-- Plugin registry
-- Tests
+✅ **Documentación completada**:
+- PLAN.md (5 días, arquitectura clara) ✅
+- README.md (visión + componentes) ✅
+- Manifest format spec (TBD)
+
+📋 **Implementación (Día 1-5)**:
+- Plugin manifest format (.toml)
+- Permission model avanzado
+- Advanced sandbox (memory/CPU/FS)
+- Health monitoring
+- Plugin lifecycle
+- Plugin discovery
+- Tests (>85%)
+- Integration + docs
 
 ### Documentación
 
