@@ -347,26 +347,48 @@ Veo que necesitas una **política corporativa**.
             }
 
         else:
-            # GENÉRICO: Usar Ollama con system prompt de RRHH
+            # GENÉRICO: Usar Ollama con system prompt de RRHH + Leyes Colombianas
             try:
                 from ..ollama_client import OllamaClient
                 from ..system_prompts import get_system_prompt
+                from ..legal import LegalSearchEngine
 
                 ollama = OllamaClient()
                 system_prompt = get_system_prompt("rrhh_agent")
+                legal_search = LegalSearchEngine()
+
+                # 🏛️ Buscar ley actualizada si aplica
+                ley_actualizada = await legal_search.buscar_ley(query, tema="laboral")
+
+                marco_legal = ""
+                if ley_actualizada and "error" not in ley_actualizada:
+                    marco_legal = f"""
+🏛️ MARCO LEGAL VIGENTE:
+Fuente: {ley_actualizada.get('fuente', 'N/A')}
+Fecha: {ley_actualizada.get('fecha', 'N/A')}
+Confianza: {ley_actualizada.get('confianza', 0)*100:.0f}%
+
+{ley_actualizada.get('texto', '')}
+"""
 
                 prompt_ollama = f"""{system_prompt}
 
+{marco_legal}
+
+---
+
 Pregunta del usuario: {query}
 
-Responde de manera profesional, concisa y útil."""
+Responde de manera profesional, concisa y útil. Usa leyes vigentes."""
 
                 logger.info("📞 Llamando a Ollama para respuesta general de RRHH...")
                 respuesta = await ollama.generar("glm4:9b", prompt_ollama)
 
                 return {
                     "intent": "general_query",
-                    "message": f"🧑‍💼 *Asistente de Recursos Humanos*\n\n{respuesta}"
+                    "message": f"🧑‍💼 *Asistente de Recursos Humanos*\n\n{respuesta}",
+                    "ley_consultada": ley_actualizada.get("fuente") if ley_actualizada else None,
+                    "confianza_legal": ley_actualizada.get("confianza") if ley_actualizada else None
                 }
             except Exception as e:
                 logger.error(f"Ollama error en HR: {e}")
@@ -374,10 +396,11 @@ Responde de manera profesional, concisa y útil."""
                     "intent": "general_query",
                     "message": """🧑‍💼 *Asistente de Recursos Humanos* a tu servicio.
 
-Soy especialista en documentación laboral. Puedo ayudarte con:
+Soy especialista en documentación laboral y legislación colombiana. Puedo ayudarte con:
 
 📋 **Contratos** - Contratos de empleados, acuerdos, cartas de oferta
 📜 **Políticas** - Ausencias, vacaciones, código de conducta
+🏛️ **Legislación** - Derechos laborales, prestaciones, protección
 
 ¿Qué necesitas? Cuéntame más detalles."""
                 }

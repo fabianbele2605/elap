@@ -198,19 +198,39 @@ Teléfono: +57 (5) 330-2200 ext. 105
 Email: beneficios@andina-foods.com.co"""
 
     async def _generic_benefits_response(self, query: str) -> str:
-        """Respuesta genérica para queries de beneficios - usa Ollama"""
+        """Respuesta genérica para queries de beneficios - usa Ollama + Leyes Vigentes"""
         try:
             from ..ollama_client import OllamaClient
             from ..system_prompts import get_system_prompt
+            from ..legal import LegalSearchEngine
 
             ollama = OllamaClient()
             system_prompt = get_system_prompt("benefits_agent")
+            legal_search = LegalSearchEngine()
+
+            # 🏛️ Buscar leyes vigentes sobre beneficios/pensión
+            ley_actualizada = await legal_search.buscar_ley(query, tema="pension")
+
+            marco_legal = ""
+            if ley_actualizada and "error" not in ley_actualizada:
+                marco_legal = f"""
+🏛️ MARCO LEGAL VIGENTE:
+Fuente: {ley_actualizada.get('fuente', 'N/A')}
+Fecha: {ley_actualizada.get('fecha', 'N/A')}
+Confianza: {ley_actualizada.get('confianza', 0)*100:.0f}%
+
+{ley_actualizada.get('texto', '')}
+"""
 
             prompt_ollama = f"""{system_prompt}
 
+{marco_legal}
+
+---
+
 Pregunta del usuario: {query}
 
-Responde de manera clara, con ejemplos y cálculos cuando sea relevante."""
+Responde de manera clara, con ejemplos y cálculos cuando sea relevante. Usa leyes vigentes."""
 
             logger.info("💼 Llamando a Ollama para respuesta general de Benefits...")
             respuesta = await ollama.generar("glm4:9b", prompt_ollama)
@@ -220,6 +240,8 @@ Responde de manera clara, con ejemplos y cálculos cuando sea relevante."""
             return """💼 ASISTENTE DE BENEFICIOS - ANDINA FOODS
 
 Puedo ayudarte con cálculos de prestaciones (cesantías, prima, vacaciones),
-información de EPS, análisis de beneficios y reportes.
+información de EPS, análisis de beneficios, pensiones y reportes.
+
+Consulto leyes vigentes colombianas para respuestas actualizadas.
 
 ¿Qué necesitas saber sobre beneficios?"""
