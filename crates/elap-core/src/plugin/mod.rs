@@ -12,6 +12,8 @@ pub mod research_plugin;
 pub mod payroll;
 pub mod benefits;
 pub mod recruitment;
+pub mod discovery;
+pub mod health;
 
 pub use plugin_trait::Plugin;
 pub use metadata::PluginMetadata;
@@ -22,3 +24,5 @@ pub use research_plugin::ResearchPlugin;
 pub use payroll::{PayrollPlugin, PayrollPluginConfig, SalaryAnalysis, BenefitCalculation, PayrollSummary};
 pub use benefits::{BenefitsPlugin, BenefitsProvider, ProviderType, BenefitsPlan, SocialBenefits};
 pub use recruitment::{RecruitmentPlugin, JobPosting, Candidate, ScreeningResult, OnboardingPlan};
+pub use discovery::{PluginDiscoveryService, DiscoveredPlugin, DiscoveryStats};
+pub use health::{PluginHealthMonitor, HealthStatus, ExecutionMetrics};
