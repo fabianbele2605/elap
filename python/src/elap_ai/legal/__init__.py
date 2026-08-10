@@ -2,19 +2,29 @@
 
 Proporciona:
 - Búsqueda en APIs oficiales colombianas
-- Caché en Qdrant para respuestas rápidas
+- Caché en SQLite para respuestas rápidas
 - Web search para fuentes no disponibles
 - Actualización automática de leyes
 - Sincronización con canales oficiales
+
+Nota: Requiere apscheduler para el scheduler. Sin él, funciona búsqueda manual.
 """
 
 from .official_apis import OfficialAPIs
 from .legal_search_engine import LegalSearchEngine
-from .update_scheduler import LeyesUpdateScheduler, leyes_scheduler
+
+try:
+    from .update_scheduler import LeyesUpdateScheduler, leyes_scheduler
+    HAS_SCHEDULER = True
+except ImportError:
+    HAS_SCHEDULER = False
+    leyes_scheduler = None
+    LeyesUpdateScheduler = None
 
 __all__ = [
     "OfficialAPIs",
     "LegalSearchEngine",
     "LeyesUpdateScheduler",
     "leyes_scheduler",
+    "HAS_SCHEDULER",
 ]
