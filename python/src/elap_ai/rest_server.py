@@ -1326,9 +1326,9 @@ async def start_rest_server(host: str = '0.0.0.0', port: int = 5000):
     cors = aiohttp_cors.setup(app, defaults={
         "*": aiohttp_cors.ResourceOptions(
             allow_credentials=True,
-            expose_headers="*",
-            allow_headers="*",
-            allow_methods="*"
+            expose_headers=("*", "Content-Type", "Authorization"),
+            allow_headers=("*", "Content-Type", "Authorization", "X-Requested-With"),
+            allow_methods=("*", "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
         )
     })
 
