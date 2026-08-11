@@ -1,4 +1,4 @@
-import { API_BASE_URL } from '../../config/api';
+import { API_BASE_URL } from '../config/api';
 import React, { useState, useEffect } from 'react';
 import {
   Zap,
@@ -58,7 +58,7 @@ export const WindowHeader: React.FC<WindowHeaderProps> = ({
     const loadMenuConfig = async () => {
       try {
         setLoading(true);
-        const response = await fetch('${API_BASE_URL}/api/menu-config');
+        const response = await fetch(`${API_BASE_URL}/api/menu-config`);
         if (response.ok) {
           const config = await response.json();
           setMenuConfig(config);

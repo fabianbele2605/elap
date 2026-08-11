@@ -42,7 +42,7 @@ export const KnowledgeTab: React.FC<KnowledgeTabProps> = ({ knowledgeSources }) 
     const loadKnowledgeSources = async () => {
       try {
         setLoading(true);
-        const response = await fetch('${API_BASE_URL}/api/knowledge-sources');
+        const response = await fetch(`${API_BASE_URL}/api/knowledge-sources`);
         if (response.ok) {
           const data = await response.json();
           setApiSources(data);

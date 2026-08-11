@@ -122,8 +122,6 @@ class PayrollAgent:
                 respuesta += f"- Máximo: ${maximo:,.0f}\n"
                 respuesta += f"- Rango: ${maximo - minimo:,.0f}\n\n"
 
-            respuesta += "✅ Datos obtenidos de PostgreSQL en tiempo real"
-
             logger.info(f"✅ Payroll report generado con {len(empleados)} empleados reales")
             return respuesta
 

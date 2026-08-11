@@ -1,4 +1,4 @@
-import { API_BASE_URL } from '../../config/api';
+import { API_BASE_URL } from '../config/api';
 import React, { useState } from 'react';
 import { CompanyConfigForm } from './CompanyConfigForm';
 import { GenerationProgress } from './GenerationProgress';
@@ -287,7 +287,7 @@ Requisitos:
 
 Por favor genera el contenido del documento:`;
 
-    const response = await fetch('${API_BASE_URL}/api/agents/agent_sales_01/execute', {
+    const response = await fetch(`${API_BASE_URL}/api/agents/agent_sales_01/execute`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

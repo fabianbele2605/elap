@@ -371,7 +371,7 @@ export const ChatTab: React.FC<ChatTabProps> = ({
                         <button
                           onClick={async () => {
                             try {
-                              const response = await fetch('${API_BASE_URL}/api/documents/pdf', {
+                              const response = await fetch(`${API_BASE_URL}/api/documents/pdf`, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
@@ -403,7 +403,7 @@ export const ChatTab: React.FC<ChatTabProps> = ({
                         <button
                           onClick={async () => {
                             try {
-                              const response = await fetch('${API_BASE_URL}/api/documents/word', {
+                              const response = await fetch(`${API_BASE_URL}/api/documents/word`, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
@@ -435,7 +435,7 @@ export const ChatTab: React.FC<ChatTabProps> = ({
                         <button
                           onClick={async () => {
                             try {
-                              const response = await fetch('${API_BASE_URL}/api/documents/excel', {
+                              const response = await fetch(`${API_BASE_URL}/api/documents/excel`, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
