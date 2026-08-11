@@ -44,6 +44,7 @@ from .orchestrator import get_orchestrator
 from .document_generators import DocumentGenerator
 from .conversation_manager_postgres import ConversationManagerPostgres
 from .alert_manager import AlertManager
+from .workflow_orchestrator import Workflow, WorkflowStep, WorkflowTemplates
 
 logger = logging.getLogger(__name__)
 alert_manager = AlertManager()  # Instancia global de alertas
@@ -1324,6 +1325,92 @@ async def obtener_datos_empresa(request: web.Request) -> web.Response:
         return web.json_response({'error': str(e)}, status=500)
 
 
+async def listar_workflows(request: web.Request) -> web.Response:
+    """GET /api/workflows - Listar flujos de trabajo disponibles"""
+    try:
+        templates = {
+            "presupuesto": WorkflowTemplates.presupuesto_workflow(),
+            "venta": WorkflowTemplates.analisis_venta_workflow(),
+            "alerta": WorkflowTemplates.alerta_critica_workflow()
+        }
+
+        logger.info(f"📋 {len(templates)} flujos de trabajo disponibles")
+        return web.json_response({
+            "workflows": list(templates.values()),
+            "total": len(templates)
+        })
+
+    except Exception as e:
+        logger.error(f"Error listando workflows: {e}")
+        return web.json_response({'error': str(e)}, status=500)
+
+
+async def ejecutar_workflow(request: web.Request) -> web.Response:
+    """POST /api/workflows/{workflow_id}/execute - Ejecutar un flujo de trabajo
+
+    Body JSON:
+    {
+        "input": {
+            "key": "value"
+        }
+    }
+    """
+    try:
+        workflow_id = request.match_info.get('workflow_id')
+
+        # Obtener template
+        templates_map = {
+            "presupuesto": WorkflowTemplates.presupuesto_workflow(),
+            "venta": WorkflowTemplates.analisis_venta_workflow(),
+            "alerta": WorkflowTemplates.alerta_critica_workflow()
+        }
+
+        if workflow_id not in templates_map:
+            return web.json_response(
+                {'error': f'Workflow {workflow_id} no existe'},
+                status=404
+            )
+
+        template = templates_map[workflow_id]
+
+        # Crear flujo
+        workflow = Workflow(
+            workflow_id=template['id'],
+            name=template['name'],
+            description=template['description']
+        )
+
+        # Obtener input del request
+        try:
+            body = await request.json()
+            workflow.context = body.get('input', {})
+        except:
+            workflow.context = {}
+
+        # Agregar pasos (simulados por ahora)
+        for step_config in template['steps']:
+            step = WorkflowStep(
+                step_id=step_config['id'],
+                agent_id=step_config['agent'],
+                agent_name=step_config['agent'],
+                description=step_config['description'],
+                executor=lambda: {"status": "completado", "agent": step_config['agent']}
+            )
+            workflow.add_step(step)
+
+        logger.info(f"🚀 Iniciando workflow: {workflow.name}")
+
+        # Ejecutar flujo
+        result = await workflow.execute()
+
+        logger.info(f"✅ Workflow completado: {workflow.name}")
+        return web.json_response(result)
+
+    except Exception as e:
+        logger.error(f"Error ejecutando workflow: {e}")
+        return web.json_response({'error': str(e)}, status=500)
+
+
 async def obtener_alertas(request: web.Request) -> web.Response:
     """GET /api/alerts - Obtener alertas activas de la empresa"""
     try:
@@ -1334,23 +1421,32 @@ async def obtener_alertas(request: web.Request) -> web.Response:
         )
         cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-        # Obtener cartera vencida
-        cursor.execute("SELECT SUM(cartera_vencida) FROM clients WHERE cartera_vencida > 0")
-        cartera_vencida = cursor.fetchone()['sum'] or 0
+        # Obtener cartera vencida total
+        cursor.execute("""
+            SELECT COALESCE(SUM(CAST(cartera_vencida_cop AS FLOAT)), 0) as total
+            FROM clients
+            WHERE cartera_vencida_cop IS NOT NULL AND cartera_vencida_cop > 0
+        """)
+        result = cursor.fetchone()
+        cartera_vencida = float(result['total']) if result and result['total'] else 0
 
         # Obtener concentración de clientes (% en top 1)
         cursor.execute("""
-            SELECT (MAX(ventas_2025) / SUM(ventas_2025) * 100)::FLOAT as concentracion
+            SELECT COALESCE((MAX(CAST(ventas_2025 AS FLOAT)) /
+                    NULLIF(SUM(CAST(ventas_2025 AS FLOAT)), 0) * 100), 0)::FLOAT
+            as concentracion
             FROM clients
         """)
-        concentracion = cursor.fetchone()['concentracion'] or 0
+        result = cursor.fetchone()
+        concentracion = float(result['concentracion']) if result and result['concentracion'] else 0
 
         # Obtener proyectos en riesgo
         cursor.execute("""
             SELECT COUNT(*) as count FROM projects
-            WHERE estado_riesgo IN ('Crítico', 'Alto')
+            WHERE LOWER(estado) IN ('crítico', 'alto', 'en riesgo')
         """)
-        proyectos_riesgo = cursor.fetchone()['count'] or 0
+        result = cursor.fetchone()
+        proyectos_riesgo = int(result['count']) if result and result['count'] else 0
 
         # Limpiar alertas viejas
         alert_manager.clear_old_alerts(hours=24)
@@ -1414,6 +1510,10 @@ async def start_rest_server(host: str = '0.0.0.0', port: int = 5000):
 
     # === Datos de empresa (PostgreSQL) ===
     app.router.add_get('/api/data/empresa', obtener_datos_empresa)
+
+    # === Flujos de trabajo ===
+    app.router.add_get('/api/workflows', listar_workflows)
+    app.router.add_post('/api/workflows/{workflow_id}/execute', ejecutar_workflow)
 
     # === CORS manejado por middleware ===
     # (El middleware add_cors_headers agrega headers CORS a todas las respuestas)
