@@ -46,10 +46,12 @@ from .conversation_manager_postgres import ConversationManagerPostgres
 from .alert_manager import AlertManager
 from .workflow_orchestrator import Workflow, WorkflowStep, WorkflowTemplates
 from .workflow_executor import WorkflowExecutor
+from .audit_logger import AuditLogger, AuditEventType
 
 logger = logging.getLogger(__name__)
 alert_manager = AlertManager()  # Instancia global de alertas
 workflow_executor: Optional[WorkflowExecutor] = None  # Se inicializa después de los agentes
+audit_logger: Optional[AuditLogger] = None  # Instancia global de auditoría
 doc_generator = DocumentGenerator()
 
 # Inicializar conversation_manager con manejo de errores
@@ -218,6 +220,10 @@ async def init_agents():
         "document_manager_agent": document_manager_agent,
     })
 
+    # === Audit Logger ===
+    global audit_logger
+    audit_logger = AuditLogger()
+
     logger.info("✅ Sistema Agents (3): Supervisor, TaskRouter, Memory")
     logger.info("✅ Administrativo Agents (5): HR, Finance, Payroll, Benefits, Recruitment")
     logger.info("✅ Dirección Agents (3): CEO, CFO, CMO")
@@ -225,6 +231,7 @@ async def init_agents():
     logger.info("✅ Documentación Agents (2): DocumentManager, PDFAssistant")
     logger.info("✅ Agent Orchestrator initialized (Fase 6)")
     logger.info("✅ Workflow Executor initialized (real agent integration)")
+    logger.info("✅ Audit Logger initialized (full traceability)")
     logger.info("🚀 TOTAL: 15 agentes listos")
 
 
@@ -1424,6 +1431,90 @@ async def ejecutar_workflow(request: web.Request) -> web.Response:
         return web.json_response({'error': str(e)}, status=500)
 
 
+async def obtener_audit_log(request: web.Request) -> web.Response:
+    """GET /api/audit - Obtener log de auditoría con filtros"""
+    try:
+        if not audit_logger:
+            return web.json_response(
+                {'error': 'Audit logger no inicializado'},
+                status=500
+            )
+
+        # Parámetros de filtro
+        limit = int(request.query.get('limit', 100))
+        event_type = request.query.get('event_type')
+        user_id = request.query.get('user_id')
+        days = int(request.query.get('days', 7))
+
+        # Obtener logs
+        logs = audit_logger.get_audit_log(
+            limit=limit,
+            event_type=event_type,
+            user_id=user_id,
+            days=days
+        )
+
+        logger.info(f"📋 Audit log obtenido: {len(logs)} registros")
+        return web.json_response({
+            "logs": logs,
+            "total": len(logs),
+            "filters": {
+                "limit": limit,
+                "event_type": event_type,
+                "user_id": user_id,
+                "days": days
+            }
+        })
+
+    except Exception as e:
+        logger.error(f"Error obteniendo audit log: {e}")
+        return web.json_response({'error': str(e)}, status=500)
+
+
+async def obtener_workflow_audit(request: web.Request) -> web.Response:
+    """GET /api/audit/workflows/{workflow_id} - Auditoría completa de workflow"""
+    try:
+        if not audit_logger:
+            return web.json_response(
+                {'error': 'Audit logger no inicializado'},
+                status=500
+            )
+
+        workflow_id = request.match_info.get('workflow_id')
+
+        # Obtener auditoría del workflow
+        audit_data = audit_logger.get_workflow_audit(workflow_id)
+
+        logger.info(f"📋 Workflow audit obtenido: {workflow_id} ({audit_data.get('total_events', 0)} eventos)")
+        return web.json_response(audit_data)
+
+    except Exception as e:
+        logger.error(f"Error obteniendo workflow audit: {e}")
+        return web.json_response({'error': str(e)}, status=500)
+
+
+async def obtener_audit_stats(request: web.Request) -> web.Response:
+    """GET /api/audit/statistics - Estadísticas de auditoría"""
+    try:
+        if not audit_logger:
+            return web.json_response(
+                {'error': 'Audit logger no inicializado'},
+                status=500
+            )
+
+        days = int(request.query.get('days', 7))
+
+        # Obtener estadísticas
+        stats = audit_logger.get_statistics(days=days)
+
+        logger.info(f"📊 Audit statistics obtenidas para {days} días")
+        return web.json_response(stats)
+
+    except Exception as e:
+        logger.error(f"Error obteniendo audit statistics: {e}")
+        return web.json_response({'error': str(e)}, status=500)
+
+
 async def obtener_alertas(request: web.Request) -> web.Response:
     """GET /api/alerts - Obtener alertas activas de la empresa"""
     try:
@@ -1527,6 +1618,11 @@ async def start_rest_server(host: str = '0.0.0.0', port: int = 5000):
     # === Flujos de trabajo ===
     app.router.add_get('/api/workflows', listar_workflows)
     app.router.add_post('/api/workflows/{workflow_id}/execute', ejecutar_workflow)
+
+    # === Auditoría ===
+    app.router.add_get('/api/audit', obtener_audit_log)
+    app.router.add_get('/api/audit/workflows/{workflow_id}', obtener_workflow_audit)
+    app.router.add_get('/api/audit/statistics', obtener_audit_stats)
 
     # === CORS manejado por middleware ===
     # (El middleware add_cors_headers agrega headers CORS a todas las respuestas)
