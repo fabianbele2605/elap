@@ -250,6 +250,8 @@ Soy experto en:
             logger.info("💰 Detectada pregunta sobre ingresos - usando datos REALES")
 
             try:
+                from ..chart_generator import ChartGenerator
+
                 datos = await self.obtener_ingresos_por_canal()
 
                 if "error" not in datos:
@@ -265,15 +267,40 @@ Soy experto en:
 🏆 **Top 3 Canales de Venta**:
 """
 
+                    # Extraer datos para gráficos
+                    canales = [canal for canal, _ in top_3]
+                    montos = [monto for _, monto in top_3]
+                    porcentajes = [(monto / total * 100) if total > 0 else 0 for monto in montos]
+
                     for idx, (canal, monto) in enumerate(top_3, 1):
-                        pct = (monto / total * 100) if total > 0 else 0
+                        pct = porcentajes[idx-1]
                         respuesta += f"\n{idx}. **{canal}**: ${monto:,.0f} COP ({pct:.1f}%)"
 
-                    respuesta += "\n\n✅ Datos obtenidos de PostgreSQL en tiempo real."
+                    # Agregar gráficos
+                    respuesta += "\n\n✅ Datos obtenidos de PostgreSQL en tiempo real.\n\n"
+
+                    # Gráfico de barras
+                    chart_barras = ChartGenerator.generate_bar_chart(
+                        "Ingresos por Canal de Venta",
+                        canales,
+                        montos,
+                        "rgb(75, 192, 192)"
+                    )
+
+                    # Gráfico de pastel
+                    chart_pastel = ChartGenerator.generate_pie_chart(
+                        "Distribución de Ingresos (%)",
+                        canales,
+                        porcentajes
+                    )
 
                     return {
                         "intent": "ingresos_query",
-                        "message": respuesta
+                        "message": respuesta,
+                        "charts": {
+                            "barras": chart_barras,
+                            "pastel": chart_pastel
+                        }
                     }
             except Exception as e:
                 logger.error(f"Error obteniendo datos de ingresos: {e}")
@@ -412,9 +439,14 @@ Si es un reporte o análisis, estructura con:
             import re
             # Arreglar # sin espacios: #Ingresos → # Ingresos
             respuesta = re.sub(r'^(#{1,6})([^\s#])', r'\1 \2', respuesta, flags=re.MULTILINE)
-            # Remover placeholders
-            respuesta = re.sub(r'\[Inserte aquí.*?\]', '[Gráfico generado automáticamente]', respuesta, flags=re.IGNORECASE)
-            respuesta = re.sub(r'\[insertar.*?\]', '[Datos insertados]', respuesta, flags=re.IGNORECASE)
+            # Remover $$ dobles: $$324500 → $324,500
+            respuesta = re.sub(r'\$\$(\d+)', r'$\1', respuesta)
+            # Remover placeholders: $X,XXX.XX
+            respuesta = re.sub(r'\$X,XXX\.XX', '', respuesta)
+            respuesta = re.sub(r'\[Inserte.*?\]', '', respuesta, flags=re.IGNORECASE)
+            respuesta = re.sub(r'\[insertar.*?\]', '', respuesta, flags=re.IGNORECASE)
+            # Limpiar líneas vacías múltiples
+            respuesta = re.sub(r'\n\n+', '\n\n', respuesta)
 
             return {
                 "intent": "general_query",

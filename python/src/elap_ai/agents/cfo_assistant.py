@@ -101,9 +101,13 @@ Proporciona análisis financiero riguroso con números y recomendaciones."""
             import re
             # Arreglar # sin espacios: #Ingresos → # Ingresos
             respuesta = re.sub(r'^(#{1,6})([^\s#])', r'\1 \2', respuesta, flags=re.MULTILINE)
-            # Remover placeholders: $,XXX.XX → [dato]
-            respuesta = re.sub(r'\$,?\d+\.?\d*(?:,\d{3})*(?:\.\d{2})?', lambda m: f"${m.group().replace(',', '')}", respuesta)
-            respuesta = re.sub(r'\[Inserte.*?\]', '[Dato automático]', respuesta, flags=re.IGNORECASE)
+            # Remover $$ dobles: $$324500 → $324,500
+            respuesta = re.sub(r'\$\$(\d+)', r'$\1', respuesta)
+            # Remover placeholders: $X,XXX.XX → remover línea completa o reemplazar
+            respuesta = re.sub(r'\$X,XXX\.XX', '', respuesta)
+            respuesta = re.sub(r'\[Inserte.*?\]', '', respuesta, flags=re.IGNORECASE)
+            # Limpiar líneas vacías múltiples
+            respuesta = re.sub(r'\n\n+', '\n\n', respuesta)
 
             return respuesta
         except Exception as e:
