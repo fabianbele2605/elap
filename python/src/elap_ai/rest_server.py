@@ -9,7 +9,7 @@ import logging
 from aiohttp import web
 import aiohttp_cors
 import json
-from typing import Optional
+from typing import Optional, Dict, Any
 from pathlib import Path
 import os
 from datetime import datetime
@@ -45,9 +45,11 @@ from .document_generators import DocumentGenerator
 from .conversation_manager_postgres import ConversationManagerPostgres
 from .alert_manager import AlertManager
 from .workflow_orchestrator import Workflow, WorkflowStep, WorkflowTemplates
+from .workflow_executor import WorkflowExecutor
 
 logger = logging.getLogger(__name__)
 alert_manager = AlertManager()  # Instancia global de alertas
+workflow_executor: Optional[WorkflowExecutor] = None  # Se inicializa después de los agentes
 doc_generator = DocumentGenerator()
 
 # Inicializar conversation_manager con manejo de errores
@@ -170,7 +172,7 @@ async def init_agents():
     global hr_agent, finance_agent, payroll_agent, benefits_agent, recruitment_agent
     global ceo_assistant, cfo_assistant, cmo_assistant
     global compras_agent, ventas_agent, crm_agent, customer_service_agent
-    global document_manager_agent, pdf_assistant_agent, orchestrator
+    global document_manager_agent, pdf_assistant_agent, orchestrator, workflow_executor
 
     # === Sistema (3) ===
     system_supervisor = SystemSupervisor(theme="andina_foods")
@@ -201,12 +203,28 @@ async def init_agents():
 
     orchestrator = get_orchestrator()
 
+    # === Workflow Executor (inicializar con agentes reales) ===
+    workflow_executor = WorkflowExecutor({
+        "ceo_assistant": ceo_assistant,
+        "cfo_assistant": cfo_assistant,
+        "cmo_assistant": cmo_assistant,
+        "finance_agent": finance_agent,
+        "hr_agent": hr_agent,
+        "payroll_agent": payroll_agent,
+        "compras_agent": compras_agent,
+        "ventas_agent": ventas_agent,
+        "crm_agent": crm_agent,
+        "customer_service_agent": customer_service_agent,
+        "document_manager_agent": document_manager_agent,
+    })
+
     logger.info("✅ Sistema Agents (3): Supervisor, TaskRouter, Memory")
     logger.info("✅ Administrativo Agents (5): HR, Finance, Payroll, Benefits, Recruitment")
     logger.info("✅ Dirección Agents (3): CEO, CFO, CMO")
     logger.info("✅ Comercial Agents (4): Compras, Ventas, CRM, CustomerService")
     logger.info("✅ Documentación Agents (2): DocumentManager, PDFAssistant")
     logger.info("✅ Agent Orchestrator initialized (Fase 6)")
+    logger.info("✅ Workflow Executor initialized (real agent integration)")
     logger.info("🚀 TOTAL: 15 agentes listos")
 
 
@@ -1346,76 +1364,59 @@ async def listar_workflows(request: web.Request) -> web.Response:
 
 
 async def ejecutar_workflow(request: web.Request) -> web.Response:
-    """POST /api/workflows/{workflow_id}/execute - Ejecutar un flujo de trabajo
+    """POST /api/workflows/{workflow_id}/execute - Ejecutar un flujo de trabajo REAL
 
     Body JSON:
     {
-        "input": {
-            "key": "value"
-        }
+        "presupuesto": {"monto": 10000000, "descripcion": "..."},
+        "venta": {"producto": "...", "mercado": "..."},
+        "alerta": {"alerta_tipo": "...", "datos": {...}}
     }
     """
     try:
         workflow_id = request.match_info.get('workflow_id')
 
-        # Obtener template
-        templates_map = {
-            "presupuesto": WorkflowTemplates.presupuesto_workflow(),
-            "venta": WorkflowTemplates.analisis_venta_workflow(),
-            "alerta": WorkflowTemplates.alerta_critica_workflow()
-        }
+        if not workflow_executor:
+            return web.json_response(
+                {'error': 'Workflow executor no inicializado'},
+                status=500
+            )
 
-        if workflow_id not in templates_map:
+        # Obtener input del request
+        try:
+            body = await request.json()
+            input_data = body.get('input', {})
+        except:
+            input_data = {}
+
+        logger.info(f"🚀 Ejecutando workflow REAL: {workflow_id}")
+
+        # Ejecutar workflow según tipo
+        if workflow_id == "presupuesto":
+            result = await workflow_executor.execute_presupuesto_workflow(
+                monto=input_data.get('monto', 1000000),
+                descripcion=input_data.get('descripcion', '')
+            )
+
+        elif workflow_id == "venta":
+            result = await workflow_executor.execute_venta_workflow(
+                producto=input_data.get('producto', ''),
+                mercado=input_data.get('mercado', '')
+            )
+
+        elif workflow_id == "alerta":
+            result = await workflow_executor.execute_alerta_workflow(
+                alerta_tipo=input_data.get('alerta_tipo', 'Desconocida'),
+                datos=input_data.get('datos', {})
+            )
+
+        else:
             return web.json_response(
                 {'error': f'Workflow {workflow_id} no existe'},
                 status=404
             )
 
-        template = templates_map[workflow_id]
-
-        # Crear flujo
-        workflow = Workflow(
-            workflow_id=template['id'],
-            name=template['name'],
-            description=template['description']
-        )
-
-        # Obtener input del request
-        try:
-            body = await request.json()
-            workflow.context = body.get('input', {})
-        except:
-            workflow.context = {}
-
-        # Agregar pasos
-        async def create_executor(agent_id, agent_name):
-            async def executor(**kwargs):
-                # Simular ejecución del agente
-                return {
-                    "status": "completado",
-                    "agent": agent_name,
-                    "input": kwargs,
-                    "timestamp": datetime.now().isoformat()
-                }
-            return executor
-
-        for step_config in template['steps']:
-            executor = await create_executor(step_config['agent'], step_config['agent'])
-            step = WorkflowStep(
-                step_id=step_config['id'],
-                agent_id=step_config['agent'],
-                agent_name=step_config['agent'],
-                description=step_config['description'],
-                executor=executor
-            )
-            workflow.add_step(step)
-
-        logger.info(f"🚀 Iniciando workflow: {workflow.name}")
-
-        # Ejecutar flujo
-        result = await workflow.execute()
-
-        logger.info(f"✅ Workflow completado: {workflow.name}")
+        logger.info(f"✅ Workflow completado: {workflow_id}")
         return web.json_response(result)
 
     except Exception as e:
