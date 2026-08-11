@@ -1,9 +1,11 @@
-"""Word (.docx) Generator usando docxtpl"""
+"""Word (.docx) Generator usando docxtpl + python-docx para items dinámicos"""
 
 import logging
 from pathlib import Path
 from typing import Dict, Any
 from datetime import datetime
+from copy import deepcopy
+import xml.etree.ElementTree as ET
 
 logger = logging.getLogger(__name__)
 
@@ -12,6 +14,13 @@ try:
 except ImportError:
     logger.warning("docxtpl no instalado. Instala con: pip install docxtpl")
     DocxTemplate = None
+
+try:
+    from docx import Document
+    from docx.shared import Pt, RGBColor, Inches
+except ImportError:
+    logger.warning("python-docx no instalado. Instala con: pip install python-docx")
+    Document = None
 
 
 class WordGenerator:
@@ -29,7 +38,8 @@ class WordGenerator:
 
     def generate(self, document_type: str, data: Dict[str, Any], output_path: Path) -> None:
         """
-        Genera documento Word usando docxtpl
+        Genera documento Word usando docxtpl para variables simples
+        y python-docx para items dinámicos en tablas
 
         Args:
             document_type: Tipo de documento (contract, report, invoice)
@@ -48,25 +58,102 @@ class WordGenerator:
             self._create_default_template(template_path, document_type)
 
         try:
-            # Cargar template con docxtpl
-            doc = DocxTemplate(str(template_path))
-
-            # Preparar contexto con datos
-            context = self._prepare_context(data, document_type)
-
-            # Renderizar variables {{ }} en el template
-            doc.render(context)
-
             # Crear directorio si no existe
             output_path.parent.mkdir(parents=True, exist_ok=True)
 
-            # Guardar documento
-            doc.save(str(output_path))
-            logger.info(f"Word document generated: {output_path}")
+            # Paso 1: Cargar y renderizar variables simples con docxtpl
+            doc = DocxTemplate(str(template_path))
+            context = self._prepare_context(data, document_type)
+            doc.render(context)
+
+            # Paso 2: Manejo especial de items dinámicos (para factura)
+            if document_type == "invoice" and "items" in data and data["items"]:
+                # Guardar temporalmente
+                temp_path = output_path.parent / f"temp_{output_path.name}"
+                doc.save(str(temp_path))
+
+                # Procesar items dinámicos con python-docx
+                self._add_invoice_items_to_table(str(temp_path), data["items"], str(output_path))
+                temp_path.unlink()  # Eliminar temporal
+                logger.info(f"Word document generated with {len(data['items'])} items: {output_path}")
+            else:
+                # Guardar documento
+                doc.save(str(output_path))
+                logger.info(f"Word document generated: {output_path}")
 
         except Exception as e:
             logger.error(f"Error generating Word document: {e}")
             raise
+
+    def _add_invoice_items_to_table(self, doc_path: str, items: list, output_path: str) -> None:
+        """Agrega items dinámicos a tabla de factura clonando filas"""
+        try:
+            if not Document:
+                logger.error("python-docx no disponible")
+                return
+
+            doc = Document(doc_path)
+
+            # Encontrar tabla de items (segunda tabla típicamente)
+            if len(doc.tables) < 2:
+                logger.warning("No se encontró tabla de items, guardando sin procesar")
+                doc.save(output_path)
+                return
+
+            items_table = doc.tables[1]
+
+            # Encontrar índice de fila template
+            template_row_idx = None
+            for idx, row in enumerate(items_table.rows):
+                row_text = " ".join([cell.text for cell in row.cells])
+                if "{{item.descripcion}}" in row_text or "{{item.precio_unitario}}" in row_text:
+                    template_row_idx = idx
+                    break
+
+            if template_row_idx is None:
+                logger.warning("No se encontró fila template, guardando sin procesar items")
+                doc.save(output_path)
+                return
+
+            # Obtener acceso a XML de la tabla
+            tbl = items_table._element
+            template_row_element = items_table.rows[template_row_idx]._element
+
+            # Clonar fila para cada item
+            for item_data in items:
+                # Crear copia del elemento fila
+                new_row_element = deepcopy(template_row_element)
+
+                # Reemplazar variables en la fila clonada
+                for text_elem in new_row_element.iter("{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t"):
+                    if text_elem.text:
+                        if "{{item.descripcion}}" in text_elem.text:
+                            text_elem.text = str(item_data.get("descripcion", ""))
+                        elif "{{item.precio_unitario}}" in text_elem.text:
+                            text_elem.text = str(item_data.get("precio_unitario", ""))
+                        elif "{{item.cantidad}}" in text_elem.text:
+                            text_elem.text = str(item_data.get("cantidad", ""))
+                        elif "{{item.subtotal}}" in text_elem.text:
+                            text_elem.text = str(item_data.get("subtotal", ""))
+
+                # Insertar nueva fila en tabla
+                tbl.insert(tbl.index(template_row_element) + 1, new_row_element)
+
+            # Eliminar fila template original
+            tbl.remove(template_row_element)
+
+            # Guardar documento
+            doc.save(output_path)
+            logger.info(f"Added {len(items)} items to invoice table")
+
+        except Exception as e:
+            logger.error(f"Error adding invoice items: {e}")
+            # Fallback: guardar el documento como está
+            try:
+                doc = Document(doc_path)
+                doc.save(output_path)
+            except:
+                pass
 
     def _get_template_path(self, document_type: str) -> Path:
         """Obtiene ruta del template según tipo"""
@@ -74,6 +161,7 @@ class WordGenerator:
             "contract": "contract_template.docx",
             "report": "report_template.docx",
             "invoice": "invoice_template.docx",
+            "job_offer": "job_offer_template.docx",
             "hr_document": "hr_document_template.docx",
         }
         template_name = templates.get(document_type, "default_template.docx")
@@ -108,49 +196,37 @@ class WordGenerator:
         return context
 
     def _prepare_contract_context(self, context: Dict) -> Dict:
-        """Prepara contexto para contrato con docxtpl"""
-        # docxtpl puede iterar listas directamente con {% for %}
-        # Solo asegurarse de que existan
+        """Prepara contexto para contrato"""
         if "beneficios" not in context:
             context["beneficios"] = []
-
         if "responsabilidades" not in context:
             context["responsabilidades"] = []
-
         return context
 
     def _prepare_report_context(self, context: Dict) -> Dict:
-        """Prepara contexto para reporte con docxtpl"""
-        # docxtpl puede iterar dicts directamente
+        """Prepara contexto para reporte"""
         if "metricas" not in context:
             context["metricas"] = {}
-
         return context
 
     def _prepare_invoice_context(self, context: Dict) -> Dict:
-        """Prepara contexto para factura con docxtpl"""
+        """Prepara contexto para factura"""
         # Calcular totales de items
         if "items" in context and isinstance(context["items"], list):
             for item in context["items"]:
                 cantidad = float(item.get("cantidad", 1))
                 precio = float(item.get("precio_unitario", 0))
                 subtotal_item = cantidad * precio
-                # Usar "subtotal" que es lo que espera el template
                 item["subtotal"] = f"${subtotal_item:,.0f}"
                 item["precio_unitario"] = f"${precio:,.0f}"
                 item["cantidad"] = int(cantidad)
 
-            # Calcular totales generales
+            # Calcular totales
             subtotal = sum(float(item.get("precio_unitario", "0").replace("$", "").replace(",", "")) * item.get("cantidad", 1) for item in context["items"])
             context["subtotal"] = f"${subtotal:,.0f}"
-
-            impuesto = subtotal * 0.19
-            context["impuesto"] = f"${impuesto:,.0f}"
-
-            total = subtotal + impuesto
-            context["total"] = f"${total:,.0f}"
+            context["impuesto"] = f"${subtotal * 0.19:,.0f}"
+            context["total"] = f"${subtotal * 1.19:,.0f}"
         else:
-            # Valores por defecto si no hay items
             context["subtotal"] = "$0"
             context["impuesto"] = "$0"
             context["total"] = "$0"
@@ -160,37 +236,25 @@ class WordGenerator:
 
     def _create_default_template(self, template_path: Path, document_type: str) -> None:
         """Crea template por defecto si no existe"""
-        try:
-            from docx import Document
-            from docx.shared import Pt, RGBColor, Inches
-        except ImportError:
-            logger.error("python-docx no instalado")
+        if not Document:
+            logger.error("python-docx no disponible")
             return
 
-        # Crear directorio si no existe
         template_path.parent.mkdir(parents=True, exist_ok=True)
-
-        # Crear documento base
         doc = Document()
 
-        # Agregar título
         title = doc.add_paragraph()
         title_run = title.add_run(f"Template: {document_type.upper()}")
         title_run.font.size = Pt(16)
         title_run.font.bold = True
-        title_run.font.color.rgb = RGBColor(45, 80, 22)  # Verde Andina
+        title_run.font.color.rgb = RGBColor(45, 80, 22)
 
-        # Agregar descripción
-        desc = doc.add_paragraph("Este es un template por defecto. Personaliza según necesites.")
-        desc.style = "Heading 2"
+        doc.add_paragraph("Este es un template por defecto. Personaliza según necesites.")
 
-        # Agregar campos de ejemplo
         if document_type == "contract":
             doc.add_paragraph("Empresa: {{empresa}}")
             doc.add_paragraph("Empleado: {{empleado}}")
             doc.add_paragraph("Cargo: {{cargo}}")
-            doc.add_paragraph("Salario: {{salario}}")
 
-        # Guardar
         doc.save(str(template_path))
         logger.info(f"Default template created: {template_path}")
