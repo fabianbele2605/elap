@@ -7,11 +7,18 @@ Es una solución temporal mientras el gRPC está siendo habilitado.
 import asyncio
 import logging
 from aiohttp import web
+import aiohttp_cors
 import json
 from typing import Optional
 from pathlib import Path
 import os
 from datetime import datetime
+
+# 🔧 Configurar logging INMEDIATAMENTE
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 
 from .agents.hr_agent import HRAgent
 from .agents.finance_agent import FinanceAgent
@@ -31,8 +38,26 @@ from .agents.system_supervisor import SystemSupervisor
 from .agents.task_router import TaskRouter
 from .agents.memory_manager import MemoryManager
 from .orchestrator import get_orchestrator
+from .document_generators import DocumentGenerator
+from .conversation_manager_postgres import ConversationManagerPostgres
 
 logger = logging.getLogger(__name__)
+doc_generator = DocumentGenerator()
+
+# Inicializar conversation_manager con manejo de errores
+conversation_manager = None
+try:
+    conversation_manager = ConversationManagerPostgres(
+        host="localhost",
+        port=5432,
+        database="elap_db",
+        user="elap_user",
+        password="elap_secure_pass_2026"
+    )
+    logger.info("✅ ConversationManager PostgreSQL inicializado")
+except Exception as e:
+    logger.error(f"❌ Error inicializando ConversationManager: {e}")
+    conversation_manager = None
 
 # Inicializar agentes globales - 15 agentes ELAP
 # === Sistema (3) ===
@@ -82,11 +107,11 @@ def _detect_agent_type_from_prompt(prompt: str) -> str:
         return "cmo_assistant"
 
     # === RRHH (HR) ===
-    if any(word in prompt_lower for word in ["rrhh", "recursos humanos", "contrat", "empleado", "selección"]):
+    if any(word in prompt_lower for word in ["rrhh", "recursos humanos", "contrat", "empleado", "selección", "salario promedio", "análisis salarial", "estructura salarial", "rango salarial"]):
         return "hr"
 
     # === Finanzas (Análista Financiero) ===
-    if any(word in prompt_lower for word in ["analista financiero", "finanz", "utilidad", "margen", "reportes financiero", "ingresos"]):
+    if any(word in prompt_lower for word in ["analista financiero", "finanz", "utilidad", "margen", "reportes financiero", "ingresos", "gasto", "operacional", "proyecciones", "ahorro", "costo", "presupuesto", "rentabilidad", "flujo de caja", "análisis financiero", "inversión"]):
         return "finance"
 
     # === Contabilidad ===
@@ -94,7 +119,7 @@ def _detect_agent_type_from_prompt(prompt: str) -> str:
         return "finance"
 
     # === Nómina/Payroll ===
-    if any(word in prompt_lower for word in ["nómina", "payroll", "salario", "deducciones", "provisión"]):
+    if any(word in prompt_lower for word in ["nómina", "payroll", "deducciones", "provisión", "cálculo de nómina"]):
         return "payroll"
 
     # === Prestaciones/Benefits ===
@@ -198,6 +223,7 @@ async def ejecutar_agente(request: web.Request) -> web.Response:
         agent_id = request.match_info.get('agent_id', 'asistente')
         prompt = data.get('prompt', data.get('query', 'Hola'))
 
+        logger.info(f"🔴 EXECUTE ENDPOINT - agent_id desde URL: '{agent_id}'")
         logger.info(f"Solicitud: {prompt[:50]}... [Agent: {agent_id}]")
 
         # 🧠 AGENT ORCHESTRATOR - Intent detection automático
@@ -297,6 +323,20 @@ async def ejecutar_agente(request: web.Request) -> web.Response:
             agent = hr_agent
             logger.warning(f"Fallback a HR Agent para agent_id: {agent_id}")
 
+        # 🏷️ Mapear agent_id a nombre legible ANTES de procesar
+        print(f"🟡 ANTES DE PROCESAR - agent_id='{agent_id}'")
+        agent_names = {
+            'hr': 'HR Agent', 'finance': 'Finance Agent', 'payroll': 'Payroll Agent',
+            'benefits': 'Benefits Agent', 'recruitment': 'Recruitment Agent',
+            'ceo_assistant': 'CEO Assistant', 'cfo_assistant': 'CFO Assistant', 'cmo_assistant': 'CMO Assistant',
+            'compras': 'Compras Agent', 'ventas': 'Ventas Agent', 'crm': 'CRM Agent',
+            'customer_service': 'Customer Service Agent', 'document_manager': 'Document Manager',
+            'pdf_assistant': 'PDF Assistant', 'system_supervisor': 'System Supervisor',
+            'task_router': 'Task Router', 'memory_manager': 'Memory Manager'
+        }
+        agent_display_name = agent_names.get(agent_id, agent_id)
+        print(f"✅ agent_display_name='{agent_display_name}', conversation_manager is None? {conversation_manager is None}")
+
         # Procesar query con el agente
         result = await agent.process_query(prompt)
 
@@ -310,8 +350,46 @@ async def ejecutar_agente(request: web.Request) -> web.Response:
         else:
             logger.warning("❌ MARKDOWN LINK NO ENCONTRADO EN RESPUESTA")
 
+        print(f"🔵 COMPLETADO: agent_display_name='{agent_display_name}', conversation_manager is None? {conversation_manager is None}")
+
+        # 💾 AUTO-CREAR Y GUARDAR EN HISTORIAL
+        conversation_id = data.get('conversation_id')
+        print(f"💾 conversation_manager is None? {conversation_manager is None}")
+        if not conversation_id:
+            # Crear conversación automáticamente con el nombre correcto del agente
+            if conversation_manager is None:
+                logger.error("❌ ConversationManager NO INICIALIZADO - no se puede guardar historial")
+            else:
+                try:
+                    conversation_id = conversation_manager.create_conversation(
+                        agent_id, agent_display_name,
+                        title=f"Chat con {agent_display_name}"
+                    )
+                    logger.info(f"✅ Conversación creada automáticamente: {conversation_id} ({agent_display_name})")
+                except Exception as e:
+                    logger.error(f"❌ Error creando conversación: {e}")
+
+        # Guardar mensajes en conversación
+        if conversation_id and conversation_manager is not None:
+            try:
+                # Guardar mensaje del usuario
+                conversation_manager.add_message(
+                    conversation_id, 'user', prompt,
+                    agent_name=agent_display_name
+                )
+                # Guardar respuesta del asistente
+                conversation_manager.add_message(
+                    conversation_id, 'assistant', respuesta,
+                    agent_name=agent_display_name,
+                    metadata={'intent': result.get('intent')}
+                )
+                logger.info(f"💾 Mensajes guardados en conversación: {conversation_id}")
+            except Exception as e:
+                logger.warning(f"⚠️ No se pudo guardar mensajes: {e}")
+
         return web.json_response({
             'agente_id': agent_id,
+            'agent_name': agent_display_name,
             'estado': 'completado',
             'pasos_completados': 1,
             'progreso': 100.0,
@@ -804,6 +882,123 @@ async def obtener_documento(request: web.Request) -> web.Response:
         return web.json_response({'error': str(e)}, status=500)
 
 
+async def generar_reporte_html(request: web.Request) -> web.Response:
+    """POST /api/reports/{agent_id} - Generar reporte HTML profesional
+
+    Body esperado:
+    {
+        "title": "Reporte Financiero",
+        "subtitle": "Análisis Q3 2026",
+        "executive_summary": "Texto del resumen ejecutivo",
+        "kpi_data": [
+            {"label": "Ingresos", "value": "$21.2M", "change": "↑ 12%", "status": "positive"}
+        ],
+        "sections": [
+            {
+                "title": "Análisis Detallado",
+                "content": "Contenido aquí",
+                "table": {"headers": [...], "rows": [...]}
+            }
+        ],
+        "recommendations": ["Rec 1", "Rec 2"],
+        "next_steps_short": ["Paso 1"],
+        "next_steps_medium": ["Paso 2"]
+    }
+    """
+    try:
+        from .templates.report_generator import ReportGenerator, ReportData, KPICard
+
+        agent_id = request.match_info.get('agent_id', 'asistente')
+        data = await request.json()
+
+        # Construir KPI cards
+        kpi_cards = []
+        for kpi in data.get('kpi_data', []):
+            kpi_cards.append(KPICard(
+                label=kpi.get('label', 'Métrica'),
+                value=kpi.get('value', '-'),
+                change=kpi.get('change', '→'),
+                status=kpi.get('status', 'positive'),
+                icon=kpi.get('icon', '📊')
+            ))
+
+        # Construir report data
+        report_data = ReportData(
+            title=data.get('title', 'Reporte Ejecutivo'),
+            subtitle=data.get('subtitle', 'Análisis profesional'),
+            agent_name=agent_id,
+            kpi_cards=kpi_cards,
+            executive_summary=data.get('executive_summary', 'Resumen pendiente'),
+            sections=data.get('sections', []),
+            recommendations=data.get('recommendations', []),
+            next_steps_short=data.get('next_steps_short', []),
+            next_steps_medium=data.get('next_steps_medium', []),
+        )
+
+        # Generar HTML
+        generator = ReportGenerator()
+        html = generator.generate_html(report_data)
+
+        # Guardar temporalmente
+        import hashlib
+        report_id = hashlib.md5(f"{agent_id}{datetime.now()}".encode()).hexdigest()[:8]
+        report_filename = f"reporte_{agent_id}_{report_id}.html"
+        report_path = Path('/tmp/elap_reports') / report_filename
+
+        # Crear directorio si no existe
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Guardar archivo
+        generator.save_html(html, str(report_path))
+
+        logger.info(f"✅ Reporte HTML generado: {report_filename}")
+
+        return web.json_response({
+            'status': 'success',
+            'report_id': report_id,
+            'filename': report_filename,
+            'filepath': str(report_path),
+            'html': html,
+            'url': f'/api/reports/download/{report_filename}'
+        })
+
+    except Exception as e:
+        logger.error(f"Error generating report: {e}")
+        import traceback
+        traceback.print_exc()
+        return web.json_response({
+            'error': str(e),
+            'traceback': traceback.format_exc()
+        }, status=500)
+
+
+async def descargar_reporte(request: web.Request) -> web.FileResponse:
+    """GET /api/reports/download/{filename} - Descargar reporte HTML"""
+    try:
+        filename = request.match_info.get('filename')
+
+        if '..' in filename or '/' in filename:
+            return web.json_response({'error': 'Invalid filename'}, status=400)
+
+        report_path = Path('/tmp/elap_reports') / filename
+
+        if not report_path.exists():
+            return web.json_response({'error': 'Report not found'}, status=404)
+
+        logger.info(f"📥 Descargando reporte: {filename}")
+
+        return web.FileResponse(
+            report_path,
+            headers={
+                'Content-Disposition': f'attachment; filename="{filename}"'
+            }
+        )
+
+    except Exception as e:
+        logger.error(f"Error downloading report: {e}")
+        return web.json_response({'error': str(e)}, status=500)
+
+
 async def add_cors_headers(request: web.Request, handler) -> web.Response:
     """Middleware para agregar headers CORS"""
     # Manejar OPTIONS requests (CORS preflight)
@@ -828,17 +1023,235 @@ async def add_cors_headers(request: web.Request, handler) -> web.Response:
     return response
 
 
+# === GENERADORES DE DOCUMENTOS ===
+
+async def generar_documento_pdf(request: web.Request) -> web.Response:
+    """Genera PDF desde respuesta de agente"""
+    try:
+        data = await request.json()
+        agent_name = data.get('agent_name', 'Unknown')
+        title = data.get('title', 'Reporte')
+        content = data.get('content', '')
+
+        filepath = doc_generator.generate_pdf(agent_name, title, content)
+
+        with open(filepath, 'rb') as f:
+            pdf_data = f.read()
+
+        return web.Response(
+            body=pdf_data,
+            content_type='application/pdf',
+            headers={
+                'Content-Disposition': f'attachment; filename="{agent_name}_report.pdf"'
+            }
+        )
+    except Exception as e:
+        logger.error(f"❌ Error generando PDF: {e}")
+        return web.json_response({'error': str(e)}, status=500)
+
+
+async def generar_documento_word(request: web.Request) -> web.Response:
+    """Genera Word desde respuesta de agente"""
+    try:
+        data = await request.json()
+        agent_name = data.get('agent_name', 'Unknown')
+        title = data.get('title', 'Reporte')
+        content = data.get('content', '')
+
+        filepath = doc_generator.generate_word(agent_name, title, content)
+
+        with open(filepath, 'rb') as f:
+            word_data = f.read()
+
+        return web.Response(
+            body=word_data,
+            content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            headers={
+                'Content-Disposition': f'attachment; filename="{agent_name}_report.docx"'
+            }
+        )
+    except Exception as e:
+        logger.error(f"❌ Error generando Word: {e}")
+        return web.json_response({'error': str(e)}, status=500)
+
+
+async def listar_conversaciones(request: web.Request) -> web.Response:
+    """Lista conversaciones recientes"""
+    try:
+        convs = conversation_manager.get_recent_conversations(limit=20)
+        logger.info(f"📋 {len(convs)} conversaciones listadas")
+        return web.json_response({"conversations": convs})
+    except Exception as e:
+        logger.error(f"Error listando conversaciones: {e}")
+        return web.json_response({"error": str(e)}, status=500)
+
+
+async def obtener_conversacion(request: web.Request) -> web.Response:
+    """Obtiene una conversación completa con mensajes"""
+    try:
+        conv_id = request.match_info.get('conversation_id')
+        conv = conversation_manager.get_conversation(conv_id)
+
+        if not conv:
+            return web.json_response({"error": "Conversación no encontrada"}, status=404)
+
+        logger.info(f"📖 Conversación cargada: {conv_id}")
+        return web.json_response(conv)
+    except Exception as e:
+        logger.error(f"Error obteniendo conversación: {e}")
+        return web.json_response({"error": str(e)}, status=500)
+
+
+async def crear_conversacion(request: web.Request) -> web.Response:
+    """Crea nueva conversación"""
+    try:
+        data = await request.json()
+        agent_id = data.get('agent_id', 'unknown')
+        agent_name = data.get('agent_name', 'Asistente')
+        title = data.get('title')
+
+        conv_id = conversation_manager.create_conversation(agent_id, agent_name, title)
+        logger.info(f"✅ Nueva conversación: {conv_id}")
+
+        return web.json_response({
+            "id": conv_id,
+            "title": title or f"Chat con {agent_name}",
+            "agent_name": agent_name
+        })
+    except Exception as e:
+        logger.error(f"Error creando conversación: {e}")
+        return web.json_response({"error": str(e)}, status=500)
+
+
+async def agregar_mensaje(request: web.Request) -> web.Response:
+    """Agrega mensaje a conversación"""
+    try:
+        conv_id = request.match_info.get('conversation_id')
+        data = await request.json()
+
+        role = data.get('role', 'user')  # 'user' o 'assistant'
+        content = data.get('content', '')
+        agent_name = data.get('agent_name')
+        metadata = data.get('metadata')
+
+        msg_id = conversation_manager.add_message(
+            conv_id, role, content, agent_name, metadata
+        )
+
+        logger.info(f"💬 Mensaje agregado: {msg_id}")
+        return web.json_response({"id": msg_id, "success": True})
+    except Exception as e:
+        logger.error(f"Error agregando mensaje: {e}")
+        return web.json_response({"error": str(e)}, status=500)
+
+
+async def eliminar_conversacion(request: web.Request) -> web.Response:
+    """Elimina una conversación"""
+    try:
+        conv_id = request.match_info.get('conversation_id')
+        conversation_manager.delete_conversation(conv_id)
+        logger.info(f"🗑️ Conversación eliminada: {conv_id}")
+        return web.json_response({"success": True})
+    except Exception as e:
+        logger.error(f"Error eliminando conversación: {e}")
+        return web.json_response({"error": str(e)}, status=500)
+
+
+async def estadisticas_conversaciones(request: web.Request) -> web.Response:
+    """Obtiene estadísticas de conversaciones"""
+    try:
+        stats = conversation_manager.get_stats()
+        logger.info("📊 Estadísticas de conversaciones obtenidas")
+        return web.json_response(stats)
+    except Exception as e:
+        logger.error(f"Error obteniendo estadísticas: {e}")
+        return web.json_response({"error": str(e)}, status=500)
+
+
+async def generar_documento_excel(request: web.Request) -> web.Response:
+    """Genera Excel desde respuesta de agente"""
+    try:
+        data = await request.json()
+        agent_name = data.get('agent_name', 'Unknown')
+        title = data.get('title', 'Reporte')
+        content = data.get('content', '')
+
+        filepath = doc_generator.generate_excel(agent_name, title, content)
+
+        with open(filepath, 'rb') as f:
+            excel_data = f.read()
+
+        return web.Response(
+            body=excel_data,
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            headers={
+                'Content-Disposition': f'attachment; filename="{agent_name}_report.xlsx"'
+            }
+        )
+    except Exception as e:
+        logger.error(f"❌ Error generando Excel: {e}")
+        return web.json_response({'error': str(e)}, status=500)
+
+
+async def listar_agentes(request: web.Request) -> web.Response:
+    """Lista todos los 15 agentes ELAP disponibles"""
+    try:
+        agents = [
+            # === Sistema ===
+            {'id': 'system_supervisor', 'nombre': 'System Supervisor', 'rol': 'Sistema', 'estado': 'Activo', 'modelo': 'qwen3:8b'},
+            {'id': 'task_router', 'nombre': 'Task Router', 'rol': 'Sistema', 'estado': 'Activo', 'modelo': 'qwen3:8b'},
+            {'id': 'memory_manager', 'nombre': 'Memory Manager', 'rol': 'Sistema', 'estado': 'Activo', 'modelo': 'qwen3:8b'},
+
+            # === Administrativo ===
+            {'id': 'hr', 'nombre': 'HR Agent', 'rol': 'Recursos Humanos', 'estado': 'Activo', 'modelo': 'glm4:9b'},
+            {'id': 'finance', 'nombre': 'Finance Agent', 'rol': 'Finanzas', 'estado': 'Activo', 'modelo': 'glm4:9b'},
+            {'id': 'payroll', 'nombre': 'Payroll Agent', 'rol': 'Nómina', 'estado': 'Activo', 'modelo': 'glm4:9b'},
+            {'id': 'benefits', 'nombre': 'Benefits Agent', 'rol': 'Prestaciones', 'estado': 'Activo', 'modelo': 'glm4:9b'},
+            {'id': 'recruitment', 'nombre': 'Recruitment Agent', 'rol': 'Reclutamiento', 'estado': 'Activo', 'modelo': 'glm4:9b'},
+
+            # === Dirección ===
+            {'id': 'ceo_assistant', 'nombre': 'CEO Assistant', 'rol': 'Dirección Ejecutiva', 'estado': 'Activo', 'modelo': 'glm4:9b'},
+            {'id': 'cfo_assistant', 'nombre': 'CFO Assistant', 'rol': 'Dirección Financiera', 'estado': 'Activo', 'modelo': 'glm4:9b'},
+            {'id': 'cmo_assistant', 'nombre': 'CMO Assistant', 'rol': 'Dirección Marketing', 'estado': 'Activo', 'modelo': 'glm4:9b'},
+
+            # === Comercial ===
+            {'id': 'compras', 'nombre': 'Compras Agent', 'rol': 'Procuramiento', 'estado': 'Activo', 'modelo': 'glm4:9b'},
+            {'id': 'ventas', 'nombre': 'Ventas Agent', 'rol': 'Ventas', 'estado': 'Activo', 'modelo': 'glm4:9b'},
+            {'id': 'crm', 'nombre': 'CRM Agent', 'rol': 'Gestión de Clientes', 'estado': 'Activo', 'modelo': 'glm4:9b'},
+            {'id': 'customer_service', 'nombre': 'Customer Service Agent', 'rol': 'Servicio al Cliente', 'estado': 'Activo', 'modelo': 'glm4:9b'},
+
+            # === Documentación ===
+            {'id': 'document_manager', 'nombre': 'Document Manager', 'rol': 'Gestión Documental', 'estado': 'Activo', 'modelo': 'glm4:9b'},
+            {'id': 'pdf_assistant', 'nombre': 'PDF Assistant', 'rol': 'Análisis PDF', 'estado': 'Activo', 'modelo': 'glm4:9b'},
+        ]
+
+        logger.info(f"📋 {len(agents)} agentes listados")
+        return web.json_response({'agentes': agents, 'total': len(agents)})
+    except Exception as e:
+        logger.error(f"Error listando agentes: {e}")
+        return web.json_response({'error': str(e)}, status=500)
+
+
 async def start_rest_server(host: str = '0.0.0.0', port: int = 5000):
     """Inicia el servidor REST para exponer agentes"""
 
     await init_agents()
 
-    app = web.Application(middlewares=[
-        web.middleware(add_cors_headers)
-    ])
+    app = web.Application()
+
+    # === Configurar CORS ===
+    cors = aiohttp_cors.setup(app, defaults={
+        "*": aiohttp_cors.ResourceOptions(
+            allow_credentials=True,
+            expose_headers="*",
+            allow_headers="*",
+            allow_methods="*"
+        )
+    })
 
     # Rutas
     app.router.add_get('/api/health', health_check)
+    app.router.add_get('/api/agents', listar_agentes)
     app.router.add_post('/api/agents/{agent_id}/execute', ejecutar_agente)
     app.router.add_get('/api/documents', listar_documentos)
     app.router.add_get('/api/documents/{filename}', obtener_documento)
@@ -848,6 +1261,27 @@ async def start_rest_server(host: str = '0.0.0.0', port: int = 5000):
     app.router.add_get('/api/history', obtener_historial)
     app.router.add_get('/api/knowledge-sources', obtener_fuentes_conocimiento)
     app.router.add_get('/api/menu-config', obtener_configuracion_menu)
+
+    # === Nuevas rutas para reportes profesionales ===
+    app.router.add_post('/api/reports/{agent_id}', generar_reporte_html)
+    app.router.add_get('/api/reports/download/{filename}', descargar_reporte)
+
+    # === Generadores de documentos (PDF, Word, Excel) ===
+    app.router.add_post('/api/documents/pdf', generar_documento_pdf)
+    app.router.add_post('/api/documents/word', generar_documento_word)
+    app.router.add_post('/api/documents/excel', generar_documento_excel)
+
+    # === Historial de conversaciones (NUEVO) ===
+    app.router.add_get('/api/conversations', listar_conversaciones)
+    app.router.add_post('/api/conversations', crear_conversacion)
+    app.router.add_get('/api/conversations/{conversation_id}', obtener_conversacion)
+    app.router.add_post('/api/conversations/{conversation_id}/messages', agregar_mensaje)
+    app.router.add_delete('/api/conversations/{conversation_id}', eliminar_conversacion)
+    app.router.add_get('/api/conversations/stats', estadisticas_conversaciones)
+
+    # === Hacer todas las rutas CORS-aware ===
+    for route in list(app.router.routes()):
+        cors.add(route)
 
     runner = web.AppRunner(app)
     await runner.setup()
@@ -866,6 +1300,13 @@ async def start_rest_server(host: str = '0.0.0.0', port: int = 5000):
     logger.info(f"   GET /api/history - Historial de conversaciones")
     logger.info(f"   GET /api/knowledge-sources - Fuentes de conocimiento")
     logger.info(f"   GET /api/menu-config - Configuración del menú")
+    logger.info(f"   POST /api/reports/{{agent_id}} - Generar reporte HTML profesional")
+    logger.info(f"   GET /api/reports/download/{{filename}} - Descargar reporte HTML")
+    logger.info(f"   GET /api/conversations - Listar conversaciones")
+    logger.info(f"   POST /api/conversations - Crear nueva conversación")
+    logger.info(f"   GET /api/conversations/{{conversation_id}} - Obtener conversación")
+    logger.info(f"   POST /api/conversations/{{conversation_id}}/messages - Agregar mensaje")
+    logger.info(f"   DELETE /api/conversations/{{conversation_id}} - Eliminar conversación")
 
     # Mantener el servidor corriendo
     try:

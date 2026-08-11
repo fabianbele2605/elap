@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:3000';
+const API_BASE = 'http://localhost:5000';  // Python REST API
 
 export interface Agent {
   id: string;
@@ -18,10 +18,10 @@ export interface CreateAgentPayload {
 // Agentes
 export async function listarAgentes(): Promise<Agent[]> {
   try {
-    const res = await fetch(`${API_BASE}/agents`);
+    const res = await fetch(`${API_BASE}/api/agents`);
     if (!res.ok) throw new Error(`Error ${res.status}`);
     const data = await res.json();
-    return data.agentes || [];
+    return data.agents || data.agentes || [];
   } catch (err) {
     console.error('Error listando agentes:', err);
     return [];
@@ -30,7 +30,7 @@ export async function listarAgentes(): Promise<Agent[]> {
 
 export async function crearAgente(payload: CreateAgentPayload): Promise<Agent | null> {
   try {
-    const res = await fetch(`${API_BASE}/agents`, {
+    const res = await fetch(`${API_BASE}/api/agents`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -126,5 +126,29 @@ export function ejecutarAgentStreaming(
   } catch (err) {
     onError(err);
     return null;
+  }
+}
+
+// === Historial de conversaciones ===
+export async function apiCall(
+  method: 'GET' | 'POST' | 'DELETE',
+  endpoint: string,
+  body?: any
+): Promise<any> {
+  try {
+    const options: RequestInit = {
+      method,
+      headers: { 'Content-Type': 'application/json' }
+    };
+    if (body) options.body = JSON.stringify(body);
+
+    // Asegurar que el endpoint tenga /api como prefijo
+    const fullEndpoint = endpoint.startsWith('/api') ? endpoint : `/api${endpoint}`;
+    const res = await fetch(`${API_BASE}${fullEndpoint}`, options);
+    if (!res.ok) throw new Error(`Error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.error(`Error en ${method} ${endpoint}:`, err);
+    throw err;
   }
 }

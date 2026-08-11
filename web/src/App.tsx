@@ -8,6 +8,7 @@ import {
   INITIAL_HARDWARE
 } from './data/initialData';
 import { Agent, Message, Tool, KnowledgeSource, ConversationHistoryItem, HardwareMetrics, MainTab } from './types';
+import { useConversation } from './hooks/useConversation';
 import { listarAgentes } from './services/api';
 import { WindowHeader } from './components/WindowHeader';
 import { LeftSidebar } from './components/LeftSidebar';
@@ -49,11 +50,34 @@ export default function App() {
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isInstallAgentsModalOpen, setIsInstallAgentsModalOpen] = useState(false);
 
-  // Load agents from backend on mount
+  // Historial de conversaciones
+  const conversation = useConversation();
+
+  // Auto-crear conversación cuando se selecciona un agente
+  // DESHABILITADO: Causaba crear múltiples conversaciones innecesarias
+  // useEffect(() => {
+  //   const createConv = async () => {
+  //     if (selectedAgentId && selectedAgent && activeTab === 'chat') {
+  //       if (!conversation.currentConversationId) {
+  //         try {
+  //           console.log(`📝 Auto-creando conversación para ${selectedAgent.name}...`);
+  //           await conversation.createConversation(selectedAgent.name, selectedAgent.id);
+  //           console.log('✅ Conversación creada');
+  //         } catch (err) {
+  //           console.error('❌ Error creando conversación:', err);
+  //         }
+  //       }
+  //     }
+  //   };
+  //   createConv();
+  // }, [selectedAgentId, activeTab]);
+
+  // Load agents from backend on mount (ALWAYS from backend, NOT localStorage)
   useEffect(() => {
     const loadAgents = async () => {
       setIsLoadingAgents(true);
       try {
+        // Always fetch from backend (source of truth)
         const backendAgents = await listarAgentes();
         if (backendAgents && backendAgents.length > 0) {
           // Map backend response to frontend Agent type
@@ -77,6 +101,8 @@ export default function App() {
           }));
           setAgents(mappedAgents);
           setSelectedAgentId(mappedAgents[0].id);
+          // Save to localStorage for reference (not as source of truth)
+          localStorage.setItem('elap_agents', JSON.stringify(mappedAgents));
         } else {
           console.warn('No agents found from backend');
         }
@@ -89,6 +115,12 @@ export default function App() {
 
     loadAgents();
   }, []);
+
+  // 🛑 NO persistir agents a localStorage - siempre cargar del backend
+  // Esto evita que agentes viejos en localStorage sobrescriban los nuevos
+
+  // 🛑 NO persistir messagesMap a localStorage - carga desde backend (conversation_manager)
+  // Esto evita que mensajes viejos en localStorage se mezclen con los nuevos
 
   // Load hardware metrics and other data from API every 2 seconds
   useEffect(() => {
@@ -144,6 +176,8 @@ export default function App() {
   const handleSendMessage = async (text: string) => {
     const timestampStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
+    console.log(`🔵 handleSendMessage: selectedAgentId=${selectedAgentId}, selectedAgent.name=${selectedAgent?.name}`);
+
     const userMsg: Message = {
       id: `user_${Date.now()}`,
       sender: 'user',
@@ -161,7 +195,10 @@ export default function App() {
     setIsStreaming(true);
 
     try {
-      const res = await fetch(`http://localhost:3000/agents/${selectedAgentId}/execute`, {
+      // Enviar al backend - backend se encarga de crear conversación y guardar todo
+      const url = `http://localhost:5000/api/agents/${selectedAgentId}/execute`;
+      console.log(`📤 Enviando a: ${url}`);
+      const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -178,16 +215,15 @@ export default function App() {
 
       const data = await res.json();
 
-      // Post-procesar respuesta para limpiar markdown y caracteres especiales
+      // Post-procesar respuesta
       let respuestaLimpia = data.respuesta || "Error procesando la solicitud";
       respuestaLimpia = respuestaLimpia
-        .replace(/\*\*(.+?)\*\*/g, '$1')  // **negrita** → negrita
-        .replace(/\*(.+?)\*/g, '$1')      // *cursiva* → cursiva
-        .replace(/###\s/g, '')            // ### → (quita heading)
-        .replace(/##\s/g, '')             // ## → (quita heading)
-        .replace(/#\s/g, '')              // # → (quita heading)
-        .replace(/\[\[(.+?)\]\]/g, '$1')  // [[link]] → link
-        // .replace(/\[(.*?)\]\((.*?)\)/g, '$1') // [text](url) → text // DESHABILITADO: preservar markdown links para botones de descarga
+        .replace(/\*\*(.+?)\*\*/g, '$1')
+        .replace(/\*(.+?)\*/g, '$1')
+        .replace(/###\s/g, '')
+        .replace(/##\s/g, '')
+        .replace(/#\s/g, '')
+        .replace(/\[\[(.+?)\]\]/g, '$1')
         .trim();
 
       const assistantMsg: Message = {
@@ -290,7 +326,7 @@ export default function App() {
 
       const newAgents: Agent[] = [];
       for (const template of agentsToCreate) {
-        const response = await fetch('http://localhost:3000/agents', {
+        const response = await fetch('http://localhost:5000/api/agents', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -431,7 +467,7 @@ export default function App() {
                 }`}
               >
                 <MessageSquare className="w-3.5 h-3.5 text-blue-600" />
-                <span>'Chat'</span>
+                <span>Chat</span>
               </button>
 
               <button
@@ -443,7 +479,7 @@ export default function App() {
                 }`}
               >
                 <BarChart2 className="w-3.5 h-3.5 text-green-600" />
-                <span>'Panél'</span>
+                <span>Panél</span>
               </button>
 
               <button
@@ -455,7 +491,7 @@ export default function App() {
                 }`}
               >
                 <Wrench className="w-3.5 h-3.5 text-amber-700" />
-                <span>'Wrench'</span>
+                <span>Wrench</span>
               </button>
 
               <button
@@ -467,7 +503,7 @@ export default function App() {
                 }`}
               >
                 <BookOpen className="w-3.5 h-3.5 text-purple-700" />
-                <span>'BookOpen'</span>
+                <span>Conocimiento</span>
               </button>
 
               <button
@@ -479,7 +515,7 @@ export default function App() {
                 }`}
               >
                 <History className="w-3.5 h-3.5 text-rose-700" />
-                <span>'History'</span>
+                <span>Historial</span>
               </button>
 
               <button
@@ -491,7 +527,7 @@ export default function App() {
                 }`}
               >
                 <FileText className="w-3.5 h-3.5 text-orange-600" />
-                <span>'Documentos'</span>
+                <span>Documentos</span>
               </button>
 
               <button
@@ -503,25 +539,38 @@ export default function App() {
                 }`}
               >
                 <Zap className="w-3.5 h-3.5 text-yellow-600" />
-                <span>'Fase 3'</span>
+                <span>Fase 3</span>
               </button>
             </div>
 
             <div className="hidden sm:flex items-center gap-2 text-[12px] font-mono text-slate-700">
-              <span>ELAP Engine: <strong className="text-green-600">'En línea'</strong></span>
+              <span>ELAP Engine: <strong className="text-green-600">En línea</strong></span>
             </div>
           </div>
 
           {/* ACTIVE TAB CONTENT DISPLAY */}
           <div className="flex-1 flex flex-col min-h-0 relative">
             {activeTab === 'chat' && (
-              <ChatTab 
+              <ChatTab
                 agent={selectedAgent}
                 messages={currentMessages}
                 onSendMessage={handleSendMessage}
                 onNewConversation={handleClearChat}
                 isStreaming={isStreaming}
                 tools={tools}
+                conversations={conversation.conversations}
+                currentConversationId={conversation.currentConversationId}
+                onSelectConversation={conversation.loadConversation}
+                onDeleteConversation={conversation.deleteConversation}
+                onCreateConversation={() => {
+                  // Limpiar conversación actual para empezar una nueva
+                  conversation.setCurrentConversationId(null);
+                  setMessagesMap(prev => ({
+                    ...prev,
+                    [selectedAgentId]: []
+                  }));
+                }}
+                conversationLoading={conversation.loading}
               />
             )}
 
@@ -547,10 +596,13 @@ export default function App() {
 
             {activeTab === 'history' && (
               <HistoryTab
-                historyItems={historyItems}
+                conversations={conversation.conversations}
+                historyItems={[]}
                 onSelectSession={(id) => {
+                  conversation.loadConversation(id);
                   setActiveTab('chat');
                 }}
+                onDeleteConversation={conversation.deleteConversation}
               />
             )}
 
