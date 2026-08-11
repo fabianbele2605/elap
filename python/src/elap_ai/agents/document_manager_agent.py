@@ -41,7 +41,7 @@ Consulta Documental: {query}
 Proporciona clasificación, organización y políticas de retención documental."""
 
             logger.info("📑 Llamando a Ollama para gestión documental...")
-            respuesta = await ollama.generar("qwen3:8b", prompt_ollama)
+            respuesta = await ollama.generar("glm4:9b", prompt_ollama)
             return respuesta
         except Exception as e:
             logger.error(f"Ollama error en DocumentManagerAgent: {e}")

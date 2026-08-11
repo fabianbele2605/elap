@@ -41,7 +41,7 @@ Consulta de Tarea: {query}
 Proporciona análisis de ruta, descomposición de tareas y asignación óptima de agentes."""
 
             logger.info("🔀 Llamando a Ollama para enrutamiento de tareas...")
-            respuesta = await ollama.generar("qwen3:8b", prompt_ollama)
+            respuesta = await ollama.generar("glm4:9b", prompt_ollama)
             return respuesta
         except Exception as e:
             logger.error(f"Ollama error en TaskRouter: {e}")

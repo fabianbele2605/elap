@@ -41,7 +41,7 @@ Consulta de Sistema: {query}
 Proporciona monitoreo, salud de agentes y recomendaciones de coordinación."""
 
             logger.info("🔍 Llamando a Ollama para supervisión del sistema...")
-            respuesta = await ollama.generar("qwen3:8b", prompt_ollama)
+            respuesta = await ollama.generar("glm4:9b", prompt_ollama)
             return respuesta
         except Exception as e:
             logger.error(f"Ollama error en SystemSupervisor: {e}")

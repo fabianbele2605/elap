@@ -13,7 +13,7 @@ class OllamaClient:
 
     def __init__(self, base_url: str = "http://localhost:11434"):
         self.base_url = base_url
-        self.timeout = aiohttp.ClientTimeout(total=300)  # 5 minutos timeout
+        self.timeout = aiohttp.ClientTimeout(total=600)  # 10 minutos timeout para modelos grandes
         logger.info(f"OllamaClient initialized with {base_url}")
 
     async def generar(

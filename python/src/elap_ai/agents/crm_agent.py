@@ -41,7 +41,7 @@ Consulta CRM: {query}
 Proporciona gestión de clientes, segmentación y estrategias de retención."""
 
             logger.info("👥 Llamando a Ollama para gestión CRM...")
-            respuesta = await ollama.generar("qwen3:8b", prompt_ollama)
+            respuesta = await ollama.generar("glm4:9b", prompt_ollama)
             return respuesta
         except Exception as e:
             logger.error(f"Ollama error en CRMAgent: {e}")

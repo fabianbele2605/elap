@@ -45,7 +45,7 @@ export function useCompanySetup() {
     try {
       // Step 1: Send configuration to Rust backend
       // Rust will forward to Python gRPC
-      const setupResponse = await fetch('http://localhost:3000/company/setup', {
+      const setupResponse = await fetch('http://localhost:5000/company/setup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(fullConfig),
@@ -73,7 +73,7 @@ export function useCompanySetup() {
         try {
           // Fetch real status from backend
           const statusResponse = await fetch(
-            `http://localhost:3000/company/${companyId}/status`,
+            `http://localhost:5000/company/${companyId}/status`,
             {
               method: 'GET',
               headers: { 'Content-Type': 'application/json' },

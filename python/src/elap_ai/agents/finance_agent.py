@@ -210,10 +210,39 @@ class FinanceAgent(Agent):
 
         query_lower = query.lower()
 
-        # Verificar si tiene datos de factura
+        # Palabras clave para dominio financiero
+        finance_keywords = [
+            "reporte", "report", "análisis", "analysis", "presupuesto", "budget",
+            "estado", "flujo", "cash flow", "ingresos", "revenue", "gastos", "expenses",
+            "utilidad", "profit", "margen", "margin", "factura", "invoice", "boleta",
+            "finanza", "finance", "financiero", "presupuestal", "egresos", "ventas",
+            "costo", "cost", "rentabilidad", "proyección", "forecast", "balance",
+            "activos", "pasivos", "patrimonio", "cffo", "cfo", "tesorería"
+        ]
+
+        # Verificar si es pregunta del dominio financiero
+        is_finance_question = any(keyword in query_lower for keyword in finance_keywords)
+
+        # Si NO es pregunta financiera, rechazar cortésmente
+        if not is_finance_question:
+            return {
+                "intent": "out_of_domain",
+                "message": """💰 *Asistente de Finanzas* aquí.
+
+Lo siento, esa pregunta está fuera de mi especialidad financiera.
+Soy experto en:
+
+🧾 **Facturas** - Facturas, notas crédito/débito
+📊 **Reportes** - Ingresos, flujo de caja, presupuestos
+💡 **Análisis** - Rentabilidad, proyecciones, márgenes
+💼 **Documentos** - Estados financieros, auditorías
+
+¿Tienes alguna pregunta sobre finanzas?"""
+            }
+
+        # Verificar si tiene datos EXACTOS de factura para generar
         has_invoice_data = all(keyword in query for keyword in ["Factura:", "Cliente:", "Items:"])
 
-        # Si tiene datos, GENERAR la factura
         if has_invoice_data:
             logger.info("🚀 Detectados datos de factura, generando...")
 
@@ -280,78 +309,52 @@ class FinanceAgent(Agent):
                     "message": f"❌ Error procesando datos: {str(e)}"
                 }
 
-        # Si NO tiene datos pero pide factura, solicitar datos
-        elif any(word in query_lower for word in ["factura", "invoice", "boleta", "comprobante"]):
-            return {
-                "intent": "generate_invoice",
-                "message": """💰 *Asistente de Finanzas* aquí.
+        # CUALQUIER otra pregunta financiera: Usar Ollama
+        try:
+            from ..ollama_client import OllamaClient
+            from ..system_prompts import get_system_prompt
 
-Veo que necesitas generar una **factura**.
+            logger.info("💰 Llamando a Ollama para respuesta financiera...")
+            ollama = OllamaClient()
+            system_prompt = get_system_prompt("finance_agent")
 
-Para crearla necesito:
-• Número de factura
-• Nombre del cliente
-• Fecha de emisión
-• Fecha de vencimiento
-• Items (descripción, precio, cantidad)
-• Condiciones de pago
-
-¿Proporcionas los detalles para generar la factura?""",
-                "required_fields": ["numero", "cliente", "items", "fecha"]
-            }
-
-        elif any(word in query_lower for word in ["reporte", "report", "análisis", "analysis", "estado"]):
-            return {
-                "intent": "generate_report",
-                "message": """💰 *Asistente de Finanzas* aquí.
-
-Veo que necesitas un **reporte financiero**.
-
-Para generarlo necesito:
-• Título del reporte
-• Período (trimestre, año, etc)
-• Resumen ejecutivo
-• Métricas clave (ventas, utilidad, margen)
-• Análisis detallado
-• Conclusiones
-
-¿Cuál es el período del reporte y qué métricas quieres incluir?""",
-                "required_fields": ["titulo", "periodo", "metricas"]
-            }
-
-        else:
-            # GENÉRICO: Usar Ollama con system prompt de Finanza
-            try:
-                from ..ollama_client import OllamaClient
-                from ..system_prompts import get_system_prompt
-
-                ollama = OllamaClient()
-                system_prompt = get_system_prompt("finance_agent")
-
-                prompt_ollama = f"""{system_prompt}
+            prompt_ollama = f"""{system_prompt}
 
 Pregunta del usuario: {query}
 
-Responde de manera profesional, analítica y con datos cuando sea posible."""
+Responde de manera profesional, analítica y con datos cuando sea posible.
+Si es un reporte o análisis, estructura con:
+- Resumen ejecutivo
+- Métricas clave
+- Análisis detallado
+- Conclusiones y recomendaciones"""
 
-                logger.info("💰 Llamando a Ollama para respuesta general de Finanzas...")
-                respuesta = await ollama.generar("glm4:9b", prompt_ollama)
+            respuesta = await ollama.generar("glm4:9b", prompt_ollama)
 
-                return {
-                    "intent": "general_query",
-                    "message": f"💰 *Asistente de Finanzas*\n\n{respuesta}"
-                }
-            except Exception as e:
-                logger.error(f"Ollama error en Finance: {e}")
-                return {
-                    "intent": "general_query",
-                    "message": """💰 *Asistente de Finanzas* a tu servicio.
+            # POST-PROCESAR: Arreglar markdown incorrecto
+            import re
+            # Arreglar # sin espacios: #Ingresos → # Ingresos
+            respuesta = re.sub(r'^(#{1,6})([^\s#])', r'\1 \2', respuesta, flags=re.MULTILINE)
+            # Remover placeholders
+            respuesta = re.sub(r'\[Inserte aquí.*?\]', '[Gráfico generado automáticamente]', respuesta, flags=re.IGNORECASE)
+            respuesta = re.sub(r'\[insertar.*?\]', '[Datos insertados]', respuesta, flags=re.IGNORECASE)
 
-Soy especialista en documentación financiera. Puedo ayudarte con:
+            return {
+                "intent": "general_query",
+                "message": f"💰 *Asistente de Finanzas*\n\n{respuesta}"
+            }
+
+        except Exception as e:
+            logger.error(f"Ollama error en Finance: {e}")
+            return {
+                "intent": "error",
+                "message": f"""💰 *Asistente de Finanzas* a tu servicio.
+
+Soy especialista en análisis y documentación financiera. Puedo ayudarte con:
 
 🧾 **Facturas** - Facturas, notas crédito/débito
 📊 **Reportes** - Ingresos, flujo de caja, análisis
 💡 **Análisis** - Presupuestos, proyecciones, rentabilidad
 
-¿Qué necesitas? Cuéntame los detalles."""
-                }
+Error al conectar con Ollama. Intenta de nuevo."""
+            }

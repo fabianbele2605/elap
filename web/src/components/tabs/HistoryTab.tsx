@@ -1,24 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  History, 
-  Search, 
-  Filter, 
-  Download, 
-  Star, 
-  Pin, 
-  Trash2, 
-  Bot, 
-  Clock, 
-  MessageSquare, 
-  Sparkles, 
+import {
+  History,
+  Search,
+  Filter,
+  Download,
+  Star,
+  Pin,
+  Trash2,
+  Bot,
+  Clock,
+  MessageSquare,
+  Sparkles,
   ChevronRight,
   Check
 } from 'lucide-react';
 import { ConversationHistoryItem } from '../../types';
+import { Conversation } from '../../hooks/useConversation';
 
 interface HistoryTabProps {
-  historyItems: ConversationHistoryItem[];
-  onSelectSession: (id: string) => void;
+  historyItems?: ConversationHistoryItem[];
+  conversations?: Conversation[];
+  onSelectSession?: (id: string) => void;
+  onDeleteConversation?: (id: string) => void;
 }
 
 interface HistoryItem {
@@ -33,52 +36,32 @@ interface HistoryItem {
   icon: string;
 }
 
-export const HistoryTab: React.FC<HistoryTabProps> = ({ historyItems, onSelectSession }) => {
-  const [apiHistory, setApiHistory] = useState<HistoryItem[]>([]);
-  const [loading, setLoading] = useState(true);
+export const HistoryTab: React.FC<HistoryTabProps> = ({
+  historyItems = [],
+  conversations = [],
+  onSelectSession,
+  onDeleteConversation
+}) => {
+  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'pinned' | 'favorites'>('all');
 
-  // Cargar historial desde API al iniciar
-  useEffect(() => {
-    const loadHistory = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch('http://localhost:5000/api/history');
-        if (response.ok) {
-          const data = await response.json();
-          setApiHistory(data);
-          console.log(`✅ Cargado historial: ${data.length} items`);
-        } else {
-          console.log('⚠️ API no disponible, usando historial por defecto');
-          setApiHistory([]);
-        }
-      } catch (error) {
-        console.log('⚠️ No se pudo conectar a API:', error);
-        setApiHistory([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadHistory();
-  }, []);
-
-  // Usar historial del API si está disponible, sino usar props
-  const displayHistory = apiHistory.length > 0 ? apiHistory : historyItems;
+  // Usar conversaciones reales del hook (prioritario) o fallback a historyItems
+  const displayHistory = conversations.length > 0 ? conversations : historyItems;
 
   const filteredHistory = displayHistory.filter(item => {
+    // Extraer propiedades comunes
     const title = 'title' in item ? item.title : item.agent_name;
     const agentName = 'agentName' in item ? item.agentName : item.agent_name;
-    const preview = 'preview' in item ? item.preview : item.user_message;
+    const preview = 'preview' in item ? item.preview : 'user_message' in item ? item.user_message : '';
 
     const matchesQuery = title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          agentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          preview.toLowerCase().includes(searchQuery.toLowerCase());
     if (!matchesQuery) return false;
 
-    // Si hay datos del API, no filtrar por pinned/favorites (no están en el API)
-    if (apiHistory.length > 0) return true;
+    // Si son conversaciones reales (del hook), no filtrar por pinned/favorites
+    if (conversations.length > 0) return true;
 
     // Filtrar por propiedades solo si usamos historyItems
     if ('isPinned' in item && filterType === 'pinned') return item.isPinned;
@@ -92,7 +75,7 @@ export const HistoryTab: React.FC<HistoryTabProps> = ({ historyItems, onSelectSe
       <div className="flex items-center justify-between border-b border-slate-200 pb-4">
         <div>
           <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <History className="w-5 h-5 text-blue-600" /> Historial de Conversaciones ({historyItems.length})
+            <History className="w-5 h-5 text-blue-600" /> Historial de Conversaciones ({displayHistory.length})
           </h2>
           <p className="text-xs text-slate-700">
             Registro de todas las conversaciones con agentes, tokens consumidos y opciones de exportación.
@@ -154,20 +137,20 @@ export const HistoryTab: React.FC<HistoryTabProps> = ({ historyItems, onSelectSe
         ) : (
           filteredHistory.map(item => {
             const itemId = item.id;
-            const itemTitle = 'title' in item ? item.title : `${item.agent_name} - ${item.type}`;
+            const itemTitle = 'title' in item ? item.title : item.agent_name;
             const itemAgent = 'agentName' in item ? item.agentName : item.agent_name;
-            const itemPreview = 'preview' in item ? item.preview : item.user_message.substring(0, 100);
-            const itemTimestamp = 'timestamp' in item ? item.timestamp : item.timestamp;
+            const itemPreview = 'preview' in item ? item.preview : ('user_message' in item ? item.user_message.substring(0, 100) : 'Sin vista previa');
+            const itemTimestamp = item.updated_at || item.timestamp || new Date().toISOString();
             const isPinned = 'isPinned' in item ? item.isPinned : false;
             const isFavorite = 'isFavorite' in item ? item.isFavorite : false;
-            const messageCount = 'messageCount' in item ? item.messageCount : 1;
+            const messageCount = 'messageCount' in item ? item.messageCount : (item.message_count || 0);
             const tokensUsed = 'tokensUsed' in item ? item.tokensUsed : '~150';
             const icon = 'icon' in item ? item.icon : '💬';
 
             return (
               <div
                 key={itemId}
-                onClick={() => onSelectSession(itemId)}
+                onClick={() => onSelectSession?.(itemId)}
                 className="p-4 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-300 hover:border-blue-600/60 transition-all cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow"
               >
                 <div className="space-y-1.5 min-w-0 flex-1">
@@ -197,9 +180,26 @@ export const HistoryTab: React.FC<HistoryTabProps> = ({ historyItems, onSelectSe
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0 border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-300">
-                  <button className="p-2 hover:bg-slate-100 rounded-lg text-slate-700 hover:text-blue-600 transition-colors" title="Export session">
+                  <button
+                    className="p-2 hover:bg-slate-100 rounded-lg text-slate-700 hover:text-blue-600 transition-colors"
+                    title="Export session"
+                  >
                     <Download className="w-4 h-4" />
                   </button>
+                  {onDeleteConversation && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (confirm(`¿Eliminar "${itemTitle}"?`)) {
+                          onDeleteConversation(itemId);
+                        }
+                      }}
+                      className="p-2 hover:bg-slate-100 rounded-lg text-slate-700 hover:text-red-600 transition-colors"
+                      title="Eliminar"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                   <button className="p-2 hover:bg-slate-100 rounded-lg text-slate-700 hover:text-slate-900 transition-colors">
                     <ChevronRight className="w-4 h-4" />
                   </button>

@@ -41,7 +41,7 @@ Consulta de Cliente: {query}
 Proporciona soporte empático, resolución de problemas y escalamiento si es necesario."""
 
             logger.info("💬 Llamando a Ollama para atención al cliente...")
-            respuesta = await ollama.generar("qwen3:8b", prompt_ollama)
+            respuesta = await ollama.generar("glm4:9b", prompt_ollama)
             return respuesta
         except Exception as e:
             logger.error(f"Ollama error en CustomerServiceAgent: {e}")

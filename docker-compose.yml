@@ -1,0 +1,68 @@
+services:
+  # PostgreSQL - BD Principal
+  postgres:
+    image: postgres:15-alpine
+    container_name: elap_postgres
+    environment:
+      POSTGRES_USER: elap_user
+      POSTGRES_PASSWORD: elap_secure_pass_2026
+      POSTGRES_DB: elap_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U elap_user -d elap_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - elap_network
+
+  # Qdrant - Vector Database para RAG
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: elap_qdrant
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    environment:
+      QDRANT_API_KEY: elap_qdrant_key_2026
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - elap_network
+
+  # Redis - Cache & Message Queue
+  redis:
+    image: redis:7-alpine
+    container_name: elap_redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --requirepass elap_redis_pass_2026
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - elap_network
+
+volumes:
+  postgres_data:
+    driver: local
+  qdrant_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  elap_network:
+    driver: bridge

@@ -41,7 +41,7 @@ Consulta de PDF: {query}
 Proporciona extracción de datos, resúmenes ejecutivos y análisis de documentos."""
 
             logger.info("📄 Llamando a Ollama para análisis de PDF...")
-            respuesta = await ollama.generar("qwen3:8b", prompt_ollama)
+            respuesta = await ollama.generar("glm4:9b", prompt_ollama)
             return respuesta
         except Exception as e:
             logger.error(f"Ollama error en PDFAssistantAgent: {e}")
