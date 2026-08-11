@@ -6,8 +6,8 @@
 // ✅ Para desarrollo local
 // export const API_BASE_URL = "http://localhost:5000";
 
-// ✅ Para producción con Cloudflare Tunnel
-export const API_BASE_URL = "https://seriously-latex-walk-universities.trycloudflare.com";
+// ✅ Para desarrollo local
+export const API_BASE_URL = "http://localhost:5000";
 
 /**
  * Uso en componentes:
