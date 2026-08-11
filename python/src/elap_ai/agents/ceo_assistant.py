@@ -101,8 +101,8 @@ Consulta Ejecutiva: {query}
 
 Proporciona reporte ejecutivo con resumen, métricas y recomendaciones accionables."""
 
-            logger.info("👔 Llamando a Ollama para asesoría ejecutiva...")
-            respuesta = await ollama.generar("glm4:9b", prompt_ollama)
+            logger.info("👔 Llamando a Ollama para asesoría ejecutiva con deepseek-r1...")
+            respuesta = await ollama.generar("deepseek-r1:7b", prompt_ollama)
             return respuesta
         except Exception as e:
             logger.error(f"Ollama error en CEOAssistant: {e}")

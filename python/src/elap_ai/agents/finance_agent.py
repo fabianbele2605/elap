@@ -405,7 +405,8 @@ Si es un reporte o análisis, estructura con:
 - Análisis detallado
 - Conclusiones y recomendaciones"""
 
-            respuesta = await ollama.generar("glm4:9b", prompt_ollama)
+            logger.info("💰 Llamando a Ollama para análisis financiero con deepseek-r1...")
+            respuesta = await ollama.generar("deepseek-r1:7b", prompt_ollama)
 
             # POST-PROCESAR: Arreglar markdown incorrecto
             import re

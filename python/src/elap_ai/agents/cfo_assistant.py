@@ -94,8 +94,8 @@ Consulta Financiera: {query}
 
 Proporciona análisis financiero riguroso con números y recomendaciones."""
 
-            logger.info("💼 Llamando a Ollama para análisis del CFO...")
-            respuesta = await ollama.generar("glm4:9b", prompt_ollama)
+            logger.info("💼 Llamando a Ollama para análisis del CFO con deepseek-r1...")
+            respuesta = await ollama.generar("deepseek-r1:7b", prompt_ollama)
             return respuesta
         except Exception as e:
             logger.error(f"Ollama error en CFOAssistant: {e}")
