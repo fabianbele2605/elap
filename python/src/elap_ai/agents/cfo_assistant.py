@@ -96,6 +96,15 @@ Proporciona análisis financiero riguroso con números y recomendaciones."""
 
             logger.info("💼 Llamando a Ollama para análisis del CFO con deepseek-r1...")
             respuesta = await ollama.generar("deepseek-r1:7b", prompt_ollama)
+
+            # POST-PROCESAR: Arreglar markdown incorrecto
+            import re
+            # Arreglar # sin espacios: #Ingresos → # Ingresos
+            respuesta = re.sub(r'^(#{1,6})([^\s#])', r'\1 \2', respuesta, flags=re.MULTILINE)
+            # Remover placeholders: $,XXX.XX → [dato]
+            respuesta = re.sub(r'\$,?\d+\.?\d*(?:,\d{3})*(?:\.\d{2})?', lambda m: f"${m.group().replace(',', '')}", respuesta)
+            respuesta = re.sub(r'\[Inserte.*?\]', '[Dato automático]', respuesta, flags=re.IGNORECASE)
+
             return respuesta
         except Exception as e:
             logger.error(f"Ollama error en CFOAssistant: {e}")

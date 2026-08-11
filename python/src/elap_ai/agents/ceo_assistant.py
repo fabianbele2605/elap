@@ -103,6 +103,14 @@ Proporciona reporte ejecutivo con resumen, métricas y recomendaciones accionabl
 
             logger.info("👔 Llamando a Ollama para asesoría ejecutiva con deepseek-r1...")
             respuesta = await ollama.generar("deepseek-r1:7b", prompt_ollama)
+
+            # POST-PROCESAR: Arreglar markdown incorrecto
+            import re
+            # Arreglar # sin espacios: #Ingresos → # Ingresos
+            respuesta = re.sub(r'^(#{1,6})([^\s#])', r'\1 \2', respuesta, flags=re.MULTILINE)
+            # Remover placeholders
+            respuesta = re.sub(r'\[Inserte.*?\]', '[Dato automático]', respuesta, flags=re.IGNORECASE)
+
             return respuesta
         except Exception as e:
             logger.error(f"Ollama error en CEOAssistant: {e}")
