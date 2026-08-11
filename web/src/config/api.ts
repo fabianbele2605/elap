@@ -7,7 +7,7 @@
 // export const API_BASE_URL = "http://localhost:5000";
 
 // ✅ Para producción con Cloudflare Tunnel
-export const API_BASE_URL = "https://dock-potatoes-volunteer-caught.trycloudflare.com";
+export const API_BASE_URL = "https://tail-gathering-bronze-lyric.trycloudflare.com";
 
 /**
  * Uso en componentes:
