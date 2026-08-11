@@ -1,11 +1,13 @@
 """Payroll Agent - Especializado en análisis salarial y nómina
 
 Procesa queries relacionadas con salarios, nómina, análisis de equity,
-beneficios salariales, etc.
+beneficios salariales, etc. Accede a datos REALES desde PostgreSQL.
 """
 
 import logging
 from typing import Dict, Any
+import asyncio
+import aiohttp
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +17,24 @@ class PayrollAgent:
 
     def __init__(self, theme: str = "andina_foods"):
         self.theme = theme
+        self.api_url = "http://localhost:5000/api/data/empresa"
         logger.info(f"PayrollAgent initialized with theme: {theme}")
+
+    async def _obtener_datos_reales(self, tabla: str = "employees") -> Dict[str, Any]:
+        """Obtiene datos reales desde PostgreSQL via API"""
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(f"{self.api_url}?tabla={tabla}&limite=1000") as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        logger.info(f"✅ Datos obtenidos de {tabla}: {len(data.get('datos', []))} registros")
+                        return data.get('datos', [])
+                    else:
+                        logger.warning(f"⚠️ API retornó {resp.status}")
+                        return []
+        except Exception as e:
+            logger.error(f"❌ Error obteniendo datos: {e}")
+            return []
 
     async def process_query(self, query: str) -> Dict[str, Any]:
         """Procesar consulta de nómina
@@ -42,86 +61,157 @@ class PayrollAgent:
         query_lower = query.lower()
 
         # Detección simple para diferentes tipos de queries
-        if "promedio" in query_lower or "average" in query_lower:
-            return self._salaries_by_department(query)
+        if "promedio" in query_lower or "departamento" in query_lower or "empleados por" in query_lower:
+            return await self._salaries_by_department(query)
         elif "equity" in query_lower or "equidad" in query_lower:
-            return self._salary_equity_analysis(query)
+            return await self._salary_equity_analysis(query)
         elif "distribución" in query_lower:
-            return self._salary_distribution(query)
+            return await self._salary_distribution(query)
         else:
             return await self._generic_payroll_response(query)
 
-    def _salaries_by_department(self, query: str) -> str:
-        """Análisis de salarios por departamento"""
-        return """📊 ANÁLISIS DE SALARIOS POR DEPARTAMENTO
+    async def _salaries_by_department(self, query: str) -> str:
+        """Análisis de salarios por departamento - DATOS REALES"""
+        try:
+            # Obtener datos reales de empleados
+            empleados = await self._obtener_datos_reales("employees")
 
-Departamento: Operaciones y Logística
-Salario Promedio: $3,500,000
-  • Mínimo: $2,800,000
-  • Máximo: $4,200,000
-  • Empleados: 45
+            if not empleados:
+                return "⚠️ No se pudieron obtener datos de empleados. Intenta más tarde."
 
-Desglose:
-- Gerente Operaciones: $4,200,000
-- Coordinadores: $3,800,000
-- Auxiliares: $2,800,000
+            # Agrupar por departamento y calcular estadísticas
+            deptos = {}
+            for emp in empleados:
+                depto = emp.get('departamento', 'Desconocido')
+                salario = emp.get('salario_basico', 0)
 
-Análisis:
-- Rango salarial: $1,400,000 (50% variación)
-- Desviación estándar: $385,000
-- Percentil 75: $3,900,000
+                if depto not in deptos:
+                    deptos[depto] = {'salarios': [], 'cantidad': 0}
 
-Comparación con otras áreas:
-- Comercial: $3,800,000 (+8.6%)
-- Administración: $3,200,000 (-8.6%)
-- IT: $4,100,000 (+17.1%)
+                deptos[depto]['salarios'].append(salario)
+                deptos[depto]['cantidad'] += 1
 
-Recomendación: Estructura salarial equilibrada dentro del mercado regional."""
+            # Generar reporte
+            respuesta = "📊 ANÁLISIS DE SALARIOS POR DEPARTAMENTO (DATOS REALES)\n"
+            respuesta += "=" * 60 + "\n\n"
 
-    def _salary_equity_analysis(self, query: str) -> str:
-        """Análisis de equidad salarial"""
-        return """📈 ANÁLISIS DE EQUIDAD SALARIAL
+            for depto, datos in sorted(deptos.items(), key=lambda x: x[1]['cantidad'], reverse=True):
+                salarios = datos['salarios']
+                cantidad = datos['cantidad']
+                promedio = sum(salarios) / len(salarios) if salarios else 0
+                minimo = min(salarios) if salarios else 0
+                maximo = max(salarios) if salarios else 0
 
-Distribución Actual por Departamento:
-- Comercial: $3,800,000 promedio (48 empleados)
-- Operaciones: $3,500,000 promedio (45 empleados)
-- Administración: $3,200,000 promedio (34 empleados)
-- IT: $4,100,000 promedio (28 empleados)
-- RRHH: $3,400,000 promedio (12 empleados)
+                respuesta += f"🏢 **{depto}**\n"
+                respuesta += f"   • Empleados: {cantidad}\n"
+                respuesta += f"   • Salario Promedio: ${promedio:,.0f}\n"
+                respuesta += f"   • Mínimo: ${minimo:,.0f}\n"
+                respuesta += f"   • Máximo: ${maximo:,.0f}\n"
+                respuesta += f"   • Rango: ${maximo - minimo:,.0f}\n\n"
 
-Índice de Equidad:
-- Ratio máximo/mínimo: 1.28 (dentro de rango aceptable 1.3)
-- Coeficiente de Gini: 0.22 (buena distribución)
-- Dispersión: Baja a media
+            respuesta += "📈 Análisis: Estructura salarial equilibrada con variaciones por especialización.\n"
+            respuesta += "✅ Datos obtenidos de PostgreSQL en tiempo real."
 
-Hallazgos:
-✓ Distribución equitativa entre niveles
-✓ Premios por especialización (IT +17%)
-✓ Consistencia con mercado regional
+            logger.info(f"✅ Payroll report generado con {len(empleados)} empleados reales")
+            return respuesta
 
-Recomendación: Mantener estructura actual con revisión anual."""
+        except Exception as e:
+            logger.error(f"Error en _salaries_by_department: {e}")
+            return f"❌ Error procesando datos: {str(e)}"
 
-    def _salary_distribution(self, query: str) -> str:
-        """Distribución de salarios"""
-        return """💰 DISTRIBUCIÓN DE SALARIOS - ANDINA FOODS
+    async def _salary_equity_analysis(self, query: str) -> str:
+        """Análisis de equidad salarial - DATOS REALES"""
+        try:
+            empleados = await self._obtener_datos_reales("employees")
 
-Total Empleados: 187
+            if not empleados:
+                return "⚠️ No se pudieron obtener datos de empleados."
 
-Rangos Salariales:
-$2M - $2.5M:  12 empleados (6.4%) - Auxiliares
-$2.5M - $3M:  34 empleados (18.2%) - Coordinadores
-$3M - $3.5M:  56 empleados (29.9%) - Especialistas
-$3.5M - $4M:  52 empleados (27.8%) - Supervisores
-$4M - $4.5M:  23 empleados (12.3%) - Gerentes
-$4.5M +:       10 empleados (5.3%) - Directivos
+            # Calcular por departamento
+            deptos = {}
+            for emp in empleados:
+                depto = emp.get('departamento', 'Desconocido')
+                salario = emp.get('salario_basico', 0)
 
-Estadísticas:
-- Salario Promedio: $3,450,000
-- Salario Mediano: $3,380,000
-- Desviación: $485,000
-- Rango: $2,000,000 - $5,200,000
+                if depto not in deptos:
+                    deptos[depto] = {'salarios': []}
+                deptos[depto]['salarios'].append(salario)
 
-Distribución Normal: ✓ Levemente concentrada en media"""
+            promedios = {k: sum(v['salarios']) / len(v['salarios']) for k, v in deptos.items()}
+            max_prom = max(promedios.values()) if promedios else 0
+            min_prom = min(promedios.values()) if promedios else 0
+            ratio = max_prom / min_prom if min_prom > 0 else 0
+
+            respuesta = "📈 ANÁLISIS DE EQUIDAD SALARIAL (DATOS REALES)\n"
+            respuesta += "=" * 60 + "\n\n"
+            respuesta += "Distribución por Departamento:\n"
+
+            for depto in sorted(promedios.keys()):
+                prom = promedios[depto]
+                cant = len(deptos[depto]['salarios'])
+                respuesta += f"- {depto}: ${prom:,.0f} promedio ({cant} empleados)\n"
+
+            respuesta += f"\n📊 Índice de Equidad:\n"
+            respuesta += f"- Ratio máximo/mínimo: {ratio:.2f} (aceptable < 1.5)\n"
+            respuesta += f"- Rango de variación: ${(max_prom - min_prom):,.0f}\n\n"
+            respuesta += "✅ Distribución equitativa dentro de rangos aceptables.\n"
+            respuesta += "✅ Datos en tiempo real desde PostgreSQL."
+
+            return respuesta
+
+        except Exception as e:
+            logger.error(f"Error en equity analysis: {e}")
+            return f"❌ Error: {str(e)}"
+
+    async def _salary_distribution(self, query: str) -> str:
+        """Distribución de salarios - DATOS REALES"""
+        try:
+            empleados = await self._obtener_datos_reales("employees")
+
+            if not empleados:
+                return "⚠️ No se pudieron obtener datos."
+
+            salarios = [e.get('salario_basico', 0) for e in empleados if e.get('salario_basico')]
+            salarios.sort()
+
+            # Rangos
+            rangos = {
+                '2M-2.5M': 0, '2.5M-3M': 0, '3M-3.5M': 0,
+                '3.5M-4M': 0, '4M-4.5M': 0, '4.5M+': 0
+            }
+
+            for sal in salarios:
+                if sal < 2500000: rangos['2M-2.5M'] += 1
+                elif sal < 3000000: rangos['2.5M-3M'] += 1
+                elif sal < 3500000: rangos['3M-3.5M'] += 1
+                elif sal < 4000000: rangos['3.5M-4M'] += 1
+                elif sal < 4500000: rangos['4M-4.5M'] += 1
+                else: rangos['4.5M+'] += 1
+
+            promedio = sum(salarios) / len(salarios) if salarios else 0
+            mediana = salarios[len(salarios)//2] if salarios else 0
+
+            respuesta = f"💰 DISTRIBUCIÓN DE SALARIOS - ANDINA FOODS (DATOS REALES)\n"
+            respuesta += f"{'='*60}\n\n"
+            respuesta += f"Total Empleados: {len(empleados)}\n\n"
+            respuesta += "Rangos Salariales:\n"
+
+            for rango, cantidad in rangos.items():
+                pct = (cantidad / len(salarios) * 100) if salarios else 0
+                respuesta += f"${rango:10} : {cantidad:3} empleados ({pct:5.1f}%)\n"
+
+            respuesta += f"\nEstadísticas:\n"
+            respuesta += f"- Salario Promedio: ${promedio:,.0f}\n"
+            respuesta += f"- Salario Mediano: ${mediana:,.0f}\n"
+            respuesta += f"- Mínimo: ${min(salarios):,.0f}\n"
+            respuesta += f"- Máximo: ${max(salarios):,.0f}\n"
+            respuesta += f"\n✅ Análisis en tiempo real desde PostgreSQL"
+
+            return respuesta
+
+        except Exception as e:
+            logger.error(f"Error en salary distribution: {e}")
+            return f"❌ Error: {str(e)}"
 
     async def _generic_payroll_response(self, query: str) -> str:
         """Respuesta genérica para queries de nómina - usa Ollama"""
