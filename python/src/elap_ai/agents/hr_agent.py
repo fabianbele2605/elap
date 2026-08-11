@@ -338,6 +338,22 @@ El párrafo debe incluir los derechos y responsabilidades del empleado. Sé form
                     filename = result['path'].split('/')[-1]
                     download_url = f"http://localhost:3000/documents/download/{filename}"
 
+                    # ==================== NOTIFICAR AL DOCUMENT MANAGER ====================
+                    await self._register_document_with_manager({
+                        'file_path': result['path'],
+                        'doc_type': 'contract',
+                        'agent_name': 'HR Agent',
+                        'entity_id': f"employee_{empleado.replace(' ', '_')}",
+                        'entity_name': empleado,
+                        'metadata': {
+                            'cargo': cargo,
+                            'empresa': empresa,
+                            'salario': salario,
+                            'beneficios': beneficios,
+                            'responsabilidades': responsabilidades
+                        }
+                    })
+
                     return {
                         "intent": "contract_generated",
                         "message": f"""✅ **CONTRATO GENERADO EXITOSAMENTE**
@@ -353,6 +369,8 @@ El contrato incluye:
 • Contenido generado por IA profesional
 
 [DESCARGAR CONTRATO]({download_url})
+
+📋 Documento registrado en Document Manager
 
 ¿Necesitas hacer cambios?""",
                         "generated_file": result['path'],
@@ -524,6 +542,25 @@ Intenta nuevamente."""
         except Exception as e:
             logger.error(f"Error generando reporte HR: {e}")
             return ""
+
+    async def _register_document_with_manager(self, document_data: Dict[str, Any]) -> None:
+        """Notificar al Document Manager sobre un documento generado
+
+        Args:
+            document_data: Metadata del documento a registrar
+        """
+        try:
+            from .document_manager_agent import DocumentManagerAgent
+
+            doc_manager = DocumentManagerAgent()
+            result = await doc_manager.register_document(document_data)
+
+            if result['status'] == 'success':
+                logger.info(f"✅ Documento registrado en Document Manager: {result['doc_id']}")
+            else:
+                logger.warning(f"⚠️ Error registrando en Document Manager: {result.get('message')}")
+        except Exception as e:
+            logger.error(f"Error notificando al Document Manager: {e}")
 
     def get_available_themes(self) -> list:
         """Obtiene temas corporativos disponibles"""

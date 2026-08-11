@@ -323,6 +323,20 @@ Soy experto en:
                 )
 
                 if result['status'] == 'success':
+                    # ==================== NOTIFICAR AL DOCUMENT MANAGER ====================
+                    await self._register_document_with_manager({
+                        'file_path': result['path'],
+                        'doc_type': 'invoice',
+                        'agent_name': 'Finance Agent',
+                        'entity_id': f"client_{cliente.replace(' ', '_')}",
+                        'entity_name': cliente,
+                        'metadata': {
+                            'numero': numero,
+                            'total': result.get('total'),
+                            'fecha_emision': datetime.now().strftime("%d/%m/%Y")
+                        }
+                    })
+
                     return {
                         "intent": "invoice_generated",
                         "message": f"""✅ **FACTURA GENERADA EXITOSAMENTE**
@@ -331,6 +345,8 @@ Soy experto en:
 👤 Cliente: {cliente}
 💰 Total: {result.get('total', 'Calculado')}
 📁 Guardado en: {result['path']}
+
+📋 Documento registrado en Document Manager
 
 ¿Descargas la factura o necesitas hacer cambios?""",
                         "generated_file": result['path']
@@ -397,3 +413,22 @@ Soy especialista en análisis y documentación financiera. Puedo ayudarte con:
 
 Error al conectar con Ollama. Intenta de nuevo."""
             }
+
+    async def _register_document_with_manager(self, document_data: Dict[str, Any]) -> None:
+        """Notificar al Document Manager sobre un documento generado
+
+        Args:
+            document_data: Metadata del documento a registrar
+        """
+        try:
+            from .document_manager_agent import DocumentManagerAgent
+
+            doc_manager = DocumentManagerAgent()
+            result = await doc_manager.register_document(document_data)
+
+            if result['status'] == 'success':
+                logger.info(f"✅ Documento registrado en Document Manager: {result['doc_id']}")
+            else:
+                logger.warning(f"⚠️ Error registrando en Document Manager: {result.get('message')}")
+        except Exception as e:
+            logger.error(f"Error notificando al Document Manager: {e}")
