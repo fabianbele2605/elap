@@ -91,19 +91,29 @@ class DocumentManagerAgent(DataAgentMixin):
         agent_name: str = None,
         entity_id: str = None,
         fecha_desde: str = None,
-        fecha_hasta: str = None
-    ) -> List[Dict[str, Any]]:
-        """Recuperar documentos por filtros (incluyendo rango de fechas)
+        fecha_hasta: str = None,
+        page: int = 1,
+        page_size: int = 10
+    ) -> Dict[str, Any]:
+        """Recuperar documentos con filtros avanzados y paginación
 
         Args:
             doc_type: 'contract', 'invoice', 'report', etc
             agent_name: nombre del agente que generó
-            entity_id: ID de la entidad (empleado, cliente, etc)
-            fecha_desde: YYYY-MM-DD (filtrar desde esta fecha)
-            fecha_hasta: YYYY-MM-DD (filtrar hasta esta fecha)
+            entity_id: ID de la entidad
+            fecha_desde: YYYY-MM-DD
+            fecha_hasta: YYYY-MM-DD
+            page: página (default 1)
+            page_size: documentos por página (default 10)
 
         Returns:
-            Lista de documentos que coinciden con los filtros
+            {
+                'documentos': [...],
+                'total': int,
+                'pagina': int,
+                'total_paginas': int,
+                'filtros_aplicados': {...}
+            }
         """
         resultados = []
 
@@ -117,8 +127,7 @@ class DocumentManagerAgent(DataAgentMixin):
 
             # Filtro de fechas
             if fecha_desde or fecha_hasta:
-                doc_fecha = doc.get('created_at', '')[:10]  # YYYY-MM-DD
-
+                doc_fecha = doc.get('created_at', '')[:10]
                 if fecha_desde and doc_fecha < fecha_desde:
                     continue
                 if fecha_hasta and doc_fecha > fecha_hasta:
@@ -126,8 +135,75 @@ class DocumentManagerAgent(DataAgentMixin):
 
             resultados.append(doc)
 
-        logger.info(f"🔍 Búsqueda: {len(resultados)} documentos encontrados")
-        return sorted(resultados, key=lambda x: x.get('created_at'), reverse=True)
+        # Ordenar por fecha descendente
+        resultados = sorted(resultados, key=lambda x: x.get('created_at'), reverse=True)
+
+        # Paginación
+        total = len(resultados)
+        total_paginas = (total + page_size - 1) // page_size
+        inicio = (page - 1) * page_size
+        fin = inicio + page_size
+        documentos_pagina = resultados[inicio:fin]
+
+        logger.info(f"🔍 Búsqueda: {total} documentos, página {page}/{total_paginas}")
+
+        return {
+            'documentos': documentos_pagina,
+            'total': total,
+            'pagina': page,
+            'total_paginas': total_paginas,
+            'filtros_aplicados': {
+                'doc_type': doc_type,
+                'agent_name': agent_name,
+                'entity_id': entity_id,
+                'fecha_desde': fecha_desde,
+                'fecha_hasta': fecha_hasta
+            }
+        }
+
+    async def get_documents_by_agent(self, agent_name: str, page: int = 1, page_size: int = 10) -> Dict[str, Any]:
+        """Obtener todos los documentos generados por un agente específico"""
+        return await self.get_documents(agent_name=agent_name, page=page, page_size=page_size)
+
+    async def get_documents_by_type(self, doc_type: str, page: int = 1, page_size: int = 10) -> Dict[str, Any]:
+        """Obtener todos los documentos de un tipo específico"""
+        return await self.get_documents(doc_type=doc_type, page=page, page_size=page_size)
+
+    async def get_statistics(self) -> Dict[str, Any]:
+        """Obtener estadísticas del gestor documental"""
+        if not self.document_index:
+            return {
+                'total_documentos': 0,
+                'por_tipo': {},
+                'por_agente': {},
+                'documentos_recientes': []
+            }
+
+        # Contar por tipo
+        por_tipo = {}
+        for doc in self.document_index.values():
+            dtype = doc.get('doc_type', 'unknown')
+            por_tipo[dtype] = por_tipo.get(dtype, 0) + 1
+
+        # Contar por agente
+        por_agente = {}
+        for doc in self.document_index.values():
+            agent = doc.get('agent_name', 'unknown')
+            por_agente[agent] = por_agente.get(agent, 0) + 1
+
+        # Últimos 5 documentos
+        documentos_recientes = sorted(
+            self.document_index.values(),
+            key=lambda x: x.get('created_at'),
+            reverse=True
+        )[:5]
+
+        return {
+            'total_documentos': len(self.document_index),
+            'por_tipo': por_tipo,
+            'por_agente': por_agente,
+            'documentos_recientes': documentos_recientes
+        }
 
     async def process_query(self, query: str) -> Dict[str, Any]:
         """Procesar consulta de gestión documental"""
