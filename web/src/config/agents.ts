@@ -107,7 +107,7 @@ Cuando se solicite información, busca primero en memoria interna, luego proporc
     nombre: 'CEO Assistant',
     rol: 'Dirección',
     descripcion: 'Asistente ejecutivo para la dirección general',
-    modelo: 'qwen3:8b',
+    modelo: 'deepseek-r1:7b',
     temperatura: 0.5,
     top_p: 0.9,
     systemPrompt: `${INSTRUCCIONES_FORMATO}
@@ -133,7 +133,7 @@ Cuando prepares reportes, incluye:
     nombre: 'CFO Assistant',
     rol: 'Dirección',
     descripcion: 'Asistente del director financiero',
-    modelo: 'deepseek:8b',
+    modelo: 'deepseek-r1:7b',
     temperatura: 0.2,
     top_p: 0.95,
     systemPrompt: `${INSTRUCCIONES_FORMATO}
@@ -159,7 +159,7 @@ Siempre fundamenta análisis con números concretos. Cuando repor tes financiero
     nombre: 'CMO Assistant',
     rol: 'Dirección',
     descripcion: 'Asistente del director de marketing',
-    modelo: 'qwen3:8b',
+    modelo: 'deepseek-r1:7b',
     temperatura: 0.6,
     top_p: 0.85,
     systemPrompt: `${INSTRUCCIONES_FORMATO}
@@ -249,7 +249,7 @@ En cada transacción:
     nombre: 'Finanzas',
     rol: 'Administración',
     descripcion: 'Análisis financiero y gestión de flujos',
-    modelo: 'deepseek:8b',
+    modelo: 'deepseek-r1:7b',
     temperatura: 0.3,
     top_p: 0.9,
     systemPrompt: `${INSTRUCCIONES_FORMATO}

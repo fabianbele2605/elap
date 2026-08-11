@@ -210,5 +210,5 @@ export const INITIAL_HARDWARE: HardwareMetrics = {
   vramTotalGb: 16.0,
   diskUsedGb: 340,
   diskTotalGb: 1000,
-  ollamaModelLoaded: 'glm4:9b (Q4_K_M)',
+  ollamaModelLoaded: 'deepseek-r1:7b',
 };
