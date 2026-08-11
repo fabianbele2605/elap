@@ -1398,6 +1398,13 @@ async def ejecutar_workflow(request: web.Request) -> web.Response:
 
         logger.info(f"🚀 Ejecutando workflow REAL: {workflow_id}")
 
+        # Registrar inicio del workflow
+        if audit_logger:
+            audit_logger.log_workflow_start(
+                workflow_id=workflow_id,
+                details={"input": input_data}
+            )
+
         # Ejecutar workflow según tipo
         if workflow_id == "presupuesto":
             result = await workflow_executor.execute_presupuesto_workflow(
@@ -1424,10 +1431,28 @@ async def ejecutar_workflow(request: web.Request) -> web.Response:
             )
 
         logger.info(f"✅ Workflow completado: {workflow_id}")
+
+        # Registrar finalización
+        if audit_logger and result:
+            audit_logger.log_workflow_complete(
+                workflow_id=workflow_id,
+                status=result.get('status', 'success'),
+                duration_ms=None
+            )
+
         return web.json_response(result)
 
     except Exception as e:
         logger.error(f"Error ejecutando workflow: {e}")
+
+        # Registrar error
+        if audit_logger:
+            audit_logger.log_error(
+                error_type="workflow_execution_error",
+                error_msg=str(e),
+                context={"workflow_id": workflow_id}
+            )
+
         return web.json_response({'error': str(e)}, status=500)
 
 
