@@ -1324,16 +1324,6 @@ async def start_rest_server(host: str = '0.0.0.0', port: int = 5000):
 
     app = web.Application(middlewares=[add_cors_headers])
 
-    # === Configurar CORS ===
-    cors = aiohttp_cors.setup(app, defaults={
-        "*": aiohttp_cors.ResourceOptions(
-            allow_credentials=True,
-            expose_headers=("*", "Content-Type", "Authorization"),
-            allow_headers=("*", "Content-Type", "Authorization", "X-Requested-With"),
-            allow_methods=("*", "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
-        )
-    })
-
     # Rutas
     app.router.add_get('/api/health', health_check)
     app.router.add_get('/api/agents', listar_agentes)
@@ -1367,9 +1357,8 @@ async def start_rest_server(host: str = '0.0.0.0', port: int = 5000):
     # === Datos de empresa (PostgreSQL) ===
     app.router.add_get('/api/data/empresa', obtener_datos_empresa)
 
-    # === Hacer todas las rutas CORS-aware ===
-    for route in list(app.router.routes()):
-        cors.add(route)
+    # === CORS manejado por middleware ===
+    # (El middleware add_cors_headers agrega headers CORS a todas las respuestas)
 
     runner = web.AppRunner(app)
     await runner.setup()
