@@ -1,12 +1,13 @@
 """Recruitment Agent - Especializado en reclutamiento y selección con datos REALES
 
 Procesa queries sobre screening de candidatos, job postings,
-onboarding, evaluación de skills, etc.
+onboarding, evaluación de skills, etc. Genera documentos de oferta.
 """
 
 import logging
 import re
 from typing import Dict, Any
+from datetime import datetime
 
 from elap_ai.data_agent_mixin import DataAgentMixin
 
@@ -20,6 +21,13 @@ class RecruitmentAgent(DataAgentMixin):
         super().__init__()
         self.theme = theme
         logger.info(f"RecruitmentAgent initialized with theme: {theme} - usando datos REALES")
+
+        try:
+            from ..document_engine import DocumentEngine
+            self.document_engine = DocumentEngine(theme=theme, language="es")
+        except Exception as e:
+            logger.warning(f"DocumentEngine no disponible: {e}")
+            self.document_engine = None
 
     async def process_query(self, query: str) -> Dict[str, Any]:
         """Procesar consulta de reclutamiento
@@ -344,3 +352,87 @@ Puedo ayudarte con evaluación de candidatos, creación de ofertas laborales,
 planes de onboarding, y análisis de pipeline de reclutamiento.
 
 ¿Qué necesitas en reclutamiento?"""
+
+    async def generate_job_offer(
+        self,
+        candidato: str,
+        puesto: str,
+        salario: str,
+        contrato: str = "Indefinido"
+    ) -> Dict[str, Any]:
+        """Generar oferta de trabajo para candidato
+
+        Args:
+            candidato: Nombre del candidato
+            puesto: Puesto a ofrecer
+            salario: Salario ofrecido
+            contrato: Tipo de contrato (Indefinido, Término Fijo, etc)
+
+        Returns:
+            Dict con ruta del documento generado
+        """
+        if not self.document_engine:
+            return {"status": "error", "message": "DocumentEngine no disponible"}
+
+        try:
+            offer_data = {
+                "titulo": f"Oferta de Empleo - {puesto}",
+                "empresa": "Andina Foods S.A.S.",
+                "candidato": candidato,
+                "puesto": puesto,
+                "salario": salario,
+                "tipo_contrato": contrato,
+                "fecha_oferta": datetime.now().strftime("%d/%m/%Y"),
+                "condiciones": "Bajo las condiciones estándar de la empresa",
+                "validez": "Esta oferta es válida por 15 días hábiles"
+            }
+
+            output_path = self.document_engine.generate_word(
+                "job_offer",
+                offer_data,
+                f"oferta_{candidato.replace(' ', '_')}.docx"
+            )
+
+            logger.info(f"✅ Oferta de trabajo generada: {output_path}")
+
+            # Registrar en Document Manager
+            await self._register_document_with_manager({
+                'file_path': str(output_path),
+                'doc_type': 'job_offer',
+                'agent_name': 'Recruitment Agent',
+                'entity_id': f"candidato_{candidato.replace(' ', '_')}",
+                'entity_name': candidato,
+                'metadata': {
+                    'puesto': puesto,
+                    'salario': salario,
+                    'contrato': contrato
+                }
+            })
+
+            return {
+                "status": "success",
+                "document_type": "job_offer",
+                "candidato": candidato,
+                "puesto": puesto,
+                "path": str(output_path),
+                "message": f"Oferta de empleo generada para {candidato}"
+            }
+
+        except Exception as e:
+            logger.error(f"Error generando oferta: {e}")
+            return {"status": "error", "message": str(e)}
+
+    async def _register_document_with_manager(self, document_data: Dict[str, Any]) -> None:
+        """Notificar al Document Manager sobre un documento generado"""
+        try:
+            from .document_manager_agent import DocumentManagerAgent
+
+            doc_manager = DocumentManagerAgent()
+            result = await doc_manager.register_document(document_data)
+
+            if result['status'] == 'success':
+                logger.info(f"✅ Documento registrado en Document Manager: {result['doc_id']}")
+            else:
+                logger.warning(f"⚠️ Error registrando en Document Manager: {result.get('message')}")
+        except Exception as e:
+            logger.error(f"Error notificando al Document Manager: {e}")

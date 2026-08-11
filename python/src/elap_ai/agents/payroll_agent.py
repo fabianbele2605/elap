@@ -1,13 +1,15 @@
-"""Payroll Agent - Especializado en análisis salarial y nómina
+"""Payroll Agent - Especializado en análisis salarial y nómina con generación de reportes
 
 Procesa queries relacionadas con salarios, nómina, análisis de equity,
 beneficios salariales, etc. Accede a datos REALES desde PostgreSQL.
+Genera reportes de nómina y notifica al Document Manager.
 """
 
 import logging
 from typing import Dict, Any
 import asyncio
 import aiohttp
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +21,13 @@ class PayrollAgent:
         self.theme = theme
         self.api_url = "http://localhost:5000/api/data/empresa"
         logger.info(f"PayrollAgent initialized with theme: {theme}")
+
+        try:
+            from ..document_engine import DocumentEngine
+            self.document_engine = DocumentEngine(theme=theme, language="es")
+        except Exception as e:
+            logger.warning(f"DocumentEngine no disponible: {e}")
+            self.document_engine = None
 
     async def _obtener_datos_reales(self, tabla: str = "employees") -> Dict[str, Any]:
         """Obtiene datos reales desde PostgreSQL via API"""
@@ -241,3 +250,93 @@ Puedo ayudarte con:
 📈 Reportes de nómina, análisis comparativo, proyecciones
 
 ¿Qué información necesitas sobre nómina?"""
+
+    async def generate_payroll_report(self, periodo: str = None) -> Dict[str, Any]:
+        """Generar reporte de nómina mensual
+
+        Args:
+            periodo: Período del reporte (e.g., "agosto-2026")
+
+        Returns:
+            Dict con resultado de generación y ruta del archivo
+        """
+        if not self.document_engine:
+            return {"status": "error", "message": "DocumentEngine no disponible"}
+
+        try:
+            empleados = await self._obtener_datos_reales("employees")
+
+            if not empleados:
+                return {"status": "error", "message": "No hay datos de empleados"}
+
+            # Calcular estadísticas
+            total_salarios = sum(float(e.get('salario_basico', 0)) for e in empleados)
+            promedio = total_salarios / len(empleados) if empleados else 0
+
+            # Crear datos para el reporte
+            periodo = periodo or datetime.now().strftime("%B-%Y")
+            report_data = {
+                "titulo": f"Reporte de Nómina {periodo}",
+                "empresa": "Andina Foods S.A.S.",
+                "periodo": periodo,
+                "seccion_ejecutiva": f"Reporte de nómina para {len(empleados)} empleados",
+                "metricas": {
+                    "Total Empleados": str(len(empleados)),
+                    "Nómina Total": f"${total_salarios:,.0f}",
+                    "Salario Promedio": f"${promedio:,.0f}"
+                },
+                "contenido_ia": f"Nómina procesada para {len(empleados)} empleados en el período {periodo}.",
+                "conclusiones": "Nómina generada exitosamente desde datos en tiempo real."
+            }
+
+            # Generar documento
+            output_path = self.document_engine.generate_word(
+                "report",
+                report_data,
+                f"nomina_{periodo.replace(' ', '_')}.docx"
+            )
+
+            logger.info(f"✅ Reporte de nómina generado: {output_path}")
+
+            # Notificar a Document Manager
+            await self._register_document_with_manager({
+                'file_path': str(output_path),
+                'doc_type': 'report',
+                'agent_name': 'Payroll Agent',
+                'entity_id': f"nomina_{periodo}",
+                'entity_name': f"Nómina {periodo}",
+                'metadata': {
+                    'periodo': periodo,
+                    'total_empleados': len(empleados),
+                    'nómina_total': float(total_salarios)
+                }
+            })
+
+            return {
+                "status": "success",
+                "document_type": "payroll_report",
+                "periode": periodo,
+                "total_empleados": len(empleados),
+                "nómina_total": f"${total_salarios:,.0f}",
+                "path": str(output_path),
+                "message": f"Reporte de nómina {periodo} generado exitosamente"
+            }
+
+        except Exception as e:
+            logger.error(f"Error generando reporte de nómina: {e}")
+            return {"status": "error", "message": str(e)}
+
+    async def _register_document_with_manager(self, document_data: Dict[str, Any]) -> None:
+        """Notificar al Document Manager sobre un documento generado"""
+        try:
+            from .document_manager_agent import DocumentManagerAgent
+
+            doc_manager = DocumentManagerAgent()
+            result = await doc_manager.register_document(document_data)
+
+            if result['status'] == 'success':
+                logger.info(f"✅ Documento registrado en Document Manager: {result['doc_id']}")
+            else:
+                logger.warning(f"⚠️ Error registrando en Document Manager: {result.get('message')}")
+        except Exception as e:
+            logger.error(f"Error notificando al Document Manager: {e}")

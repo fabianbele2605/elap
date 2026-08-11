@@ -85,13 +85,22 @@ class DocumentManagerAgent(DataAgentMixin):
             logger.error(f"Error registrando documento: {e}")
             return {'status': 'error', 'message': str(e)}
 
-    async def get_documents(self, doc_type: str = None, agent_name: str = None, entity_id: str = None) -> List[Dict[str, Any]]:
-        """Recuperar documentos por filtros
+    async def get_documents(
+        self,
+        doc_type: str = None,
+        agent_name: str = None,
+        entity_id: str = None,
+        fecha_desde: str = None,
+        fecha_hasta: str = None
+    ) -> List[Dict[str, Any]]:
+        """Recuperar documentos por filtros (incluyendo rango de fechas)
 
         Args:
             doc_type: 'contract', 'invoice', 'report', etc
             agent_name: nombre del agente que generó
             entity_id: ID de la entidad (empleado, cliente, etc)
+            fecha_desde: YYYY-MM-DD (filtrar desde esta fecha)
+            fecha_hasta: YYYY-MM-DD (filtrar hasta esta fecha)
 
         Returns:
             Lista de documentos que coinciden con los filtros
@@ -106,6 +115,15 @@ class DocumentManagerAgent(DataAgentMixin):
             if entity_id and doc.get('entity_id') != entity_id:
                 continue
 
+            # Filtro de fechas
+            if fecha_desde or fecha_hasta:
+                doc_fecha = doc.get('created_at', '')[:10]  # YYYY-MM-DD
+
+                if fecha_desde and doc_fecha < fecha_desde:
+                    continue
+                if fecha_hasta and doc_fecha > fecha_hasta:
+                    continue
+
             resultados.append(doc)
 
         logger.info(f"🔍 Búsqueda: {len(resultados)} documentos encontrados")
@@ -119,7 +137,7 @@ class DocumentManagerAgent(DataAgentMixin):
 
         # ==================== BÚSQUEDA EN ÍNDICE ====================
         # Palabras clave para buscar documentos registrados
-        busqueda_keywords = ["contrato", "factura", "reporte", "generado", "creado", "archivo"]
+        busqueda_keywords = ["contrato", "factura", "reporte", "documento", "generado", "creado", "archivo", "semana", "mes", "hoy"]
 
         if any(kw in query_lower for kw in busqueda_keywords):
             logger.info("🔍 Detectada búsqueda de documentos - consultando índice")
@@ -131,10 +149,27 @@ class DocumentManagerAgent(DataAgentMixin):
                     doc_type = "contract"
                 elif "factura" in query_lower:
                     doc_type = "invoice"
-                elif "reporte" in query_lower:
+                elif "reporte" in query_lower or "nómina" in query_lower:
                     doc_type = "report"
 
-                documentos = await self.get_documents(doc_type=doc_type)
+                # Detectar rango de fechas
+                from datetime import datetime, timedelta
+                fecha_desde = None
+                fecha_hasta = None
+
+                if "semana" in query_lower or "últimos 7" in query_lower:
+                    fecha_desde = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
+                elif "mes" in query_lower or "últimos 30" in query_lower:
+                    fecha_desde = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
+                elif "hoy" in query_lower:
+                    fecha_desde = datetime.now().strftime("%Y-%m-%d")
+                    fecha_hasta = datetime.now().strftime("%Y-%m-%d")
+
+                documentos = await self.get_documents(
+                    doc_type=doc_type,
+                    fecha_desde=fecha_desde,
+                    fecha_hasta=fecha_hasta
+                )
 
                 if documentos:
                     respuesta = f"""📄 **DOCUMENTOS REGISTRADOS**
