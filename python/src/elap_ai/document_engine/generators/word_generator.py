@@ -132,19 +132,29 @@ class WordGenerator:
         # Calcular totales de items
         if "items" in context and isinstance(context["items"], list):
             for item in context["items"]:
-                cantidad = float(item.get("cantidad", 0))
+                cantidad = float(item.get("cantidad", 1))
                 precio = float(item.get("precio_unitario", 0))
-                item["total"] = cantidad * precio
+                subtotal_item = cantidad * precio
+                # Usar "subtotal" que es lo que espera el template
+                item["subtotal"] = f"${subtotal_item:,.0f}"
+                item["precio_unitario"] = f"${precio:,.0f}"
+                item["cantidad"] = int(cantidad)
 
-            # Calcular totales
-            subtotal = sum(item.get("total", 0) for item in context["items"])
-            context["subtotal"] = f"{subtotal:,.2f}"
+            # Calcular totales generales
+            subtotal = sum(float(item.get("precio_unitario", "0").replace("$", "").replace(",", "")) * item.get("cantidad", 1) for item in context["items"])
+            context["subtotal"] = f"${subtotal:,.0f}"
 
             impuesto = subtotal * 0.19
-            context["impuesto"] = f"{impuesto:,.2f}"
+            context["impuesto"] = f"${impuesto:,.0f}"
 
             total = subtotal + impuesto
-            context["total"] = f"{total:,.2f}"
+            context["total"] = f"${total:,.0f}"
+        else:
+            # Valores por defecto si no hay items
+            context["subtotal"] = "$0"
+            context["impuesto"] = "$0"
+            context["total"] = "$0"
+            context["items"] = []
 
         return context
 

@@ -300,15 +300,36 @@ Soy experto en:
 
                 logger.info(f"Datos extraídos: Factura {numero}, Cliente {cliente}")
 
-                # Parsear items (asumir formato: Descripción (precio x cantidad))
+                # Parsear items (formato: Descripción (precio x cantidad))
                 items = []
                 for item_line in items_str.split(";"):
                     if item_line.strip():
-                        items.append({
-                            "descripcion": item_line.strip(),
-                            "precio_unitario": 50000,  # default
-                            "cantidad": 1
-                        })
+                        try:
+                            # Parsear: "Producto A (100000 x 10)"
+                            desc_part, param_part = item_line.strip().rsplit("(", 1)
+                            desc = desc_part.strip()
+                            params = param_part.rstrip(")")
+
+                            if "x" in params:
+                                precio_str, cantidad_str = params.split("x")
+                                precio = float(precio_str.strip())
+                                cantidad = int(cantidad_str.strip())
+                            else:
+                                precio = 50000
+                                cantidad = 1
+
+                            items.append({
+                                "descripcion": desc,
+                                "precio_unitario": precio,
+                                "cantidad": cantidad
+                            })
+                        except Exception as e:
+                            logger.warning(f"Error parseando item: {item_line}, usando default")
+                            items.append({
+                                "descripcion": item_line.strip(),
+                                "precio_unitario": 50000,
+                                "cantidad": 1
+                            })
 
                 # Generar factura
                 result = await self.generate_invoice(
