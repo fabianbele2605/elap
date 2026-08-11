@@ -1,30 +1,34 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { 
-  Send, 
-  Paperclip, 
-  Mic, 
-  Wrench, 
-  Sliders, 
-  RotateCcw, 
-  MoreVertical, 
-  Brain, 
-  ChevronDown, 
-  ChevronUp, 
-  CheckCircle2, 
-  Sparkles, 
-  Clock, 
-  Cpu, 
-  Terminal, 
-  Database, 
-  BarChart2, 
-  Copy, 
-  Check, 
-  Bot, 
-  User, 
-  Volume2, 
+import {
+  Send,
+  Paperclip,
+  Mic,
+  Wrench,
+  Sliders,
+  RotateCcw,
+  MoreVertical,
+  Brain,
+  ChevronDown,
+  ChevronUp,
+  CheckCircle2,
+  Sparkles,
+  Clock,
+  Cpu,
+  Terminal,
+  Database,
+  BarChart2,
+  Copy,
+  Check,
+  Bot,
+  User,
+  Volume2,
   Layers
 } from 'lucide-react';
 import { Agent, Message, Tool } from '../../types';
+import { Download } from 'lucide-react';
+import { ConversationHistory, type ConversationHistoryProps } from '../ConversationHistory';
+import { Conversation } from '../../hooks/useConversation';
+import { AutoChart } from '../AutoChart';
 
 interface ChatTabProps {
   agent: Agent;
@@ -33,6 +37,13 @@ interface ChatTabProps {
   onNewConversation: () => void;
   isStreaming: boolean;
   tools: Tool[];
+  // Historial
+  conversations?: Conversation[];
+  currentConversationId?: string | null;
+  onSelectConversation?: (convId: string) => void;
+  onDeleteConversation?: (convId: string) => void;
+  onCreateConversation?: () => void;
+  conversationLoading?: boolean;
 }
 
 export const ChatTab: React.FC<ChatTabProps> = ({
@@ -41,7 +52,13 @@ export const ChatTab: React.FC<ChatTabProps> = ({
   onSendMessage,
   onNewConversation,
   isStreaming,
-  tools
+  tools,
+  conversations = [],
+  currentConversationId,
+  onSelectConversation,
+  onDeleteConversation,
+  onCreateConversation,
+  conversationLoading = false
 }) => {
   const [inputText, setInputText] = useState('');
   const [openThoughts, setOpenThoughts] = useState<{ [msgId: string]: boolean }>({
@@ -235,26 +252,74 @@ export const ChatTab: React.FC<ChatTabProps> = ({
                   </div>
                 )}
 
-                {/* MAIN MESSAGE CONTENT FORMATTED */}
-                <div className="prose prose-invert max-w-none text-slate-700 text-sm space-y-2 leading-relaxed">
+                {/* MAIN MESSAGE CONTENT - MARKDOWN PROFESIONAL */}
+                <div className="max-w-none text-slate-700 text-sm space-y-3 leading-relaxed">
                   {msg.text.split('\n\n').map((paragraph, pIdx) => {
-                    if (paragraph.startsWith('### ')) {
-                      return <h3 key={pIdx} className="text-base font-bold text-blue-600 mt-3 mb-1">{paragraph.replace('### ', '')}</h3>;
+                    const paragraphs = msg.text.split('\n\n');
+
+                    // Detectar gráfico automático
+                    if (paragraph.includes('[Gráfico automático:')) {
+                      const match = paragraph.match(/\[Gráfico automático:\s*(.+?)\]/);
+                      const chartTitle = match ? match[1].trim() : 'Gráfico';
+
+                      // Buscar tabla anterior
+                      let tableMarkdown = '';
+                      for (let i = pIdx - 1; i >= 0; i--) {
+                        if (paragraphs[i]?.startsWith('|')) {
+                          tableMarkdown = paragraphs[i];
+                          break;
+                        }
+                      }
+
+                      return (
+                        <div key={pIdx}>
+                          <AutoChart title={chartTitle} tableMarkdown={tableMarkdown} />
+                          <p className="text-slate-700 leading-relaxed text-sm mt-2">
+                            {paragraph.replace(/\[Gráfico automático:.*?\]\s*/g, '').trim()}
+                          </p>
+                        </div>
+                      );
                     }
+
+                    // H1 (# Título)
+                    if (paragraph.startsWith('# ') && !paragraph.startsWith('## ')) {
+                      return (
+                        <h1 key={pIdx} className="text-2xl font-bold text-blue-700 mt-4 mb-2 pb-2 border-b-2 border-blue-400">
+                          {paragraph.replace(/^#+\s*/, '')}
+                        </h1>
+                      );
+                    }
+                    // H2 (## Subtítulo)
+                    if (paragraph.startsWith('## ') && !paragraph.startsWith('### ')) {
+                      return (
+                        <h2 key={pIdx} className="text-xl font-bold text-blue-600 mt-3 mb-2 flex items-center gap-2">
+                          <span className="w-1 h-6 bg-blue-600 rounded"></span>
+                          {paragraph.replace(/^#+\s*/, '')}
+                        </h2>
+                      );
+                    }
+                    // H3 (### Subencabezado)
+                    if (paragraph.startsWith('### ')) {
+                      return (
+                        <h3 key={pIdx} className="text-base font-bold text-blue-700 mt-2 mb-1">
+                          {paragraph.replace(/^#+\s*/, '')}
+                        </h3>
+                      );
+                    }
+                    // Tablas
                     if (paragraph.startsWith('|')) {
-                      // Basic table formatting helper
                       const rows = paragraph.trim().split('\n');
                       return (
-                        <div key={pIdx} className="overflow-x-auto my-2 rounded border border-slate-300 bg-slate-50">
+                        <div key={pIdx} className="overflow-x-auto my-3 rounded-lg border border-slate-300 bg-gradient-to-br from-blue-50 to-slate-50 shadow-sm">
                           <table className="w-full text-xs text-left border-collapse">
                             <tbody>
                               {rows.map((row, rIdx) => {
                                 const cells = row.split('|').filter(c => c.trim().length > 0 || c === '');
-                                if (rIdx === 1 && row.includes('---')) return null; // skip header separator
+                                if (rIdx === 1 && row.includes('---')) return null;
                                 return (
-                                  <tr key={rIdx} className={rIdx === 0 ? 'bg-white/90 font-bold border-b border-slate-300 text-blue-600' : 'border-b border-slate-300/60'}>
+                                  <tr key={rIdx} className={rIdx === 0 ? 'bg-gradient-to-r from-blue-600 to-blue-700 font-bold border-b border-blue-300 text-white' : rIdx % 2 === 0 ? 'bg-white border-b border-slate-300/60' : 'bg-slate-50 border-b border-slate-300/60'}>
                                     {cells.map((cell, cIdx) => (
-                                      <td key={cIdx} className="px-3 py-1.5">{cell.trim()}</td>
+                                      <td key={cIdx} className="px-4 py-2.5 font-medium text-slate-700">{cell.trim()}</td>
                                     ))}
                                   </tr>
                                 );
@@ -264,57 +329,142 @@ export const ChatTab: React.FC<ChatTabProps> = ({
                         </div>
                       );
                     }
+                    // Listas
                     if (paragraph.startsWith('* ') || paragraph.startsWith('• ') || paragraph.startsWith('1. ')) {
                       return (
-                        <ul key={pIdx} className="list-disc pl-5 space-y-1 text-slate-700">
-                          {paragraph.split('\n').map((li, lIdx) => {
-                            const text = li.replace(/^(\*|•|\d+\.)\s*/, '');
-                            // Procesar markdown links en items
-                            const linkMatch = text.match(/\[(.*?)\]\((.*?)\)/);
-                            if (linkMatch) {
-                              const [, linkText, linkUrl] = linkMatch;
-                              return (
-                                <li key={lIdx}>
-                                  {text.split(linkMatch[0])[0]}
-                                  <a href={linkUrl} download className="text-blue-600 hover:text-blue-800 underline font-semibold">{linkText}</a>
-                                  {text.split(linkMatch[0])[1]}
-                                </li>
-                              );
-                            }
-                            return <li key={lIdx}>{text}</li>;
-                          })}
-                        </ul>
+                        <div key={pIdx} className="my-2 pl-2 border-l-4 border-blue-400 bg-blue-50/40 py-2 px-4 rounded">
+                          <ul className="list-disc pl-5 space-y-1.5 text-slate-700">
+                            {paragraph.split('\n').map((li, lIdx) => {
+                              const text = li.replace(/^(\*|•|\d+\.)\s*/, '');
+                              return <li key={lIdx} className="font-medium">{text}</li>;
+                            })}
+                          </ul>
+                        </div>
                       );
                     }
-                    // Procesar markdown links [texto](url)
-                    const linkMatch = paragraph.match(/\[(.*?)\]\((.*?)\)/);
-                    if (linkMatch) {
-                      const [, linkText, linkUrl] = linkMatch;
-                      const parts = paragraph.split(linkMatch[0]);
-                      return (
-                        <p key={pIdx}>
-                          {parts[0]}
-                          <a href={linkUrl} download className="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold transition-colors">{linkText}</a>
-                          {parts[1]}
-                        </p>
-                      );
-                    }
-                    return <p key={pIdx}>{paragraph}</p>;
+                    // Párrafos normales
+                    return (
+                      <p key={pIdx} className="text-slate-700 leading-relaxed">
+                        {paragraph}
+                      </p>
+                    );
                   })}
                 </div>
 
-                {/* COPY BUTTON FOR ASSISTANT */}
+                {/* COPY & REPORT BUTTONS FOR ASSISTANT */}
                 {!isUser && (
                   <div className="mt-2 pt-2 border-t border-slate-300/80 flex items-center justify-between text-[13px] text-slate-700">
                     <span className="font-mono text-[12px]">Response generated locally in 1.2s</span>
-                    <button 
-                      onClick={() => copyToClipboard(msg.text, msg.id)}
-                      className="flex items-center gap-1 hover:text-slate-700 transition-colors"
-                      title="Copy response"
-                    >
-                      {copiedId === msg.id ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
-                      <span>{copiedId === msg.id ? 'Copied' : 'Copy'}</span>
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => copyToClipboard(msg.text, msg.id)}
+                        className="flex items-center gap-1 hover:text-slate-700 transition-colors"
+                        title="Copy response"
+                      >
+                        {copiedId === msg.id ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
+                        <span>{copiedId === msg.id ? 'Copied' : 'Copy'}</span>
+                      </button>
+
+                      {/* Botones de descarga */}
+                      <div className="flex items-center gap-1.5 border-l border-slate-300/80 pl-3">
+                        <button
+                          onClick={async () => {
+                            try {
+                              const response = await fetch('http://localhost:5000/api/documents/pdf', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                  agent_name: agent.name,
+                                  title: `Análisis - ${agent.name}`,
+                                  content: msg.text
+                                })
+                              });
+                              if (response.ok) {
+                                const blob = await response.blob();
+                                const url = window.URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = `${agent.name}_report.pdf`;
+                                a.click();
+                                window.URL.revokeObjectURL(url);
+                              }
+                            } catch (err) {
+                              console.error('Error descargando PDF:', err);
+                              alert('Error descargando PDF');
+                            }
+                          }}
+                          className="flex items-center gap-1 hover:text-red-600 transition-colors text-[12px]"
+                          title="Descargar como PDF"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          <span>PDF</span>
+                        </button>
+                        <button
+                          onClick={async () => {
+                            try {
+                              const response = await fetch('http://localhost:5000/api/documents/word', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                  agent_name: agent.name,
+                                  title: `Análisis - ${agent.name}`,
+                                  content: msg.text
+                                })
+                              });
+                              if (response.ok) {
+                                const blob = await response.blob();
+                                const url = window.URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = `${agent.name}_report.docx`;
+                                a.click();
+                                window.URL.revokeObjectURL(url);
+                              }
+                            } catch (err) {
+                              console.error('Error descargando Word:', err);
+                              alert('Error descargando Word');
+                            }
+                          }}
+                          className="flex items-center gap-1 hover:text-blue-600 transition-colors text-[12px]"
+                          title="Descargar como Word"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          <span>Word</span>
+                        </button>
+                        <button
+                          onClick={async () => {
+                            try {
+                              const response = await fetch('http://localhost:5000/api/documents/excel', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                  agent_name: agent.name,
+                                  title: `Análisis - ${agent.name}`,
+                                  content: msg.text
+                                })
+                              });
+                              if (response.ok) {
+                                const blob = await response.blob();
+                                const url = window.URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = `${agent.name}_report.xlsx`;
+                                a.click();
+                                window.URL.revokeObjectURL(url);
+                              }
+                            } catch (err) {
+                              console.error('Error descargando Excel:', err);
+                              alert('Error descargando Excel');
+                            }
+                          }}
+                          className="flex items-center gap-1 hover:text-green-600 transition-colors text-[12px]"
+                          title="Descargar como Excel"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          <span>Excel</span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
