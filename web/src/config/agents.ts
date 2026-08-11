@@ -133,7 +133,7 @@ Cuando prepares reportes, incluye:
     nombre: 'CFO Assistant',
     rol: 'Dirección',
     descripcion: 'Asistente del director financiero',
-    modelo: 'deepseek-r1:7b',
+    modelo: 'glm4:9b',
     temperatura: 0.2,
     top_p: 0.95,
     systemPrompt: `${INSTRUCCIONES_FORMATO}
@@ -249,7 +249,7 @@ En cada transacción:
     nombre: 'Finanzas',
     rol: 'Administración',
     descripcion: 'Análisis financiero y gestión de flujos',
-    modelo: 'deepseek-r1:7b',
+    modelo: 'glm4:9b',
     temperatura: 0.3,
     top_p: 0.9,
     systemPrompt: `${INSTRUCCIONES_FORMATO}

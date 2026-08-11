@@ -94,8 +94,8 @@ Consulta Financiera: {query}
 
 Proporciona análisis financiero riguroso con números y recomendaciones."""
 
-            logger.info("💼 Llamando a Ollama para análisis del CFO con deepseek-r1...")
-            respuesta = await ollama.generar("deepseek-r1:7b", prompt_ollama)
+            logger.info("💼 Llamando a Ollama para análisis del CFO con glm4:9b...")
+            respuesta = await ollama.generar("glm4:9b", prompt_ollama)
 
             # POST-PROCESAR: Arreglar markdown incorrecto
             import re

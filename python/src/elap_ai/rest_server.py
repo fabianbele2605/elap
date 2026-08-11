@@ -1214,14 +1214,14 @@ async def listar_agentes(request: web.Request) -> web.Response:
 
             # === Administrativo ===
             {'id': 'hr', 'nombre': 'Agente de RRHH', 'rol': 'Recursos Humanos', 'estado': 'Activo', 'modelo': 'glm4:9b'},
-            {'id': 'finance', 'nombre': 'Agente de Finanzas', 'rol': 'Finanzas', 'estado': 'Activo', 'modelo': 'deepseek-r1:7b'},
+            {'id': 'finance', 'nombre': 'Agente de Finanzas', 'rol': 'Finanzas', 'estado': 'Activo', 'modelo': 'glm4:9b'},
             {'id': 'payroll', 'nombre': 'Agente de Nómina', 'rol': 'Nómina', 'estado': 'Activo', 'modelo': 'glm4:9b'},
             {'id': 'benefits', 'nombre': 'Agente de Prestaciones', 'rol': 'Prestaciones', 'estado': 'Activo', 'modelo': 'glm4:9b'},
             {'id': 'recruitment', 'nombre': 'Agente de Reclutamiento', 'rol': 'Reclutamiento', 'estado': 'Activo', 'modelo': 'glm4:9b'},
 
             # === Dirección ===
             {'id': 'ceo_assistant', 'nombre': 'Asistente Ejecutivo', 'rol': 'Dirección Ejecutiva', 'estado': 'Activo', 'modelo': 'deepseek-r1:7b'},
-            {'id': 'cfo_assistant', 'nombre': 'Asistente Financiero', 'rol': 'Dirección Financiera', 'estado': 'Activo', 'modelo': 'deepseek-r1:7b'},
+            {'id': 'cfo_assistant', 'nombre': 'Asistente Financiero', 'rol': 'Dirección Financiera', 'estado': 'Activo', 'modelo': 'glm4:9b'},
             {'id': 'cmo_assistant', 'nombre': 'Asistente de Marketing', 'rol': 'Dirección Marketing', 'estado': 'Activo', 'modelo': 'deepseek-r1:7b'},
 
             # === Comercial ===
