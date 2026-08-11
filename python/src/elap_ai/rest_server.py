@@ -1002,6 +1002,7 @@ async def descargar_reporte(request: web.Request) -> web.FileResponse:
         return web.json_response({'error': str(e)}, status=500)
 
 
+@web.middleware
 async def add_cors_headers(request: web.Request, handler) -> web.Response:
     """Middleware para agregar headers CORS"""
     # Manejar OPTIONS requests (CORS preflight)
@@ -1010,8 +1011,9 @@ async def add_cors_headers(request: web.Request, handler) -> web.Response:
             status=200,
             headers={
                 'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type'
+                'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS, PATCH, PUT',
+                'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+                'Access-Control-Max-Age': '3600'
             }
         )
 
@@ -1020,8 +1022,8 @@ async def add_cors_headers(request: web.Request, handler) -> web.Response:
 
     # Agregar headers CORS a la respuesta
     response.headers['Access-Control-Allow-Origin'] = '*'
-    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, DELETE, OPTIONS'
-    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, DELETE, OPTIONS, PATCH, PUT'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
 
     return response
 
