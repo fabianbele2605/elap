@@ -64,18 +64,24 @@ class WordGenerator:
             # Paso 1: Cargar y renderizar variables simples con docxtpl
             doc = DocxTemplate(str(template_path))
             context = self._prepare_context(data, document_type)
+
+            # Para facturas: NO pasar items a docxtpl (será manejado por python-docx)
+            items_backup = None
+            if document_type == "invoice" and "items" in context:
+                items_backup = context.pop("items")
+
             doc.render(context)
 
             # Paso 2: Manejo especial de items dinámicos (para factura)
-            if document_type == "invoice" and "items" in data and data["items"]:
+            if document_type == "invoice" and items_backup:
                 # Guardar temporalmente
                 temp_path = output_path.parent / f"temp_{output_path.name}"
                 doc.save(str(temp_path))
 
                 # Procesar items dinámicos con python-docx
-                self._add_invoice_items_to_table(str(temp_path), data["items"], str(output_path))
+                self._add_invoice_items_to_table(str(temp_path), items_backup, str(output_path))
                 temp_path.unlink()  # Eliminar temporal
-                logger.info(f"Word document generated with {len(data['items'])} items: {output_path}")
+                logger.info(f"Word document generated with {len(items_backup)} items: {output_path}")
             else:
                 # Guardar documento
                 doc.save(str(output_path))
