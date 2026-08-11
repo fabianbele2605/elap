@@ -100,9 +100,17 @@ class PayrollAgent:
                 deptos[depto]['salarios'].append(salario)
                 deptos[depto]['cantidad'] += 1
 
-            # Generar reporte
-            respuesta = "📊 ANÁLISIS DE SALARIOS POR DEPARTAMENTO (DATOS REALES)\n"
-            respuesta += "=" * 60 + "\n\n"
+            # Generar reporte con mejor formato
+            respuesta = f"""📊 **ANÁLISIS DE SALARIOS POR DEPARTAMENTO**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📈 **RESUMEN**
+- Total Empleados: **{len(empleados)}**
+- Total Departamentos: **{len(deptos)}**
+
+---
+
+"""
 
             for depto, datos in sorted(deptos.items(), key=lambda x: x[1]['cantidad'], reverse=True):
                 salarios = datos['salarios']
@@ -110,16 +118,22 @@ class PayrollAgent:
                 promedio = sum(salarios) / len(salarios) if salarios else 0
                 minimo = min(salarios) if salarios else 0
                 maximo = max(salarios) if salarios else 0
+                total = sum(salarios)
 
-                respuesta += f"🏢 **{depto}**\n"
-                respuesta += f"   • Empleados: {cantidad}\n"
-                respuesta += f"   • Salario Promedio: ${promedio:,.0f}\n"
-                respuesta += f"   • Mínimo: ${minimo:,.0f}\n"
-                respuesta += f"   • Máximo: ${maximo:,.0f}\n"
-                respuesta += f"   • Rango: ${maximo - minimo:,.0f}\n\n"
+                respuesta += f"""🏢 **{depto}**
+- Empleados: {cantidad}
+- Total Nómina: ${total:,.0f}
+- Promedio: ${promedio:,.0f}
+- Mínimo: ${minimo:,.0f}
+- Máximo: ${maximo:,.0f}
+- Rango: ${maximo - minimo:,.0f}
 
-            respuesta += "📈 Análisis: Estructura salarial equilibrada con variaciones por especialización.\n"
-            respuesta += "✅ Datos obtenidos de PostgreSQL en tiempo real."
+"""
+
+            respuesta += """---
+
+✅ **Datos obtenidos de PostgreSQL en tiempo real**
+📊 Estructura salarial equilibrada con variaciones por especialización."""
 
             logger.info(f"✅ Payroll report generado con {len(empleados)} empleados reales")
             return respuesta
@@ -151,20 +165,36 @@ class PayrollAgent:
             min_prom = min(promedios.values()) if promedios else 0
             ratio = max_prom / min_prom if min_prom > 0 else 0
 
-            respuesta = "📈 ANÁLISIS DE EQUIDAD SALARIAL (DATOS REALES)\n"
-            respuesta += "=" * 60 + "\n\n"
-            respuesta += "Distribución por Departamento:\n"
+            respuesta = f"""📈 **ANÁLISIS DE EQUIDAD SALARIAL**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💼 **DISTRIBUCIÓN POR DEPARTAMENTO**
+
+| Departamento | Promedio | Empleados |
+|--------------|----------|-----------|"""
 
             for depto in sorted(promedios.keys()):
                 prom = promedios[depto]
                 cant = len(deptos[depto]['salarios'])
-                respuesta += f"- {depto}: ${prom:,.0f} promedio ({cant} empleados)\n"
+                respuesta += f"\n| {depto} | ${prom:,.0f} | {cant} |"
 
-            respuesta += f"\n📊 Índice de Equidad:\n"
-            respuesta += f"- Ratio máximo/mínimo: {ratio:.2f} (aceptable < 1.5)\n"
-            respuesta += f"- Rango de variación: ${(max_prom - min_prom):,.0f}\n\n"
-            respuesta += "✅ Distribución equitativa dentro de rangos aceptables.\n"
-            respuesta += "✅ Datos en tiempo real desde PostgreSQL."
+            status_ratio = "✅ EQUILIBRADO" if ratio < 1.5 else "⚠️ DESBALANCEADO"
+
+            respuesta += f"""
+
+---
+
+📊 **ÍNDICE DE EQUIDAD**
+- Ratio máximo/mínimo: **{ratio:.2f}** {status_ratio}
+- Rango de variación: **${(max_prom - min_prom):,.0f}**
+- Referencia: <1.5 es aceptable
+
+🎯 **RECOMENDACIONES**
+- Salario mínimo: ${min_prom:,.0f}
+- Salario máximo: ${max_prom:,.0f}
+- Brecha: {(ratio-1)*100:.1f}%
+
+✅ Datos en tiempo real desde PostgreSQL"""
 
             return respuesta
 
@@ -200,21 +230,31 @@ class PayrollAgent:
             promedio = sum(salarios) / len(salarios) if salarios else 0
             mediana = salarios[len(salarios)//2] if salarios else 0
 
-            respuesta = f"💰 DISTRIBUCIÓN DE SALARIOS - ANDINA FOODS (DATOS REALES)\n"
-            respuesta += f"{'='*60}\n\n"
-            respuesta += f"Total Empleados: {len(empleados)}\n\n"
-            respuesta += "Rangos Salariales:\n"
+            respuesta = f"""💰 **DISTRIBUCIÓN DE SALARIOS - ANDINA FOODS**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 **RESUMEN GENERAL**
+- Total Empleados: **{len(empleados)}**
+- Salario Promedio: **${promedio:,.0f}**
+- Salario Mediano: **${mediana:,.0f}**
+
+💵 **RANGOS SALARIALES**
+
+| Rango | Empleados | Porcentaje |
+|-------|-----------|-----------|"""
 
             for rango, cantidad in rangos.items():
                 pct = (cantidad / len(salarios) * 100) if salarios else 0
-                respuesta += f"${rango:10} : {cantidad:3} empleados ({pct:5.1f}%)\n"
+                respuesta += f"\n| ${rango} | {cantidad} | {pct:.1f}% |"
 
-            respuesta += f"\nEstadísticas:\n"
-            respuesta += f"- Salario Promedio: ${promedio:,.0f}\n"
-            respuesta += f"- Salario Mediano: ${mediana:,.0f}\n"
-            respuesta += f"- Mínimo: ${min(salarios):,.0f}\n"
-            respuesta += f"- Máximo: ${max(salarios):,.0f}\n"
-            respuesta += f"\n✅ Análisis en tiempo real desde PostgreSQL"
+            respuesta += f"""
+
+📈 **ESTADÍSTICAS DETALLADAS**
+- Mínimo: ${min(salarios):,.0f}
+- Máximo: ${max(salarios):,.0f}
+- Rango de Variación: ${max(salarios) - min(salarios):,.0f}
+
+✅ Datos en tiempo real desde PostgreSQL"""
 
             return respuesta
 
