@@ -271,7 +271,17 @@ class AuditLogger:
             cursor.close()
             conn.close()
 
-            return [dict(log) for log in logs]
+            # Convertir datetime a string
+            result = []
+            for log in logs:
+                log_dict = dict(log)
+                if log_dict.get('timestamp'):
+                    log_dict['timestamp'] = log_dict['timestamp'].isoformat()
+                if log_dict.get('created_at'):
+                    log_dict['created_at'] = log_dict['created_at'].isoformat()
+                result.append(log_dict)
+
+            return result
 
         except Exception as e:
             logger.error(f"Error obteniendo audit log: {e}")
@@ -300,10 +310,20 @@ class AuditLogger:
             cursor.close()
             conn.close()
 
+            # Convertir datetime a string
+            result_events = []
+            for event in events:
+                event_dict = dict(event)
+                if event_dict.get('timestamp'):
+                    event_dict['timestamp'] = event_dict['timestamp'].isoformat()
+                if event_dict.get('created_at'):
+                    event_dict['created_at'] = event_dict['created_at'].isoformat()
+                result_events.append(event_dict)
+
             return {
                 "workflow_id": workflow_id,
-                "events": [dict(e) for e in events],
-                "total_events": len(events)
+                "events": result_events,
+                "total_events": len(result_events)
             }
 
         except Exception as e:
