@@ -90,37 +90,47 @@ Proporciona estrategia de marketing con canales, mensajes y ROI."""
             logger.info("📢 Llamando a Ollama para estrategia del CMO con deepseek-r1...")
             respuesta = await ollama.generar("deepseek-r1:7b", prompt_ollama)
 
-            # POST-PROCESAR: Limpiar texto corrupto deepseek-r1
+            # POST-PROCESAR: Limpiar texto corrupto deepseek-r1 AGRESIVO
             import re
 
-            # 1. Remover caracteres no-latinos/chinos/corruptos
-            respuesta = re.sub(r'[一-鿿]', '', respuesta)  # Caracteres chinos
-            respuesta = re.sub(r'[Ѐ-ӿ]', '', respuesta)  # Cirilico
+            # 1. Remover caracteres no-latinos
+            respuesta = re.sub(r'[一-鿿㐀-䶿]', '', respuesta)  # Chino
+            respuesta = re.sub(r'[Ѐ-ӿ]', '', respuesta)  # Cirílico
+            respuesta = re.sub(r'[؀-ۿݐ-ݿ]', '', respuesta)  # Árabe
 
-            # 2. Arreglar # sin espacios: #Ingresos → # Ingresos
+            # 2. Limpiar UTF-8 mal codificado
+            try:
+                respuesta = respuesta.encode('utf-8', errors='ignore').decode('utf-8', errors='ignore')
+            except:
+                pass
+
+            # 3. Arreglar # sin espacios
             respuesta = re.sub(r'^(#{1,6})([^\s#])', r'\1 \2', respuesta, flags=re.MULTILINE)
 
-            # 3. Remover placeholders
+            # 4. Remover placeholders
             respuesta = re.sub(r'\[Inserte.*?\]', '[Dato automático]', respuesta, flags=re.IGNORECASE)
-            respuesta = re.sub(r'_+', '', respuesta)  # Remover subrayados rotos
+            respuesta = re.sub(r'_+', '', respuesta)
 
-            # 4. Palabras corruptas frecuentes
-            palabras_corrupto = {
+            # 5. Palabras corruptas
+            reemplazos = {
                 'Kirk': 'churn',
                 'viñados': 'venideros',
                 'publishings': 'campañas',
-                'consumición': 'consumición'
+                'forcesa': 'foreza',
+                'comércio': 'comercio'
             }
-            for corrupto, correcto in palabras_corrupto.items():
+            for corrupto, correcto in reemplazos.items():
                 respuesta = respuesta.replace(corrupto, correcto)
 
-            # 5. Remover líneas con caracteres inválidos
+            # 6. Filtrar líneas corruptas
             lineas = respuesta.split('\n')
             lineas_limpias = []
             for linea in lineas:
-                # Si la línea tiene muchos caracteres no-ASCII, saltarla
-                ascii_ratio = sum(ord(c) < 128 for c in linea) / max(1, len(linea))
-                if ascii_ratio > 0.7:  # 70% ASCII mínimo
+                try:
+                    ascii_ratio = sum(1 for c in linea if ord(c) < 128 or c in 'áéíóúñüÁÉÍÓÚÑÜ') / max(1, len(linea))
+                    if ascii_ratio > 0.65:
+                        lineas_limpias.append(linea)
+                except:
                     lineas_limpias.append(linea)
             respuesta = '\n'.join(lineas_limpias)
 
