@@ -43,8 +43,10 @@ from .agents.memory_manager import MemoryManager
 from .orchestrator import get_orchestrator
 from .document_generators import DocumentGenerator
 from .conversation_manager_postgres import ConversationManagerPostgres
+from .alert_manager import AlertManager
 
 logger = logging.getLogger(__name__)
+alert_manager = AlertManager()  # Instancia global de alertas
 doc_generator = DocumentGenerator()
 
 # Inicializar conversation_manager con manejo de errores
@@ -1322,6 +1324,56 @@ async def obtener_datos_empresa(request: web.Request) -> web.Response:
         return web.json_response({'error': str(e)}, status=500)
 
 
+async def obtener_alertas(request: web.Request) -> web.Response:
+    """GET /api/alerts - Obtener alertas activas de la empresa"""
+    try:
+        # Obtener datos de la empresa
+        conn = psycopg2.connect(
+            host="localhost", port=5432, database="elap_db",
+            user="elap_user", password="elap_secure_pass_2026"
+        )
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        # Obtener cartera vencida
+        cursor.execute("SELECT SUM(cartera_vencida) FROM clients WHERE cartera_vencida > 0")
+        cartera_vencida = cursor.fetchone()['sum'] or 0
+
+        # Obtener concentración de clientes (% en top 1)
+        cursor.execute("""
+            SELECT (MAX(ventas_2025) / SUM(ventas_2025) * 100)::FLOAT as concentracion
+            FROM clients
+        """)
+        concentracion = cursor.fetchone()['concentracion'] or 0
+
+        # Obtener proyectos en riesgo
+        cursor.execute("""
+            SELECT COUNT(*) as count FROM projects
+            WHERE estado_riesgo IN ('Crítico', 'Alto')
+        """)
+        proyectos_riesgo = cursor.fetchone()['count'] or 0
+
+        # Limpiar alertas viejas
+        alert_manager.clear_old_alerts(hours=24)
+
+        # Verificar KPIs y generar alertas
+        alert_manager.check_cartera_vencida(cartera_vencida)
+        alert_manager.check_concentracion_clientes(concentracion)
+        alert_manager.check_proyectos_riesgo(proyectos_riesgo)
+
+        cursor.close()
+        conn.close()
+
+        # Retornar resumen de alertas
+        resumen = alert_manager.get_summary()
+        logger.info(f"🚨 Alertas activas: {resumen['critical']} críticas, {resumen['warning']} advertencias")
+
+        return web.json_response(resumen)
+
+    except Exception as e:
+        logger.error(f"Error obteniendo alertas: {e}")
+        return web.json_response({'error': str(e)}, status=500)
+
+
 async def start_rest_server(host: str = '0.0.0.0', port: int = 5000):
     """Inicia el servidor REST para exponer agentes"""
 
@@ -1338,6 +1390,7 @@ async def start_rest_server(host: str = '0.0.0.0', port: int = 5000):
     app.router.add_delete('/api/documents/{filename}', eliminar_documento)
     app.router.add_get('/api/tools', listar_herramientas)
     app.router.add_get('/api/dashboard', obtener_dashboard_info)
+    app.router.add_get('/api/alerts', obtener_alertas)
     app.router.add_get('/api/history', obtener_historial)
     app.router.add_get('/api/knowledge-sources', obtener_fuentes_conocimiento)
     app.router.add_get('/api/menu-config', obtener_configuracion_menu)
