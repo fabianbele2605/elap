@@ -1213,26 +1213,26 @@ async def listar_agentes(request: web.Request) -> web.Response:
             {'id': 'memory_manager', 'nombre': 'Memory Manager', 'rol': 'Sistema', 'estado': 'Activo', 'modelo': 'qwen3:8b'},
 
             # === Administrativo ===
-            {'id': 'hr', 'nombre': 'HR Agent', 'rol': 'Recursos Humanos', 'estado': 'Activo', 'modelo': 'glm4:9b'},
-            {'id': 'finance', 'nombre': 'Finance Agent', 'rol': 'Finanzas', 'estado': 'Activo', 'modelo': 'glm4:9b'},
-            {'id': 'payroll', 'nombre': 'Payroll Agent', 'rol': 'Nómina', 'estado': 'Activo', 'modelo': 'glm4:9b'},
-            {'id': 'benefits', 'nombre': 'Benefits Agent', 'rol': 'Prestaciones', 'estado': 'Activo', 'modelo': 'glm4:9b'},
-            {'id': 'recruitment', 'nombre': 'Recruitment Agent', 'rol': 'Reclutamiento', 'estado': 'Activo', 'modelo': 'glm4:9b'},
+            {'id': 'hr', 'nombre': 'Agente de RRHH', 'rol': 'Recursos Humanos', 'estado': 'Activo', 'modelo': 'glm4:9b'},
+            {'id': 'finance', 'nombre': 'Agente de Finanzas', 'rol': 'Finanzas', 'estado': 'Activo', 'modelo': 'deepseek-r1:7b'},
+            {'id': 'payroll', 'nombre': 'Agente de Nómina', 'rol': 'Nómina', 'estado': 'Activo', 'modelo': 'glm4:9b'},
+            {'id': 'benefits', 'nombre': 'Agente de Prestaciones', 'rol': 'Prestaciones', 'estado': 'Activo', 'modelo': 'glm4:9b'},
+            {'id': 'recruitment', 'nombre': 'Agente de Reclutamiento', 'rol': 'Reclutamiento', 'estado': 'Activo', 'modelo': 'glm4:9b'},
 
             # === Dirección ===
-            {'id': 'ceo_assistant', 'nombre': 'CEO Assistant', 'rol': 'Dirección Ejecutiva', 'estado': 'Activo', 'modelo': 'glm4:9b'},
-            {'id': 'cfo_assistant', 'nombre': 'CFO Assistant', 'rol': 'Dirección Financiera', 'estado': 'Activo', 'modelo': 'glm4:9b'},
-            {'id': 'cmo_assistant', 'nombre': 'CMO Assistant', 'rol': 'Dirección Marketing', 'estado': 'Activo', 'modelo': 'glm4:9b'},
+            {'id': 'ceo_assistant', 'nombre': 'Asistente Ejecutivo', 'rol': 'Dirección Ejecutiva', 'estado': 'Activo', 'modelo': 'deepseek-r1:7b'},
+            {'id': 'cfo_assistant', 'nombre': 'Asistente Financiero', 'rol': 'Dirección Financiera', 'estado': 'Activo', 'modelo': 'deepseek-r1:7b'},
+            {'id': 'cmo_assistant', 'nombre': 'Asistente de Marketing', 'rol': 'Dirección Marketing', 'estado': 'Activo', 'modelo': 'deepseek-r1:7b'},
 
             # === Comercial ===
-            {'id': 'compras', 'nombre': 'Compras Agent', 'rol': 'Procuramiento', 'estado': 'Activo', 'modelo': 'glm4:9b'},
-            {'id': 'ventas', 'nombre': 'Ventas Agent', 'rol': 'Ventas', 'estado': 'Activo', 'modelo': 'glm4:9b'},
-            {'id': 'crm', 'nombre': 'CRM Agent', 'rol': 'Gestión de Clientes', 'estado': 'Activo', 'modelo': 'glm4:9b'},
-            {'id': 'customer_service', 'nombre': 'Customer Service Agent', 'rol': 'Servicio al Cliente', 'estado': 'Activo', 'modelo': 'glm4:9b'},
+            {'id': 'compras', 'nombre': 'Agente de Compras', 'rol': 'Procuramiento', 'estado': 'Activo', 'modelo': 'glm4:9b'},
+            {'id': 'ventas', 'nombre': 'Agente de Ventas', 'rol': 'Ventas', 'estado': 'Activo', 'modelo': 'glm4:9b'},
+            {'id': 'crm', 'nombre': 'Agente CRM', 'rol': 'Gestión de Clientes', 'estado': 'Activo', 'modelo': 'glm4:9b'},
+            {'id': 'customer_service', 'nombre': 'Agente de Servicio', 'rol': 'Servicio al Cliente', 'estado': 'Activo', 'modelo': 'glm4:9b'},
 
             # === Documentación ===
-            {'id': 'document_manager', 'nombre': 'Document Manager', 'rol': 'Gestión Documental', 'estado': 'Activo', 'modelo': 'glm4:9b'},
-            {'id': 'pdf_assistant', 'nombre': 'PDF Assistant', 'rol': 'Análisis PDF', 'estado': 'Activo', 'modelo': 'glm4:9b'},
+            {'id': 'document_manager', 'nombre': 'Gestor Documental', 'rol': 'Gestión Documental', 'estado': 'Activo', 'modelo': 'glm4:9b'},
+            {'id': 'pdf_assistant', 'nombre': 'Asistente PDF', 'rol': 'Análisis PDF', 'estado': 'Activo', 'modelo': 'glm4:9b'},
         ]
 
         logger.info(f"📋 {len(agents)} agentes listados")
