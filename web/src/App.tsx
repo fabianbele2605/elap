@@ -116,6 +116,9 @@ export default function App() {
     loadAgents();
   }, []);
 
+  // 🛑 NO sincronizar aquí - la sincronización se hace en onSelectConversation
+  // para evitar guardrar bajo el agente incorrecto
+
   // 🛑 NO persistir agents a localStorage - siempre cargar del backend
   // Esto evita que agentes viejos en localStorage sobrescriban los nuevos
 
@@ -560,7 +563,35 @@ export default function App() {
                 tools={tools}
                 conversations={conversation.conversations}
                 currentConversationId={conversation.currentConversationId}
-                onSelectConversation={conversation.loadConversation}
+                onSelectConversation={async (convId: string) => {
+                  // Cargar conversación
+                  const conv = await conversation.loadConversation(convId);
+                  // Cambiar al agente correcto si la conversación tiene agent_id
+                  if (conv?.agent_id) {
+                    const agentToSelect = agents.find(a => a.id === conv.agent_id);
+                    if (agentToSelect) {
+                      // Convertir mensajes al formato correcto
+                      const convertedMessages: Message[] = (conv.messages || []).map((msg: any) => ({
+                        id: msg.id,
+                        sender: msg.role as 'user' | 'assistant',
+                        agentId: conv.agent_id,
+                        agentName: msg.agent_name || agentToSelect.name,
+                        text: msg.content,
+                        timestamp: msg.timestamp || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        metadata: msg.metadata
+                      }));
+
+                      // Cambiar agente y guardar mensajes bajo el agent_id correcto
+                      setSelectedAgentId(conv.agent_id);
+                      setMessagesMap(prev => ({
+                        ...prev,
+                        [conv.agent_id]: convertedMessages
+                      }));
+
+                      console.log(`✅ Cargada conversación de ${agentToSelect.name} (${convertedMessages.length} mensajes)`);
+                    }
+                  }
+                }}
                 onDeleteConversation={conversation.deleteConversation}
                 onCreateConversation={() => {
                   // Limpiar conversación actual para empezar una nueva
@@ -598,8 +629,30 @@ export default function App() {
               <HistoryTab
                 conversations={conversation.conversations}
                 historyItems={[]}
-                onSelectSession={(id) => {
-                  conversation.loadConversation(id);
+                onSelectSession={async (id) => {
+                  const conv = await conversation.loadConversation(id);
+                  // Cambiar al agente correcto y sincronizar mensajes
+                  if (conv?.agent_id) {
+                    const agentToSelect = agents.find(a => a.id === conv.agent_id);
+                    if (agentToSelect) {
+                      // Convertir mensajes al formato correcto
+                      const convertedMessages: Message[] = (conv.messages || []).map((msg: any) => ({
+                        id: msg.id,
+                        sender: msg.role as 'user' | 'assistant',
+                        agentId: conv.agent_id,
+                        agentName: msg.agent_name || agentToSelect.name,
+                        text: msg.content,
+                        timestamp: msg.timestamp || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        metadata: msg.metadata
+                      }));
+
+                      setSelectedAgentId(conv.agent_id);
+                      setMessagesMap(prev => ({
+                        ...prev,
+                        [conv.agent_id]: convertedMessages
+                      }));
+                    }
+                  }
                   setActiveTab('chat');
                 }}
                 onDeleteConversation={conversation.deleteConversation}
