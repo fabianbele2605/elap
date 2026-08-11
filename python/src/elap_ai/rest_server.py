@@ -1320,7 +1320,7 @@ async def start_rest_server(host: str = '0.0.0.0', port: int = 5000):
 
     await init_agents()
 
-    app = web.Application()
+    app = web.Application(middlewares=[add_cors_headers])
 
     # === Configurar CORS ===
     cors = aiohttp_cors.setup(app, defaults={
