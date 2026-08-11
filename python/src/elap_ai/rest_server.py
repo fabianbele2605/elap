@@ -13,6 +13,9 @@ from typing import Optional
 from pathlib import Path
 import os
 from datetime import datetime
+import psycopg2
+import psycopg2.extras
+from decimal import Decimal
 
 # 🔧 Configurar logging INMEDIATAMENTE
 logging.basicConfig(
@@ -1232,6 +1235,86 @@ async def listar_agentes(request: web.Request) -> web.Response:
         return web.json_response({'error': str(e)}, status=500)
 
 
+async def obtener_datos_empresa(request: web.Request) -> web.Response:
+    """Obtiene datos de la empresa desde PostgreSQL para agentes
+
+    Query params:
+    - tabla: employees, clients, products, transactions, evaluations, projects
+    - filtro: JSON con filtros opcionales
+    - limite: máximo de registros (default 100)
+    """
+    try:
+        tabla = request.query.get('tabla', 'employees')
+        limite = int(request.query.get('limite', 100))
+
+        # Conectar a PostgreSQL
+        import psycopg2
+        conn = psycopg2.connect(
+            host="localhost", port=5432, database="elap_db",
+            user="elap_user", password="elap_secure_pass_2026"
+        )
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        # Queries seguras por tabla
+        queries = {
+            'employees': f"SELECT * FROM employees LIMIT {limite}",
+            'clients': f"SELECT * FROM clients ORDER BY ventas_2024 DESC LIMIT {limite}",
+            'products': f"SELECT * FROM products ORDER BY stock_actual ASC LIMIT {limite}",
+            'transactions': f"SELECT * FROM transactions ORDER BY fecha DESC LIMIT {limite}",
+            'evaluations': f"SELECT * FROM evaluations ORDER BY puntaje DESC LIMIT {limite}",
+            'projects': f"SELECT * FROM projects ORDER BY avance_pct DESC LIMIT {limite}",
+            'resumen': """
+                SELECT
+                    (SELECT COUNT(*) FROM employees) as total_empleados,
+                    (SELECT COUNT(*) FROM clients) as total_clientes,
+                    (SELECT COUNT(*) FROM products) as total_productos,
+                    (SELECT COUNT(*) FROM transactions) as total_transacciones,
+                    (SELECT SUM(valor_total) FROM transactions) as ingresos_totales,
+                    (SELECT AVG(puntaje) FROM evaluations)::INT as puntaje_promedio_evaluaciones
+            """
+        }
+
+        if tabla not in queries:
+            return web.json_response({'error': f'Tabla no soportada: {tabla}'}, status=400)
+
+        cursor.execute(queries[tabla])
+
+        # Convertir resultados
+        if tabla == 'resumen':
+            resultado = dict(cursor.fetchone())
+        else:
+            filas = cursor.fetchall()
+            resultado = [dict(fila) for fila in filas]
+
+        # Convertir tipos no serializables
+        import json
+        from decimal import Decimal
+        from datetime import date
+
+        def convertir_tipos(obj):
+            if isinstance(obj, Decimal):
+                return float(obj)
+            elif isinstance(obj, date):
+                return obj.isoformat()
+            elif isinstance(obj, dict):
+                return {k: convertir_tipos(v) for k, v in obj.items()}
+            elif isinstance(obj, list):
+                return [convertir_tipos(item) for item in obj]
+            return obj
+
+        resultado = convertir_tipos(resultado)
+
+        cursor.close()
+        conn.close()
+
+        logger.info(f"📊 Datos de {tabla} enviados ({len(resultado) if isinstance(resultado, list) else 1} registros)")
+        return web.json_response({'tabla': tabla, 'datos': resultado})
+
+    except Exception as e:
+        logger.error(f"Error obteniendo datos: {e}")
+        return web.json_response({'error': str(e)}, status=500)
+
+
 async def start_rest_server(host: str = '0.0.0.0', port: int = 5000):
     """Inicia el servidor REST para exponer agentes"""
 
@@ -1279,6 +1362,9 @@ async def start_rest_server(host: str = '0.0.0.0', port: int = 5000):
     app.router.add_delete('/api/conversations/{conversation_id}', eliminar_conversacion)
     app.router.add_get('/api/conversations/stats', estadisticas_conversaciones)
 
+    # === Datos de empresa (PostgreSQL) ===
+    app.router.add_get('/api/data/empresa', obtener_datos_empresa)
+
     # === Hacer todas las rutas CORS-aware ===
     for route in list(app.router.routes()):
         cors.add(route)
@@ -1307,6 +1393,7 @@ async def start_rest_server(host: str = '0.0.0.0', port: int = 5000):
     logger.info(f"   GET /api/conversations/{{conversation_id}} - Obtener conversación")
     logger.info(f"   POST /api/conversations/{{conversation_id}}/messages - Agregar mensaje")
     logger.info(f"   DELETE /api/conversations/{{conversation_id}} - Eliminar conversación")
+    logger.info(f"   GET /api/data/empresa?tabla=<tabla>&limite=<n> - Obtener datos de empresa")
 
     # Mantener el servidor corriendo
     try:
