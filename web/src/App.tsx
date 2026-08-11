@@ -24,6 +24,7 @@ import { NewAgentModal } from './components/modals/NewAgentModal';
 import { SettingsModal } from './components/modals/SettingsModal';
 import { InstallAgentsModal } from './components/modals/InstallAgentsModal';
 import { EMPRESA_CONTEXTO, SISTEMA_PROMPT_EMPRESA } from './config/empresa_contexto';
+import { API_BASE_URL } from './config/api';
 import { MessageSquare, BarChart2, Wrench, BookOpen, History, Sliders, FileText, Zap } from 'lucide-react';
 import DocumentsPage from './pages/DocumentsPage';
 import { KnowledgePackWizard } from './components/KnowledgePackWizard';
@@ -129,7 +130,7 @@ export default function App() {
   useEffect(() => {
     const loadDashboardData = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/dashboard');
+        const response = await fetch(`${API_BASE_URL}/api/dashboard`);
         if (response.ok) {
           const data = await response.json();
           const hwData = data.hardware;
@@ -199,7 +200,7 @@ export default function App() {
 
     try {
       // Enviar al backend - backend se encarga de crear conversación y guardar todo
-      const url = `http://localhost:5000/api/agents/${selectedAgentId}/execute`;
+      const url = `${API_BASE_URL}/api/agents/${selectedAgentId}/execute`;
       console.log(`📤 Enviando a: ${url}`);
       const res = await fetch(url, {
         method: 'POST',
@@ -329,7 +330,7 @@ export default function App() {
 
       const newAgents: Agent[] = [];
       for (const template of agentsToCreate) {
-        const response = await fetch('http://localhost:5000/api/agents', {
+        const response = await fetch(`${API_BASE_URL}/api/agents`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

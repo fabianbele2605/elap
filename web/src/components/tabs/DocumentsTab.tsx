@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../config/api';
 import React, { useState, useEffect } from 'react';
 import { Trash2, Download, RefreshCw, Search } from 'lucide-react';
 
@@ -49,7 +50,7 @@ export default function DocumentsTab({ isLoading = false }: DocumentsTabProps) {
     try {
       setLoading(true);
       // Llamar a la API real en puerto 5000 (Python)
-      const response = await fetch('http://localhost:5000/api/documents');
+      const response = await fetch('${API_BASE_URL}/api/documents');
       if (response.ok) {
         const data = await response.json();
         // Transformar datos si es necesario

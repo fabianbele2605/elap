@@ -1,4 +1,5 @@
-const API_BASE = 'http://localhost:5000';  // Python REST API
+import { API_BASE_URL } from '../../config/api';
+const API_BASE = '${API_BASE_URL}';  // Python REST API
 
 export interface Agent {
   id: string;
