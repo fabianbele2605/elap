@@ -104,12 +104,40 @@ Proporciona reporte ejecutivo con resumen, métricas y recomendaciones accionabl
             logger.info("👔 Llamando a Ollama para asesoría ejecutiva con deepseek-r1...")
             respuesta = await ollama.generar("deepseek-r1:7b", prompt_ollama)
 
-            # POST-PROCESAR: Arreglar markdown incorrecto
+            # POST-PROCESAR: Limpiar texto corrupto deepseek-r1
             import re
-            # Arreglar # sin espacios: #Ingresos → # Ingresos
+
+            # 1. Remover caracteres no-latinos/chinos/corruptos
+            respuesta = re.sub(r'[一-鿿]', '', respuesta)  # Caracteres chinos
+            respuesta = re.sub(r'[Ѐ-ӿ]', '', respuesta)  # Cirilico
+
+            # 2. Arreglar # sin espacios: #Ingresos → # Ingresos
             respuesta = re.sub(r'^(#{1,6})([^\s#])', r'\1 \2', respuesta, flags=re.MULTILINE)
-            # Remover placeholders
+
+            # 3. Remover placeholders y texto incompleto
             respuesta = re.sub(r'\[Inserte.*?\]', '[Dato automático]', respuesta, flags=re.IGNORECASE)
+            respuesta = re.sub(r'_+', '', respuesta)  # Remover subrayados rotos
+
+            # 4. Palabras corruptas frecuentes
+            palabras_corrupto = {
+                'Kirk': 'churn',
+                'viñados': 'venideros',
+                'publishings': 'campañas',
+                'consumición': 'consumición',
+                'pares de compras': 'patrones de compra'
+            }
+            for corrupto, correcto in palabras_corrupto.items():
+                respuesta = respuesta.replace(corrupto, correcto)
+
+            # 5. Remover líneas con caracteres inválidos
+            lineas = respuesta.split('\n')
+            lineas_limpias = []
+            for linea in lineas:
+                # Si la línea tiene muchos caracteres no-ASCII, saltarla
+                ascii_ratio = sum(ord(c) < 128 for c in linea) / max(1, len(linea))
+                if ascii_ratio > 0.7:  # 70% ASCII mínimo
+                    lineas_limpias.append(linea)
+            respuesta = '\n'.join(lineas_limpias)
 
             return respuesta
         except Exception as e:
