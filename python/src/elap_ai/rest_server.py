@@ -230,19 +230,24 @@ async def ejecutar_agente(request: web.Request) -> web.Response:
         logger.info(f"Solicitud: {prompt[:50]}... [Agent: {agent_id}]")
 
         # 🧠 AGENT ORCHESTRATOR - Intent detection automático
-        # Lógica: si viene agent_id específico, respetarlo; sino, detectar por intent
-        if agent_id in ['hr', 'finance', 'payroll', 'benefits', 'recruitment']:
-            # Agent específico por nombre - respetarlo
+        # Lógica: si viene agent_id conocido, respetarlo; sino, detectar por intent del prompt
+        known_agents = ['hr', 'finance', 'payroll', 'benefits', 'recruitment',
+                       'ceo_assistant', 'cfo_assistant', 'cmo_assistant',
+                       'compras_agent', 'ventas_agent', 'crm_agent', 'customer_service_agent',
+                       'document_manager_agent', 'pdf_assistant_agent']
+
+        if agent_id.lower() in known_agents:
+            # Agent específico y conocido - respetarlo
             intent_val = "specific_agent"
-            logger.info(f"Agent específico por nombre: {agent_id}")
-        elif agent_id != 'asistente' and len(agent_id) > 8:
-            # Es probablemente un UUID del dashboard - detectar tipo de agente del prompt
+            logger.info(f"Agent conocido por nombre: {agent_id}")
+        elif agent_id != 'asistente':
+            # UUID u otro - detectar tipo de agente del prompt
             detected_agent_type = _detect_agent_type_from_prompt(prompt)
             agent_id = detected_agent_type
-            intent_val = "dashboard_agent"
-            logger.info(f"Agent detectado del dashboard: {agent_id}")
+            intent_val = "detected_agent"
+            logger.info(f"Agent detectado del prompt: {agent_id}")
         else:
-            # "asistente" o desconocido - usar Orchestrator para detectar
+            # "asistente" - usar Orchestrator para detectar
             detected_agent, intent = orchestrator.process_query(prompt)
             agent_id = detected_agent
             intent_val = intent.value
