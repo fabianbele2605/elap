@@ -1387,14 +1387,26 @@ async def ejecutar_workflow(request: web.Request) -> web.Response:
         except:
             workflow.context = {}
 
-        # Agregar pasos (simulados por ahora)
+        # Agregar pasos
+        async def create_executor(agent_id, agent_name):
+            async def executor(**kwargs):
+                # Simular ejecución del agente
+                return {
+                    "status": "completado",
+                    "agent": agent_name,
+                    "input": kwargs,
+                    "timestamp": datetime.now().isoformat()
+                }
+            return executor
+
         for step_config in template['steps']:
+            executor = await create_executor(step_config['agent'], step_config['agent'])
             step = WorkflowStep(
                 step_id=step_config['id'],
                 agent_id=step_config['agent'],
                 agent_name=step_config['agent'],
                 description=step_config['description'],
-                executor=lambda: {"status": "completado", "agent": step_config['agent']}
+                executor=executor
             )
             workflow.add_step(step)
 
