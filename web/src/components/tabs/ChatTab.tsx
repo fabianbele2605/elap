@@ -254,7 +254,7 @@ export const ChatTab: React.FC<ChatTabProps> = ({
                 )}
 
                 {/* MAIN MESSAGE CONTENT - MARKDOWN PROFESIONAL */}
-                <div className="max-w-none text-slate-700 text-sm space-y-3 leading-relaxed">
+                <div className="max-w-none text-slate-800 text-sm space-y-4 leading-relaxed">
                   {msg.text.split('\n\n').map((paragraph, pIdx) => {
                     const paragraphs = msg.text.split('\n\n');
 
@@ -275,7 +275,7 @@ export const ChatTab: React.FC<ChatTabProps> = ({
                       return (
                         <div key={pIdx}>
                           <AutoChart title={chartTitle} tableMarkdown={tableMarkdown} />
-                          <p className="text-slate-700 leading-relaxed text-sm mt-2">
+                          <p className="text-slate-800 leading-relaxed text-sm mt-3">
                             {paragraph.replace(/\[Gráfico automático:.*?\]\s*/g, '').trim()}
                           </p>
                         </div>
@@ -285,7 +285,7 @@ export const ChatTab: React.FC<ChatTabProps> = ({
                     // H1 (# Título)
                     if (paragraph.startsWith('# ') && !paragraph.startsWith('## ')) {
                       return (
-                        <h1 key={pIdx} className="text-2xl font-bold text-blue-700 mt-4 mb-2 pb-2 border-b-2 border-blue-400">
+                        <h1 key={pIdx} className="text-3xl font-bold text-indigo-700 mt-5 mb-3 pb-3 border-b-3 border-indigo-600">
                           {paragraph.replace(/^#+\s*/, '')}
                         </h1>
                       );
@@ -293,8 +293,8 @@ export const ChatTab: React.FC<ChatTabProps> = ({
                     // H2 (## Subtítulo)
                     if (paragraph.startsWith('## ') && !paragraph.startsWith('### ')) {
                       return (
-                        <h2 key={pIdx} className="text-xl font-bold text-blue-600 mt-3 mb-2 flex items-center gap-2">
-                          <span className="w-1 h-6 bg-blue-600 rounded"></span>
+                        <h2 key={pIdx} className="text-2xl font-bold text-indigo-600 mt-4 mb-2 flex items-center gap-3">
+                          <span className="w-1.5 h-7 bg-gradient-to-b from-indigo-600 to-blue-600 rounded-full"></span>
                           {paragraph.replace(/^#+\s*/, '')}
                         </h2>
                       );
@@ -302,7 +302,8 @@ export const ChatTab: React.FC<ChatTabProps> = ({
                     // H3 (### Subencabezado)
                     if (paragraph.startsWith('### ')) {
                       return (
-                        <h3 key={pIdx} className="text-base font-bold text-blue-700 mt-2 mb-1">
+                        <h3 key={pIdx} className="text-lg font-bold text-indigo-700 mt-3 mb-2 flex items-center gap-2">
+                          <span className="w-1 h-5 bg-indigo-600 rounded"></span>
                           {paragraph.replace(/^#+\s*/, '')}
                         </h3>
                       );
@@ -311,16 +312,16 @@ export const ChatTab: React.FC<ChatTabProps> = ({
                     if (paragraph.startsWith('|')) {
                       const rows = paragraph.trim().split('\n');
                       return (
-                        <div key={pIdx} className="overflow-x-auto my-3 rounded-lg border border-slate-300 bg-gradient-to-br from-blue-50 to-slate-50 shadow-sm">
-                          <table className="w-full text-xs text-left border-collapse">
+                        <div key={pIdx} className="overflow-x-auto my-4 rounded-lg border border-indigo-300 bg-gradient-to-br from-indigo-50 via-blue-50 to-slate-50 shadow-md">
+                          <table className="w-full text-sm text-left border-collapse">
                             <tbody>
                               {rows.map((row, rIdx) => {
                                 const cells = row.split('|').filter(c => c.trim().length > 0 || c === '');
                                 if (rIdx === 1 && row.includes('---')) return null;
                                 return (
-                                  <tr key={rIdx} className={rIdx === 0 ? 'bg-gradient-to-r from-blue-600 to-blue-700 font-bold border-b border-blue-300 text-white' : rIdx % 2 === 0 ? 'bg-white border-b border-slate-300/60' : 'bg-slate-50 border-b border-slate-300/60'}>
+                                  <tr key={rIdx} className={rIdx === 0 ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 font-bold border-b border-indigo-400 text-white' : rIdx % 2 === 0 ? 'bg-white border-b border-slate-200' : 'bg-indigo-50/40 border-b border-slate-200'}>
                                     {cells.map((cell, cIdx) => (
-                                      <td key={cIdx} className="px-4 py-2.5 font-medium text-slate-700">{cell.trim()}</td>
+                                      <td key={cIdx} className="px-4 py-3 font-medium text-slate-800 whitespace-nowrap">{cell.trim()}</td>
                                     ))}
                                   </tr>
                                 );
@@ -333,11 +334,11 @@ export const ChatTab: React.FC<ChatTabProps> = ({
                     // Listas
                     if (paragraph.startsWith('* ') || paragraph.startsWith('• ') || paragraph.startsWith('1. ')) {
                       return (
-                        <div key={pIdx} className="my-2 pl-2 border-l-4 border-blue-400 bg-blue-50/40 py-2 px-4 rounded">
-                          <ul className="list-disc pl-5 space-y-1.5 text-slate-700">
+                        <div key={pIdx} className="my-3 pl-1 border-l-4 border-indigo-500 bg-indigo-50/60 py-3 px-4 rounded-r-lg">
+                          <ul className="list-disc pl-5 space-y-2 text-slate-800">
                             {paragraph.split('\n').map((li, lIdx) => {
                               const text = li.replace(/^(\*|•|\d+\.)\s*/, '');
-                              return <li key={lIdx} className="font-medium">{text}</li>;
+                              return <li key={lIdx} className="font-medium text-slate-800">{text}</li>;
                             })}
                           </ul>
                         </div>
@@ -345,7 +346,7 @@ export const ChatTab: React.FC<ChatTabProps> = ({
                     }
                     // Párrafos normales
                     return (
-                      <p key={pIdx} className="text-slate-700 leading-relaxed">
+                      <p key={pIdx} className="text-slate-800 leading-relaxed font-light">
                         {paragraph}
                       </p>
                     );
@@ -464,6 +465,126 @@ export const ChatTab: React.FC<ChatTabProps> = ({
                           <Download className="w-3.5 h-3.5" />
                           <span>Excel</span>
                         </button>
+                        <button
+                          onClick={() => {
+                            const jsonData = {
+                              agent: agent.name,
+                              role: agent.role,
+                              timestamp: new Date().toISOString(),
+                              content: msg.text
+                            };
+                            const blob = new Blob([JSON.stringify(jsonData, null, 2)], { type: 'application/json' });
+                            const url = window.URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `${agent.name}_report.json`;
+                            a.click();
+                            window.URL.revokeObjectURL(url);
+                          }}
+                          className="flex items-center gap-1 hover:text-amber-600 transition-colors text-[12px]"
+                          title="Descargar como JSON"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          <span>JSON</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            const htmlContent = `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reporte - ${agent.name}</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: #334155;
+      background: #f8fafc;
+      padding: 40px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .header {
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      color: white;
+      padding: 30px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+    }
+    .header h1 { margin: 0 0 10px 0; }
+    .header p { margin: 0; opacity: 0.9; }
+    .content {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h1, h2, h3 { color: #4f46e5; margin-top: 20px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+    th {
+      background: #4f46e5;
+      color: white;
+      padding: 12px;
+      text-align: left;
+    }
+    td {
+      padding: 12px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    tr:nth-child(even) {
+      background: #f8fafc;
+    }
+    ul, ol {
+      margin: 15px 0;
+      padding-left: 20px;
+    }
+    li {
+      margin: 8px 0;
+    }
+    .timestamp {
+      text-align: right;
+      color: #94a3b8;
+      font-size: 0.9em;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #e2e8f0;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>${agent.name}</h1>
+    <p>${agent.role}</p>
+  </div>
+  <div class="content">
+    ${msg.text.replace(/\n/g, '<br>').replace(/^## /gm, '<h2>').replace(/^# /gm, '<h1>').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')}
+  </div>
+  <div class="timestamp">
+    Generado: ${new Date().toLocaleString('es-CO')}
+  </div>
+</body>
+</html>
+                            `;
+                            const blob = new Blob([htmlContent], { type: 'text/html' });
+                            const url = window.URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `${agent.name}_report.html`;
+                            a.click();
+                            window.URL.revokeObjectURL(url);
+                          }}
+                          className="flex items-center gap-1 hover:text-purple-600 transition-colors text-[12px]"
+                          title="Descargar como HTML"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          <span>HTML</span>
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -496,13 +617,13 @@ export const ChatTab: React.FC<ChatTabProps> = ({
       </div>
 
       {/* QUICK SUGGESTIONS BAR */}
-      <div className="px-4 py-1.5 bg-slate-100 border-t border-slate-200/60 flex items-center gap-2 overflow-x-auto text-xs shrink-0 no-scrollbar">
-        <span className="text-[12px] font-mono text-slate-700 uppercase font-bold shrink-0">Prompts:</span>
+      <div className="px-4 py-2 bg-gradient-to-r from-indigo-50 to-blue-50 border-t border-indigo-200 flex items-center gap-2 overflow-x-auto text-xs shrink-0 no-scrollbar">
+        <span className="text-[11px] font-semibold text-indigo-700 uppercase tracking-wider shrink-0">💡 Sugerencias:</span>
         {quickPrompts.map((prompt, idx) => (
           <button
             key={idx}
             onClick={() => setInputText(prompt)}
-            className="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-slate-50/80 hover:text-indigo-600 border border-slate-300 text-[13px] text-slate-700 shrink-0 transition-colors"
+            className="px-3 py-1.5 rounded-full bg-white hover:bg-indigo-100 hover:text-indigo-700 border border-indigo-200 text-[12px] text-slate-700 shrink-0 transition-all hover:shadow-sm"
           >
             {prompt}
           </button>
@@ -510,9 +631,9 @@ export const ChatTab: React.FC<ChatTabProps> = ({
       </div>
 
       {/* INPUT AREA (BOTTOM) */}
-      <div className="p-3 bg-slate-100 border-t border-slate-200 shrink-0">
-        <form onSubmit={handleSubmit} className="max-w-4xl mx-auto space-y-2">
-          <div className="relative bg-slate-50 border border-slate-700 focus-within:border-blue-600 rounded-xl p-2 shadow-inner transition-colors">
+      <div className="p-4 bg-gradient-to-t from-indigo-50 to-white border-t border-indigo-200 shrink-0">
+        <form onSubmit={handleSubmit} className="max-w-4xl mx-auto space-y-3">
+          <div className="relative bg-white border-2 border-slate-300 focus-within:border-indigo-500 focus-within:shadow-lg rounded-xl p-3 transition-all duration-200">
             <textarea
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
@@ -522,42 +643,42 @@ export const ChatTab: React.FC<ChatTabProps> = ({
                   handleSubmit(e);
                 }
               }}
-              placeholder="Escribe tu mensaje aquí... (Press Enter to send, Shift+Enter for new line)"
+              placeholder="✍️  Escribe tu pregunta aquí... (Enter para enviar, Shift+Enter para nueva línea)"
               rows={2}
-              className="w-full bg-transparent text-slate-900 placeholder-slate-500 text-xs sm:text-sm focus:outline-none resize-none custom-scrollbar"
+              className="w-full bg-transparent text-slate-900 placeholder-slate-500 text-sm focus:outline-none resize-none custom-scrollbar font-medium"
             />
 
             {/* Input Toolbar Buttons */}
-            <div className="flex items-center justify-between pt-1 border-t border-slate-300/80">
-              <div className="flex items-center gap-1.5 text-slate-700 text-xs">
+            <div className="flex items-center justify-between pt-2 border-t border-indigo-200">
+              <div className="flex items-center gap-2 text-slate-700 text-xs">
                 {/* Attach File Button */}
-                <button 
-                  type="button" 
-                  className="p-1.5 hover:bg-slate-100 rounded text-slate-700 hover:text-slate-700 transition-colors flex items-center gap-1 text-[13px]"
-                  title="Attach file or dataset"
+                <button
+                  type="button"
+                  className="p-2 hover:bg-indigo-100 rounded-lg text-slate-700 hover:text-indigo-700 transition-colors flex items-center gap-1 text-[12px] font-medium"
+                  title="Adjuntar archivo o dataset"
                 >
-                  <Paperclip className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">'Adjuntar'</span>
+                  <Paperclip className="w-4 h-4" />
+                  <span className="hidden sm:inline">Adjuntar</span>
                 </button>
 
                 {/* Tools Dropdown */}
                 <div className="relative">
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={() => setShowToolsDropdown(!showToolsDropdown)}
-                    className="p-1.5 hover:bg-slate-100 rounded text-slate-700 hover:text-slate-700 transition-colors flex items-center gap-1 text-[13px]"
+                    className="p-2 hover:bg-indigo-100 rounded-lg text-slate-700 hover:text-indigo-700 transition-colors flex items-center gap-1 text-[12px] font-medium"
                   >
-                    <Wrench className="w-3.5 h-3.5 text-amber-700" />
-                    <span className="hidden sm:inline">Tools ▼</span>
+                    <Wrench className="w-4 h-4 text-amber-600" />
+                    <span className="hidden sm:inline">Herramientas</span>
                   </button>
 
                   {showToolsDropdown && (
-                    <div className="absolute bottom-full left-0 mb-2 w-52 bg-slate-100 border border-slate-700 rounded-lg shadow-2xl z-50 p-2 text-xs space-y-1">
-                      <div className="font-semibold text-[12px] text-slate-700 uppercase tracking-wider mb-1">Active Tool Chain</div>
+                    <div className="absolute bottom-full left-0 mb-2 w-56 bg-white border border-indigo-300 rounded-lg shadow-lg z-50 p-2 text-xs space-y-1">
+                      <div className="font-semibold text-[11px] text-indigo-700 uppercase tracking-wider mb-2">Cadena de Herramientas</div>
                       {tools.map(t => (
-                        <div key={t.id} className="flex items-center justify-between p-1 hover:bg-slate-100 rounded">
-                          <span className="text-slate-700 text-[13px]">{t.name}</span>
-                          <span className="text-[11px] text-green-600 font-mono">'Listo'</span>
+                        <div key={t.id} className="flex items-center justify-between p-2 hover:bg-indigo-50 rounded">
+                          <span className="text-slate-700 text-[12px]">{t.name}</span>
+                          <span className="text-[10px] text-green-600 font-bold">✓ Listo</span>
                         </div>
                       ))}
                     </div>
@@ -565,37 +686,37 @@ export const ChatTab: React.FC<ChatTabProps> = ({
                 </div>
 
                 {/* Options Button */}
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setShowOptionsDropdown(!showOptionsDropdown)}
-                  className="p-1.5 hover:bg-slate-100 rounded text-slate-700 hover:text-slate-700 transition-colors flex items-center gap-1 text-[13px]"
+                  className="p-2 hover:bg-indigo-100 rounded-lg text-slate-700 hover:text-indigo-700 transition-colors flex items-center gap-1 text-[12px] font-medium"
                 >
-                  <Sliders className="w-3.5 h-3.5 text-blue-600" />
-                  <span className="hidden sm:inline">Options ⚙️</span>
+                  <Sliders className="w-4 h-4 text-indigo-600" />
+                  <span className="hidden sm:inline">Opciones</span>
                 </button>
               </div>
 
               {/* Action Buttons: Send & Voice */}
-              <div className="flex items-center gap-1.5">
-                <button 
-                  type="button" 
-                  className="p-1.5 hover:bg-slate-100 text-slate-700 hover:text-slate-700 rounded transition-colors"
-                  title="Voice input dictation"
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  className="p-2 hover:bg-indigo-100 text-slate-700 hover:text-indigo-700 rounded-lg transition-colors"
+                  title="Entrada de voz"
                 >
                   <Mic className="w-4 h-4" />
                 </button>
 
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   disabled={!inputText.trim() || isStreaming}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium text-xs shadow-md transition-all ${
-                    inputText.trim() && !isStreaming 
-                      ? 'bg-blue-600 hover:bg-blue-600 text-white shadow-indigo-600/30' 
-                      : 'bg-slate-100 text-slate-700 cursor-not-allowed'
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-xs transition-all duration-200 ${
+                    inputText.trim() && !isStreaming
+                      ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white shadow-lg shadow-indigo-600/40'
+                      : 'bg-slate-200 text-slate-500 cursor-not-allowed'
                   }`}
                 >
-                  <span>'Enviar'</span>
-                  <Send className="w-3.5 h-3.5" />
+                  <span>Enviar</span>
+                  <Send className="w-4 h-4" />
                 </button>
               </div>
             </div>
