@@ -1,17 +1,20 @@
-"""Ventas Agent - Nivel Comercial"""
+"""Ventas Agent - Nivel Comercial con datos REALES"""
 
 import logging
 from typing import Dict, Any
 
+from elap_ai.data_agent_mixin import DataAgentMixin
+
 logger = logging.getLogger(__name__)
 
 
-class VentasAgent:
-    """Agente de Ventas - Gestión de ventas y prospectos"""
+class VentasAgent(DataAgentMixin):
+    """Agente de Ventas - Gestión de ventas y prospectos con datos REALES"""
 
     def __init__(self, theme: str = "andina_foods"):
+        super().__init__()
         self.theme = theme
-        logger.info(f"VentasAgent initialized with theme: {theme}")
+        logger.info(f"VentasAgent initialized with theme: {theme} - usando datos REALES")
 
     async def process_query(self, query: str) -> Dict[str, Any]:
         """Procesar consulta de ventas"""

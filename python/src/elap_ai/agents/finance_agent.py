@@ -1,4 +1,4 @@
-"""Agente de Finanzas - Generación de reportes y facturas"""
+"""Agente de Finanzas - Generación de reportes y facturas con datos REALES"""
 
 import logging
 from typing import Dict, Any, List
@@ -7,11 +7,12 @@ import uuid
 
 from elap_ai.agent_runtime.agent import Agent, AgentState
 from elap_ai.document_engine import DocumentEngine
+from elap_ai.data_agent_mixin import DataAgentMixin
 
 logger = logging.getLogger(__name__)
 
 
-class FinanceAgent(Agent):
+class FinanceAgent(Agent, DataAgentMixin):
     """Agente especializado en Finanzas
 
     Genera reportes financieros, facturas, presupuestos y análisis.
@@ -19,18 +20,19 @@ class FinanceAgent(Agent):
     """
 
     def __init__(self, name: str = "Finance Assistant", role: str = "Finance", theme: str = "andina_foods"):
-        """Inicializa agente de Finanzas"""
+        """Inicializa agente de Finanzas con acceso a datos REALES"""
         # Crear AgentState
         state = AgentState(
             id=str(uuid.uuid4()),
             name=name,
             role=role,
-            objective="Generate financial documents: reports, invoices, budgets, analysis"
+            objective="Generate financial documents: reports, invoices, budgets, analysis with REAL data"
         )
         super().__init__(state=state)
+        DataAgentMixin.__init__(self)  # Inicializar mixin
         self.theme = theme
         self.document_engine = DocumentEngine(theme=theme, language="es")
-        logger.info(f"Finance Agent initialized with theme: {theme}")
+        logger.info(f"Finance Agent initialized with theme: {theme} - usando datos REALES")
 
     async def generate_report(
         self,
@@ -240,6 +242,43 @@ Soy experto en:
 ¿Tienes alguna pregunta sobre finanzas?"""
             }
 
+        # ==================== DATOS REALES ====================
+        # Preguntas sobre ingresos/canales -> retornar datos REALES de PostgreSQL
+        ingresos_keywords = ["ingreso", "venta", "revenue", "canal", "channel", "flujo"]
+
+        if any(kw in query_lower for kw in ingresos_keywords):
+            logger.info("💰 Detectada pregunta sobre ingresos - usando datos REALES")
+
+            try:
+                datos = await self.obtener_ingresos_por_canal()
+
+                if "error" not in datos:
+                    total = datos.get('ingresos_totales', 0)
+                    top_3 = datos.get('canales_top_3', [])
+
+                    respuesta = f"""📊 **ANÁLISIS DE INGRESOS (DATOS REALES)**
+==================================================
+
+💰 **Ingresos Totales**: ${total:,.0f} COP
+📈 **Total Transacciones**: {datos.get('total_transacciones', 0)}
+
+🏆 **Top 3 Canales de Venta**:
+"""
+
+                    for idx, (canal, monto) in enumerate(top_3, 1):
+                        pct = (monto / total * 100) if total > 0 else 0
+                        respuesta += f"\n{idx}. **{canal}**: ${monto:,.0f} COP ({pct:.1f}%)"
+
+                    respuesta += "\n\n✅ Datos obtenidos de PostgreSQL en tiempo real."
+
+                    return {
+                        "intent": "ingresos_query",
+                        "message": respuesta
+                    }
+            except Exception as e:
+                logger.error(f"Error obteniendo datos de ingresos: {e}")
+
+        # ==================== FACTURA ====================
         # Verificar si tiene datos EXACTOS de factura para generar
         has_invoice_data = all(keyword in query for keyword in ["Factura:", "Cliente:", "Items:"])
 

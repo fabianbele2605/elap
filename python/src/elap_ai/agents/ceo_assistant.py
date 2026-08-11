@@ -1,21 +1,78 @@
-"""CEO Assistant Agent - Nivel Dirección"""
+"""CEO Assistant Agent - Nivel Dirección con datos REALES"""
 
 import logging
 from typing import Dict, Any
 
+from elap_ai.data_agent_mixin import DataAgentMixin
+
 logger = logging.getLogger(__name__)
 
 
-class CEOAssistant:
-    """Agente Asistente del CEO - Asesoría ejecutiva y estratégica"""
+class CEOAssistant(DataAgentMixin):
+    """Agente Asistente del CEO - Asesoría ejecutiva y estratégica con datos REALES"""
 
     def __init__(self, theme: str = "andina_foods"):
+        super().__init__()
         self.theme = theme
-        logger.info(f"CEOAssistant initialized with theme: {theme}")
+        logger.info(f"CEOAssistant initialized with theme: {theme} - usando datos REALES")
 
     async def process_query(self, query: str) -> Dict[str, Any]:
         """Procesar consulta ejecutiva"""
         logger.info(f"Processing CEO query: {query[:50]}...")
+
+        query_lower = query.lower()
+
+        # ==================== DATOS REALES ====================
+        # Palabras clave para reportes ejecutivos
+        resumen_keywords = ["resumen", "estado", "empresa", "proyectos", "riesgo", "avance"]
+        proyecto_keywords = ["proyecto", "proyectos", "riesgo", "avance", "completado"]
+
+        # Resumen general de empresa
+        if any(kw in query_lower for kw in resumen_keywords):
+            logger.info("📊 Detectada pregunta sobre resumen - usando datos REALES")
+
+            try:
+                resumen = await self.obtener_resumen_empresa()
+                proyectos = await self.obtener_estado_proyectos()
+
+                if resumen and "error" not in proyectos:
+                    respuesta = """📊 **RESUMEN EJECUTIVO DE LA EMPRESA (DATOS REALES)**
+==================================================================
+
+🏢 **ESTRUCTURA ORGANIZACIONAL**
+  • Total Empleados: {empleados}
+  • Total Clientes: {clientes}
+  • Total Productos: {productos}
+
+💰 **DESEMPEÑO FINANCIERO**
+  • Ingresos Totales: ${ingresos:,.0f} COP
+  • Total Transacciones: {transacciones}
+  • Puntaje Evaluaciones Promedio: {evaluaciones:.1f}/100
+
+📋 **GESTIÓN DE PROYECTOS**
+  • Total Proyectos: {total_proyectos}
+  • En Riesgo (Crítico/Alto): {en_riesgo}
+  • Completados: {completados}
+
+✅ Todos los datos obtenidos de PostgreSQL en tiempo real.
+""".format(
+                        empleados=resumen.get('total_empleados', 0),
+                        clientes=resumen.get('total_clientes', 0),
+                        productos=resumen.get('total_productos', 0),
+                        ingresos=resumen.get('ingresos_totales', 0),
+                        transacciones=resumen.get('total_transacciones', 0),
+                        evaluaciones=resumen.get('puntaje_promedio_evaluaciones', 0),
+                        total_proyectos=proyectos.get('total_proyectos', 0),
+                        en_riesgo=proyectos.get('en_riesgo', 0),
+                        completados=proyectos.get('completados', 0)
+                    )
+
+                    return {
+                        "intent": "resumen_ejecutivo",
+                        "message": respuesta
+                    }
+            except Exception as e:
+                logger.error(f"Error obteniendo datos ejecutivos: {e}")
 
         response = await self._generate_executive_response(query)
 

@@ -1,4 +1,4 @@
-"""Benefits Agent - Especializado en cálculo de prestaciones
+"""Benefits Agent - Especializado en cálculo de prestaciones con datos REALES
 
 Procesa queries sobre cesantías, prima, vacaciones, beneficios,
 proveedores de salud, etc.
@@ -7,16 +7,19 @@ proveedores de salud, etc.
 import logging
 from typing import Dict, Any
 
+from elap_ai.data_agent_mixin import DataAgentMixin
+
 logger = logging.getLogger(__name__)
 
 
-class BenefitsAgent:
-    """Agente especializado en prestaciones sociales y beneficios"""
+class BenefitsAgent(DataAgentMixin):
+    """Agente especializado en prestaciones sociales y beneficios con datos REALES"""
 
     def __init__(self, theme: str = "andina_foods"):
+        super().__init__()
         self.theme = theme
         self.smlmv_2026 = 1_613_000  # Salario mínimo 2026 Colombia
-        logger.info(f"BenefitsAgent initialized with theme: {theme}")
+        logger.info(f"BenefitsAgent initialized with theme: {theme} - usando datos REALES")
 
     async def process_query(self, query: str) -> Dict[str, Any]:
         """Procesar consulta de beneficios
@@ -28,6 +31,55 @@ class BenefitsAgent:
             Dict con respuesta y metadata
         """
         logger.info(f"Processing benefits query: {query[:50]}...")
+
+        query_lower = query.lower()
+
+        # ==================== DATOS REALES ====================
+        # Palabras clave para consultas de beneficios
+        beneficios_keywords = ["beneficio", "prima", "cesantía", "vacación", "prestación", "bono", "salud"]
+
+        if any(kw in query_lower for kw in beneficios_keywords):
+            logger.info("💰 Detectada pregunta sobre beneficios - usando datos REALES")
+
+            try:
+                empleados = await self.obtener_datos_reales("employees", limite=1000)
+
+                if empleados:
+                    # Calcular beneficios
+                    total_salarios = sum(float(e.get('salario_basico', 0)) for e in empleados)
+                    promedio_salario = total_salarios / len(empleados) if empleados else 0
+
+                    # Estimaciones de provisiones
+                    prima = total_salarios * 0.0833  # 1/12 anual
+                    cesantia = total_salarios * 0.0833  # Depende del régimen
+                    vacacion = total_salarios * 0.0417  # 1/12 * 5 días hábiles
+
+                    respuesta = f"""💰 **ANÁLISIS DE BENEFICIOS Y PRESTACIONES (DATOS REALES)**
+==================================================================
+
+👥 **COBERTURA**
+  • Total Empleados Activos: {len(empleados)}
+  • Salario Promedio: ${promedio_salario:,.0f}
+  • Nómina Total: ${total_salarios:,.0f}
+
+📊 **PROVISIONES ESTIMADAS (ANUAL)**
+  • Prima de Servicios: ${prima:,.0f}
+  • Cesantías: ${cesantia:,.0f}
+  • Vacaciones (3 semanas): ${vacacion:,.0f}
+  • **Total Provisiones**: ${(prima + cesantia + vacacion):,.0f}
+
+📋 **POR EMPLEADO (PROMEDIO)**
+  • Prima Anual: ${prima / len(empleados) if empleados else 0:,.0f}
+  • Cesantía Anual: ${cesantia / len(empleados) if empleados else 0:,.0f}
+
+✅ Cálculos basados en nómina real desde PostgreSQL."""
+
+                    return {
+                        "intent": "beneficios_query",
+                        "message": respuesta
+                    }
+            except Exception as e:
+                logger.error(f"Error obteniendo datos de beneficios: {e}")
 
         response = await self._generate_benefits_response(query)
 

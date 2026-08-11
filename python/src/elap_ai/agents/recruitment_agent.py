@@ -1,4 +1,4 @@
-"""Recruitment Agent - Especializado en reclutamiento y selección
+"""Recruitment Agent - Especializado en reclutamiento y selección con datos REALES
 
 Procesa queries sobre screening de candidatos, job postings,
 onboarding, evaluación de skills, etc.
@@ -8,15 +8,18 @@ import logging
 import re
 from typing import Dict, Any
 
+from elap_ai.data_agent_mixin import DataAgentMixin
+
 logger = logging.getLogger(__name__)
 
 
-class RecruitmentAgent:
-    """Agente especializado en reclutamiento y selección"""
+class RecruitmentAgent(DataAgentMixin):
+    """Agente especializado en reclutamiento y selección con datos REALES"""
 
     def __init__(self, theme: str = "andina_foods"):
+        super().__init__()
         self.theme = theme
-        logger.info(f"RecruitmentAgent initialized with theme: {theme}")
+        logger.info(f"RecruitmentAgent initialized with theme: {theme} - usando datos REALES")
 
     async def process_query(self, query: str) -> Dict[str, Any]:
         """Procesar consulta de reclutamiento
@@ -28,6 +31,60 @@ class RecruitmentAgent:
             Dict con respuesta y metadata
         """
         logger.info(f"Processing recruitment query: {query[:50]}...")
+
+        query_lower = query.lower()
+
+        # ==================== DATOS REALES ====================
+        # Palabras clave para consultas de reclutamiento
+        reclutamiento_keywords = ["reclutamiento", "candidato", "candidatos", "vacante", "selección", "onboarding", "equipo"]
+
+        if any(kw in query_lower for kw in reclutamiento_keywords):
+            logger.info("👥 Detectada pregunta sobre reclutamiento - usando datos REALES")
+
+            try:
+                empleados = await self.obtener_datos_reales("employees", limite=1000)
+                evaluaciones = await self.obtener_evaluaciones_por_depto()
+
+                if empleados and evaluaciones:
+                    respuesta = """👥 **ANÁLISIS DE ESTRUCTURA DE PERSONAL (DATOS REALES)**
+==================================================================
+
+📊 **RESUMEN ORGANIZACIONAL**
+  • Total Empleados: {total}
+
+🏢 **DISTRIBUCIÓN POR DEPARTAMENTO**
+
+""".format(total=len(empleados))
+
+                    # Agrupar por departamento
+                    deptos = {}
+                    for emp in empleados:
+                        depto = emp.get('departamento', 'Desconocido')
+                        if depto not in deptos:
+                            deptos[depto] = 0
+                        deptos[depto] += 1
+
+                    for depto in sorted(deptos.keys()):
+                        cantidad = deptos[depto]
+                        eval_info = evaluaciones.get(depto, {})
+                        puntaje = eval_info.get('puntaje_promedio', 0)
+                        ascensos = eval_info.get('ascensos', 0)
+
+                        respuesta += f"  • {depto}: {cantidad} empleados\n"
+                        if puntaje > 0:
+                            respuesta += f"    Puntaje Promedio: {puntaje:.1f}/100\n"
+                        if ascensos > 0:
+                            respuesta += f"    Candidatos Ascenso: {ascensos}\n"
+                        respuesta += "\n"
+
+                    respuesta += "✅ Datos actualizados desde PostgreSQL en tiempo real."
+
+                    return {
+                        "intent": "reclutamiento_query",
+                        "message": respuesta
+                    }
+            except Exception as e:
+                logger.error(f"Error obteniendo datos de reclutamiento: {e}")
 
         response = await self._generate_recruitment_response(query)
 

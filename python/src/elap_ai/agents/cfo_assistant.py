@@ -1,21 +1,71 @@
-"""CFO Assistant Agent - Nivel Dirección"""
+"""CFO Assistant Agent - Nivel Dirección con datos REALES"""
 
 import logging
 from typing import Dict, Any
 
+from elap_ai.data_agent_mixin import DataAgentMixin
+
 logger = logging.getLogger(__name__)
 
 
-class CFOAssistant:
-    """Agente Asistente del CFO - Gestión financiera y presupuestaria"""
+class CFOAssistant(DataAgentMixin):
+    """Agente Asistente del CFO - Gestión financiera y presupuestaria con datos REALES"""
 
     def __init__(self, theme: str = "andina_foods"):
+        super().__init__()
         self.theme = theme
-        logger.info(f"CFOAssistant initialized with theme: {theme}")
+        logger.info(f"CFOAssistant initialized with theme: {theme} - usando datos REALES")
 
     async def process_query(self, query: str) -> Dict[str, Any]:
         """Procesar consulta financiera ejecutiva"""
         logger.info(f"Processing CFO query: {query[:50]}...")
+
+        query_lower = query.lower()
+
+        # ==================== DATOS REALES ====================
+        # Palabras clave para análisis financieros
+        ingresos_keywords = ["ingreso", "venta", "revenue", "flujo", "canal", "cliente", "top"]
+
+        if any(kw in query_lower for kw in ingresos_keywords):
+            logger.info("💰 Detectada pregunta sobre ingresos - usando datos REALES")
+
+            try:
+                datos_ingresos = await self.obtener_ingresos_por_canal()
+                top_clientes = await self.obtener_top_clientes(limite=5)
+
+                if "error" not in datos_ingresos:
+                    respuesta = """💰 **ANÁLISIS FINANCIERO EJECUTIVO (DATOS REALES)**
+==================================================================
+
+📊 **FLUJO DE INGRESOS**
+  • Ingresos Totales: ${total:,.0f} COP
+  • Total Transacciones: {transacciones}
+
+🏆 **TOP 3 CANALES DE VENTA**:
+""".format(
+                        total=datos_ingresos.get('ingresos_totales', 0),
+                        transacciones=datos_ingresos.get('total_transacciones', 0)
+                    )
+
+                    for idx, (canal, monto) in enumerate(datos_ingresos.get('canales_top_3', []), 1):
+                        pct = (monto / datos_ingresos.get('ingresos_totales', 1) * 100)
+                        respuesta += f"\n  {idx}. {canal}: ${monto:,.0f} ({pct:.1f}%)"
+
+                    if top_clientes:
+                        respuesta += "\n\n👥 **TOP 5 CLIENTES (2025)**:\n"
+                        for idx, cliente in enumerate(top_clientes, 1):
+                            respuesta += f"\n  {idx}. {cliente['nombre']} ({cliente['ciudad']})\n"
+                            respuesta += f"      Ventas 2025: ${cliente['ventas_2025']:,.0f}\n"
+                            respuesta += f"      Cartera Vencida: ${cliente['cartera_vencida']:,.0f}"
+
+                    respuesta += "\n\n✅ Análisis basado en datos actualizados de PostgreSQL."
+
+                    return {
+                        "intent": "financial_analysis",
+                        "message": respuesta
+                    }
+            except Exception as e:
+                logger.error(f"Error obteniendo datos financieros: {e}")
 
         response = await self._generate_cfo_response(query)
 

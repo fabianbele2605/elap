@@ -1,4 +1,4 @@
-"""Agente RRHH - Generación de documentos laborales"""
+"""Agente RRHH - Generación de documentos laborales con datos REALES"""
 
 import logging
 from typing import Dict, Any, Optional
@@ -8,15 +8,16 @@ import uuid
 
 from elap_ai.agent_runtime.agent import Agent, AgentState
 from elap_ai.document_engine import DocumentEngine
+from elap_ai.data_agent_mixin import DataAgentMixin
 
 logger = logging.getLogger(__name__)
 
 
-class HRAgent(Agent):
+class HRAgent(Agent, DataAgentMixin):
     """Agente especializado en Recursos Humanos
 
     Genera documentos laborales: contratos, políticas, certificados, etc.
-    Integrado con Document Engine para crear documentos profesionales.
+    Integrado con Document Engine y datos REALES de PostgreSQL.
     """
 
     def __init__(
@@ -37,12 +38,13 @@ class HRAgent(Agent):
             id=str(uuid.uuid4()),
             name=name,
             role=role,
-            objective="Generate HR documents: contracts, policies, certificates"
+            objective="Generate HR documents with REAL data: contracts, policies, certificates"
         )
         super().__init__(state=state)
+        DataAgentMixin.__init__(self)
         self.theme = theme
         self.document_engine = DocumentEngine(theme=theme, language="es")
-        logger.info(f"HR Agent initialized with theme: {theme}")
+        logger.info(f"HR Agent initialized with theme: {theme} - usando datos REALES")
 
     async def generate_contract(
         self,
@@ -242,6 +244,38 @@ Yo specializo en:
 
 ¿Tienes una pregunta sobre RRHH?"""
             }
+
+        # ==================== DATOS REALES ====================
+        # Preguntas sobre evaluaciones/desempeño -> retornar datos REALES de PostgreSQL
+        evaluacion_keywords = ["evaluación", "desempeño", "ascenso", "capacitación", "recomendación", "bono"]
+
+        if any(kw in query_lower for kw in evaluacion_keywords):
+            logger.info("📊 Detectada pregunta sobre evaluaciones - usando datos REALES")
+
+            try:
+                datos = await self.obtener_evaluaciones_por_depto()
+
+                if "error" not in datos:
+                    respuesta = """📊 **ANÁLISIS DE EVALUACIONES POR DEPARTAMENTO (DATOS REALES)**
+==================================================================
+
+"""
+                    for depto, info in sorted(datos.items()):
+                        respuesta += f"""🏢 **{depto}**
+   • Puntaje Promedio: {info['puntaje_promedio']:.1f}/100
+   • Total Evaluados: {info['cantidad']} empleados
+   • Recomendados Ascenso: {info['ascensos']}
+   • Recomendados Capacitación: {info['capacitacion']}
+
+"""
+                    respuesta += "\n✅ Datos obtenidos de PostgreSQL en tiempo real."
+
+                    return {
+                        "intent": "evaluaciones_query",
+                        "message": respuesta
+                    }
+            except Exception as e:
+                logger.error(f"Error obteniendo datos de evaluaciones: {e}")
 
         # Verificar si tiene datos de contrato EXACTOS (Empresa:, Empleado:, etc)
         has_employee_data = all(keyword in query for keyword in ["Empresa:", "Empleado:", "Cargo:", "Salario:"])

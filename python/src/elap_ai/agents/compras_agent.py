@@ -1,21 +1,76 @@
-"""Compras Agent - Nivel Administración"""
+"""Compras Agent - Nivel Administración con datos REALES"""
 
 import logging
 from typing import Dict, Any
 
+from elap_ai.data_agent_mixin import DataAgentMixin
+
 logger = logging.getLogger(__name__)
 
 
-class ComprasAgent:
-    """Agente de Compras - Gestión de compras y proveedores"""
+class ComprasAgent(DataAgentMixin):
+    """Agente de Compras - Gestión de compras y proveedores con datos REALES"""
 
     def __init__(self, theme: str = "andina_foods"):
+        super().__init__()
         self.theme = theme
-        logger.info(f"ComprasAgent initialized with theme: {theme}")
+        logger.info(f"ComprasAgent initialized with theme: {theme} - usando datos REALES")
 
     async def process_query(self, query: str) -> Dict[str, Any]:
         """Procesar consulta de compras"""
         logger.info(f"Processing procurement query: {query[:50]}...")
+
+        query_lower = query.lower()
+
+        # ==================== DATOS REALES ====================
+        # Palabras clave para consultas de productos
+        producto_keywords = ["producto", "productos", "inventario", "stock", "precio", "costo"]
+
+        if any(kw in query_lower for kw in producto_keywords):
+            logger.info("📦 Detectada pregunta sobre productos - usando datos REALES")
+
+            try:
+                productos = await self.obtener_datos_reales("products", limite=50)
+
+                if productos:
+                    respuesta = """📦 **INVENTARIO DE PRODUCTOS (DATOS REALES)**
+==================================================================
+
+📊 **RESUMEN DE CATÁLOGO**
+  • Total Productos: {total}
+""".format(total=len(productos))
+
+                    # Análisis de costo/venta
+                    total_costo = sum(float(p.get('precio_costo', 0)) * float(p.get('stock_actual', 0)) for p in productos)
+                    total_stock = sum(float(p.get('stock_actual', 0)) for p in productos)
+
+                    respuesta += f"""  • Unidades en Stock: {total_stock:,.0f}
+  • Valor Total de Inventario (costo): ${total_costo:,.0f}
+
+🏆 **TOP 10 PRODUCTOS POR STOCK**
+
+"""
+                    top_productos = sorted(productos, key=lambda x: float(x.get('stock_actual', 0)), reverse=True)[:10]
+
+                    for idx, prod in enumerate(top_productos, 1):
+                        sku = prod.get('sku', 'N/A')
+                        stock = float(prod.get('stock_actual', 0))
+                        precio_venta = float(prod.get('precio_venta', 0))
+                        precio_costo = float(prod.get('precio_costo', 0))
+                        margen = ((precio_venta - precio_costo) / precio_costo * 100) if precio_costo > 0 else 0
+
+                        respuesta += f"{idx}. SKU {sku}\n"
+                        respuesta += f"   Stock: {stock:,.0f} unidades\n"
+                        respuesta += f"   Precio Venta: ${precio_venta:,.0f} | Margen: {margen:.1f}%\n\n"
+
+                    respuesta += "✅ Datos desde PostgreSQL en tiempo real."
+
+                    return {
+                        "intent": "producto_query",
+                        "message": respuesta
+                    }
+            except Exception as e:
+                logger.error(f"Error obteniendo datos de productos: {e}")
 
         response = await self._generate_procurement_response(query)
 
